@@ -66,14 +66,14 @@
   @keyframes armSwingL{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}}
   @keyframes armSwingR{0%,100%{transform:rotate(22deg)}50%{transform:rotate(-22deg)}}
   @keyframes bodyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-  .mascot.walking .leg-l{animation:legSwingL .42s ease-in-out infinite;transform-origin:top center;}
-  .mascot.walking .leg-r{animation:legSwingR .42s ease-in-out infinite;transform-origin:top center;}
-  .mascot.walking .arm-l{animation:armSwingL .42s ease-in-out infinite;transform-origin:top center;}
-  .mascot.walking .arm-r{animation:armSwingR .42s ease-in-out infinite;transform-origin:top center;}
+  .mascot.walking .leg-l{animation:legSwingL .42s ease-in-out infinite;transform-origin:34px 112px;}
+  .mascot.walking .leg-r{animation:legSwingR .42s ease-in-out infinite;transform-origin:50px 112px;}
+  .mascot.walking .arm-l{animation:armSwingL .42s ease-in-out infinite;transform-origin:16px 66px;}
+  .mascot.walking .arm-r{animation:armSwingR .42s ease-in-out infinite;transform-origin:68px 66px;}
   .mascot.walking .m-body{animation:bodyBob .42s ease-in-out infinite;}
-  /* wave */
-  @keyframes waveArm{0%,100%{transform:rotate(0)}25%{transform:rotate(-120deg)}50%{transform:rotate(-95deg)}75%{transform:rotate(-120deg)}}
-  .mascot.waving .arm-r{animation:waveArm .5s ease-in-out 3;transform-origin:top center;}
+  /* wave - proper wave, hand lifted high beside head */
+  @keyframes waveArm{0%{transform:rotate(0deg)}15%{transform:rotate(-140deg)}40%{transform:rotate(-155deg)}55%{transform:rotate(-140deg)}70%{transform:rotate(-155deg)}85%{transform:rotate(-140deg)}100%{transform:rotate(0deg)}}
+  .mascot.waving .arm-r{animation:waveArm 1.6s ease-in-out 2;transform-origin:68px 66px;}
   /* jump */
   @keyframes jumpUp{0%,100%{transform:translateY(0)}40%{transform:translateY(-46px)}55%{transform:translateY(-46px)}}
   .mascot.jumping{animation:jumpUp .7s ease-in-out 2;}
@@ -81,13 +81,81 @@
   @keyframes leanIn{0%{transform:rotate(0)}100%{transform:rotate(8deg)}}
   .mascot.leaning .m-inner{transform:rotate(7deg);transition:transform .4s ease;}
   /* point */
-  @keyframes pointUp{0%,100%{transform:rotate(0)}50%{transform:rotate(-150deg)}}
-  .mascot.pointing .arm-r{animation:pointUp .6s ease-in-out 2;transform-origin:top center;}
-  /* dance */
+  @keyframes pointUp{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}
+  .mascot.pointing .arm-r{animation:pointUp .6s ease-in-out 2;transform-origin:68px 66px;}
+  /* ===== DANCES ===== */
+  /* generic happy dance */
   @keyframes danceWiggle{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
-  .mascot.dancing .m-inner{animation:danceWiggle .3s ease-in-out 6;transform-origin:bottom center;}
-  .mascot.dancing .arm-l{animation:armSwingL .3s ease-in-out 6;transform-origin:top center;}
-  .mascot.dancing .arm-r{animation:waveArm .3s ease-in-out 6;transform-origin:top center;}
+  .mascot.dancing .m-inner{animation:danceWiggle .3s ease-in-out 8;transform-origin:42px 158px;}
+  .mascot.dancing .arm-l{animation:armSwingL .3s ease-in-out 8;transform-origin:16px 66px;}
+  .mascot.dancing .arm-r{animation:armSwingR .3s ease-in-out 8;transform-origin:68px 66px;}
+
+  /* DAB - one arm up across face, other arm extended out */
+  .mascot.dab .arm-l{transform:rotate(135deg);transform-origin:16px 66px;transition:transform .25s ease-out;}
+  .mascot.dab .arm-r{transform:rotate(155deg);transform-origin:68px 66px;transition:transform .25s ease-out;}
+  .mascot.dab .m-inner{transform:rotate(-12deg);transform-origin:42px 100px;transition:transform .25s ease-out;}
+
+  /* WHIP - lean back, one arm sweeps out forward */
+  @keyframes whipArm{0%{transform:rotate(20deg)}50%{transform:rotate(-80deg)}100%{transform:rotate(20deg)}}
+  @keyframes whipLean{0%,100%{transform:rotate(0)}50%{transform:rotate(-10deg)}}
+  .mascot.whip .arm-r{animation:whipArm .6s ease-in-out 4;transform-origin:68px 66px;}
+  .mascot.whip .m-inner{animation:whipLean .6s ease-in-out 4;transform-origin:42px 130px;}
+
+  /* HIT THE WOAH - punch out then pull back with a bounce */
+  @keyframes woahArmL{0%,100%{transform:rotate(0)}40%{transform:rotate(-70deg)}60%{transform:rotate(-70deg)}}
+  @keyframes woahArmR{0%,100%{transform:rotate(0)}40%{transform:rotate(70deg)}60%{transform:rotate(70deg)}}
+  @keyframes woahBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px) scale(1.04)}}
+  .mascot.woah .arm-l{animation:woahArmL .7s ease-in-out 4;transform-origin:16px 66px;}
+  .mascot.woah .arm-r{animation:woahArmR .7s ease-in-out 4;transform-origin:68px 66px;}
+  .mascot.woah .m-inner{animation:woahBob .7s ease-in-out 4;transform-origin:42px 158px;}
+
+  /* GANGNAM STYLE - lasso arm over head, gallop legs */
+  @keyframes gangnamArm{0%{transform:rotate(-150deg)}100%{transform:rotate(-210deg)}}
+  @keyframes gangnamArmL{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(10deg)}}
+  @keyframes gangnamHop{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes gangnamLegL{0%,100%{transform:rotate(10deg)}50%{transform:rotate(-15deg)}}
+  @keyframes gangnamLegR{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(15deg)}}
+  .mascot.gangnam .arm-r{animation:gangnamArm .35s linear 10;transform-origin:68px 66px;}
+  .mascot.gangnam .arm-l{animation:gangnamArmL .35s ease-in-out 10;transform-origin:16px 66px;}
+  .mascot.gangnam .m-body{animation:gangnamHop .35s ease-in-out 10;}
+  .mascot.gangnam .leg-l{animation:gangnamLegL .35s ease-in-out 10;transform-origin:34px 112px;}
+  .mascot.gangnam .leg-r{animation:gangnamLegR .35s ease-in-out 10;transform-origin:50px 112px;}
+
+  /* ORANGE JUSTICE - arms swing across body, twist */
+  @keyframes ojArmL{0%,100%{transform:rotate(-50deg)}50%{transform:rotate(60deg)}}
+  @keyframes ojArmR{0%,100%{transform:rotate(50deg)}50%{transform:rotate(-60deg)}}
+  @keyframes ojTwist{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-4px)}}
+  .mascot.orangejustice .arm-l{animation:ojArmL .4s ease-in-out 8;transform-origin:16px 66px;}
+  .mascot.orangejustice .arm-r{animation:ojArmR .4s ease-in-out 8;transform-origin:68px 66px;}
+  .mascot.orangejustice .m-inner{animation:ojTwist .4s ease-in-out 8;transform-origin:42px 140px;}
+
+  /* FORTNITE DEFAULT (flossish + running man) - big arm pumps + hip sway */
+  @keyframes floss1L{0%,100%{transform:rotate(-35deg)}50%{transform:rotate(35deg)}}
+  @keyframes floss1R{0%,100%{transform:rotate(35deg)}50%{transform:rotate(-35deg)}}
+  @keyframes flossHip{0%,100%{transform:translateX(-4px) rotate(-4deg)}50%{transform:translateX(4px) rotate(4deg)}}
+  @keyframes flossLegL{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-8deg)}}
+  @keyframes flossLegR{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+  .mascot.defaultdance .arm-l{animation:floss1L .34s ease-in-out 10;transform-origin:16px 66px;}
+  .mascot.defaultdance .arm-r{animation:floss1R .34s ease-in-out 10;transform-origin:68px 66px;}
+  .mascot.defaultdance .m-inner{animation:flossHip .34s ease-in-out 10;transform-origin:42px 158px;}
+  .mascot.defaultdance .leg-l{animation:flossLegL .34s ease-in-out 10;transform-origin:34px 112px;}
+  .mascot.defaultdance .leg-r{animation:flossLegR .34s ease-in-out 10;transform-origin:50px 112px;}
+
+  /* ===== FLOATING (exaggerated zero-G) ===== */
+  @keyframes floatBob{0%{transform:translateY(0) rotate(-18deg)}25%{transform:translateY(-10px) rotate(10deg)}50%{transform:translateY(4px) rotate(22deg)}75%{transform:translateY(-8px) rotate(-12deg)}100%{transform:translateY(0) rotate(-18deg)}}
+  .mascot.floating .m-inner{animation:floatBob 3s ease-in-out infinite;}
+  @keyframes floatArmL{0%,100%{transform:rotate(-70deg)}50%{transform:rotate(-30deg)}}
+  @keyframes floatArmR{0%,100%{transform:rotate(70deg)}50%{transform:rotate(30deg)}}
+  @keyframes floatLegL{0%,100%{transform:rotate(35deg)}50%{transform:rotate(10deg)}}
+  @keyframes floatLegR{0%,100%{transform:rotate(-35deg)}50%{transform:rotate(-10deg)}}
+  .mascot.floating .arm-l{animation:floatArmL 2.4s ease-in-out infinite;transform-origin:16px 66px;}
+  .mascot.floating .arm-r{animation:floatArmR 2.4s ease-in-out infinite;transform-origin:68px 66px;}
+  .mascot.floating .leg-l{animation:floatLegL 2.8s ease-in-out infinite;transform-origin:34px 112px;}
+  .mascot.floating .leg-r{animation:floatLegR 2.8s ease-in-out infinite;transform-origin:50px 112px;}
+
+  /* squash on landing */
+  @keyframes landSquash{0%{transform:scaleY(1)}30%{transform:scaleY(.6) scaleX(1.25)}60%{transform:scaleY(1.08) scaleX(.96)}100%{transform:scaleY(1)}}
+  .mascot.landing .m-inner{animation:landSquash .45s ease-out;transform-origin:42px 158px;}
 
   .emote-bubble{position:absolute;bottom:150px;z-index:4;background:#fff;color:#222;font-family:'Baloo 2',cursive;font-weight:700;font-size:1.4rem;padding:6px 14px;border-radius:16px;opacity:0;transform:translateX(-50%) scale(.5);transform-origin:bottom center;transition:opacity .25s, transform .25s cubic-bezier(.5,1.6,.5,1);pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px #0006;}
   .emote-bubble::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#fff;border-bottom:0;}
@@ -255,6 +323,7 @@
     <button class="btn btn-primary" onclick="showScreen('screen-join')">🎮 Join a Game</button>
     <div class="or-sep">or</div>
     <button class="btn btn-ghost" onclick="showScreen('screen-host-setup')">🎯 Host a Game</button>
+    <button class="btn btn-ghost btn-sm" id="gravity-btn" style="width:auto;margin:6px auto 0;opacity:.8" onclick="toggleGravity()">🌍 Turn off gravity</button>
   </div>
 </div>
 
@@ -1137,22 +1206,33 @@ function resetToLanding(){
 // ===================== MASCOT =====================
 const MASCOT_SVG = `
 <svg viewBox="0 0 84 170" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <pattern id="fairisle" width="14" height="12" patternUnits="userSpaceOnUse">
+    <rect width="14" height="12" fill="#d9c9a8"/>
+    <path d="M0 2 H14 M0 10 H14" stroke="#a07d52" stroke-width="1.2"/>
+    <path d="M7 3 L10 6 L7 9 L4 6 Z" fill="#8a6a45"/>
+    <path d="M0 6 L2 4 L2 8 Z M14 6 L12 4 L12 8 Z" fill="#bfa074"/>
+    <circle cx="3.5" cy="6" r="1" fill="#6e5436"/><circle cx="10.5" cy="6" r="1" fill="#6e5436"/>
+  </pattern>
+ </defs>
  <g class="m-inner">
   <g class="m-body">
-   <!-- back arm (left) -->
-   <g class="arm-l"><rect x="6" y="62" width="11" height="42" rx="5.5" fill="#1a1a1a"/><circle cx="11.5" cy="106" r="6" fill="#f3c9a0"/></g>
-   <!-- legs -->
-   <g class="leg-l"><rect x="28" y="112" width="13" height="46" rx="6" fill="#9aa0a8"/><ellipse cx="33" cy="162" rx="11" ry="6" fill="#fff"/><ellipse cx="33" cy="160" rx="11" ry="4" fill="#e8e8e8"/></g>
-   <g class="leg-r"><rect x="44" y="112" width="13" height="46" rx="6" fill="#8b9199"/><ellipse cx="51" cy="162" rx="11" ry="6" fill="#fff"/><ellipse cx="51" cy="160" rx="11" ry="4" fill="#e8e8e8"/></g>
-   <!-- torso (black tee) -->
-   <path d="M20 60 Q42 52 64 60 L60 116 Q42 122 24 116 Z" fill="#181818"/>
-   <path d="M20 60 Q42 52 64 60 L62 72 Q42 64 22 72 Z" fill="#222"/>
+   <!-- back arm (left) — jumper sleeve, shorter -->
+   <g class="arm-l"><rect x="11" y="64" width="11" height="34" rx="5.5" fill="url(#fairisle)"/><rect x="11" y="92" width="11" height="6" rx="3" fill="#cfc0a0"/><circle cx="16.5" cy="100" r="5.5" fill="#f3c9a0"/></g>
+   <!-- legs: brown corduroy with attached sneakers -->
+   <g class="leg-l"><rect x="28" y="112" width="13" height="46" rx="6" fill="#9c7b4e"/><path d="M30 114 V156 M33 114 V156 M36 114 V156 M39 114 V156" stroke="#876641" stroke-width=".8"/><g><path d="M24 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#6e4f37"/><path d="M24 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="22" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M30 153 l3 3 M34 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
+   <g class="leg-r"><rect x="44" y="112" width="13" height="46" rx="6" fill="#8f6f44"/><path d="M46 114 V156 M49 114 V156 M52 114 V156 M55 114 V156" stroke="#7a5d3a" stroke-width=".8"/><g><path d="M42 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#5e4330"/><path d="M42 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="40" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M48 153 l3 3 M52 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
+   <!-- torso: Fair Isle jumper (oversized) -->
+   <path d="M17 60 Q42 50 67 60 L63 118 Q42 125 21 118 Z" fill="url(#fairisle)"/>
+   <!-- ribbed collar -->
+   <path d="M30 56 Q42 62 54 56 L54 60 Q42 66 30 60 Z" fill="#ece2cc"/>
+   <!-- ribbed hem -->
+   <path d="M21 114 Q42 121 63 114 L63 119 Q42 126 21 119 Z" fill="#ece2cc"/>
    <!-- neck -->
-   <rect x="36" y="48" width="12" height="12" rx="4" fill="#f3c9a0"/>
+   <rect x="36" y="48" width="12" height="11" rx="4" fill="#f3c9a0"/>
    <!-- head -->
    <ellipse cx="42" cy="34" rx="22" ry="23" fill="#f7d3aa"/>
    <ellipse cx="42" cy="36" rx="20" ry="20" fill="#f9d8b2"/>
-   <!-- ears -->
    <circle cx="21" cy="36" r="4" fill="#f3c9a0"/><circle cx="63" cy="36" r="4" fill="#f3c9a0"/>
    <!-- hair (blonde) -->
    <path d="M21 30 Q22 8 42 8 Q62 8 63 30 Q58 20 50 22 Q52 14 42 14 Q32 14 34 22 Q26 20 21 30 Z" fill="#e8c560"/>
@@ -1170,8 +1250,8 @@ const MASCOT_SVG = `
    <!-- big grin -->
    <path d="M32 45 Q42 53 52 45 Q42 50 32 45 Z" fill="#fff"/>
    <path d="M32 45 Q42 52 52 45" stroke="#c4806a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-   <!-- front arm (right) -->
-   <g class="arm-r"><rect x="67" y="62" width="11" height="42" rx="5.5" fill="#181818"/><circle cx="72.5" cy="106" r="6" fill="#f7d3aa"/></g>
+   <!-- front arm (right) — jumper sleeve, shorter -->
+   <g class="arm-r"><rect x="62" y="64" width="11" height="34" rx="5.5" fill="url(#fairisle)"/><rect x="62" y="92" width="11" height="6" rx="3" fill="#cfc0a0"/><circle cx="67.5" cy="100" r="5.5" fill="#f7d3aa"/></g>
   </g>
  </g>
 </svg>`;
@@ -1184,25 +1264,17 @@ function initMascot(){
   runMascotLoop();
 }
 
-function setEmote(text){
-  const b=document.getElementById('emote-bubble');
-  if(!b) return;
-  b.textContent=text;
-  b.style.left='calc(50% + '+mascotX+'px)';
-  b.classList.add('show');
-  setTimeout(()=>b.classList.remove('show'),1400);
-}
+function setEmote(text){ /* emote bubbles disabled */ }
 
 let mascotX=-300;
 function moveMascotTo(x,faceLeft,withWalk=true){
   const m=document.getElementById('mascot');
   return new Promise(res=>{
     const dist=Math.abs(x-mascotX);
-    const dur=Math.max(0.5,dist/130); // speed
+    const dur=Math.max(0.5,dist/130);
     m.style.transition=`transform ${dur}s linear`;
     m.classList.toggle('face-left',faceLeft);
     if(withWalk) m.classList.add('walking');
-    // set CSS var for face-left transform combo
     m.style.setProperty('--mx',x+'px');
     if(faceLeft){ m.style.transform=`translateX(${x}px) scaleX(-1)`; }
     else { m.style.transform=`translateX(${x}px)`; }
@@ -1211,55 +1283,115 @@ function moveMascotTo(x,faceLeft,withWalk=true){
   });
 }
 
-function doEmote(cls,emoji,dur=1500){
+function doEmote(cls,dur=1500){
   const m=document.getElementById('mascot');
   return new Promise(res=>{
     m.classList.add(cls);
-    if(emoji) setEmote(emoji);
     setTimeout(()=>{ m.classList.remove(cls); res(); }, dur);
   });
 }
 
 function wait(ms){return new Promise(r=>setTimeout(r,ms));}
 
+// Dance roster: [cssClass, durationMs]
+const DANCES=[
+  ['dab',1500],
+  ['whip',2600],
+  ['woah',3000],
+  ['gangnam',3800],
+  ['orangejustice',3400],
+  ['defaultdance',3600],
+  ['dancing',2600],
+];
+let danceIdx=0;
+function nextDance(){ const d=DANCES[danceIdx % DANCES.length]; danceIdx++; return d; }
+
+let gravityOn=true;
+let floatInterval=null;
+let mascotY=0;
+
+function toggleGravity(){ if(gravityOn){ removeGravity(); } else { restoreGravity(); } }
+
+function removeGravity(){
+  gravityOn=false;
+  document.getElementById('gravity-btn').textContent='🪐 Turn on gravity';
+  const m=document.getElementById('mascot');
+  m.classList.remove('walking','waving','pointing','leaning','dancing','jumping','dab','whip','woah','gangnam','orangejustice','defaultdance');
+  m.classList.add('floating');
+  startFloating();
+}
+
+function startFloating(){
+  const m=document.getElementById('mascot');
+  clearInterval(floatInterval);
+  const drift=()=>{
+    if(gravityOn) return;
+    const maxX=210, maxUp=180;
+    const x=(Math.random()*2-1)*maxX;
+    const up=20+Math.random()*maxUp;
+    const dur=1.4+Math.random()*1.4;
+    m.style.transition=`transform ${dur}s ease-in-out`;
+    mascotX=x; mascotY=up;
+    m.style.transform=`translateX(${x}px) translateY(${-up}px)`;
+  };
+  drift();
+  floatInterval=setInterval(drift,1900);
+}
+
+async function restoreGravity(){
+  gravityOn=true;
+  clearInterval(floatInterval);
+  document.getElementById('gravity-btn').textContent='🌍 Turn off gravity';
+  const m=document.getElementById('mascot');
+  m.classList.remove('floating');
+  // fast drop
+  const fallDur=Math.max(.18,mascotY/650);
+  m.style.transition=`transform ${fallDur}s cubic-bezier(.7,0,.9,.4)`;
+  m.style.transform=`translateX(${mascotX}px) translateY(0)`;
+  mascotY=0;
+  await wait(fallDur*1000);
+  m.classList.add('landing');
+  await wait(450);
+  m.classList.remove('landing');
+  await wait(300);
+}
+
 async function runMascotLoop(){
-  // only run while landing screen is active
   while(true){
-    if(!document.getElementById('screen-landing').classList.contains('active')){
-      await wait(800); continue;
-    }
-    // walk in from left
+    if(!ready()){ await wait(500); continue; }
     await moveMascotTo(-150,false);
-    if(!landingActive()){await wait(500);continue;}
-    // come to left side of title, wave
+    if(!ready())continue;
+    // wave on left
     await moveMascotTo(-120,false);
-    await doEmote('waving','👋 Hi!',1600);
-    if(!landingActive()){await wait(500);continue;}
-    // walk to right side
+    await doEmote('waving',3200);
+    if(!ready())continue;
+    // point on right
     await moveMascotTo(120,false);
-    await doEmote('pointing','👆',1300);
-    if(!landingActive()){await wait(500);continue;}
-    // lean on title (centre-ish)
+    await doEmote('pointing',1300);
+    if(!ready())continue;
+    // lean on title
     await moveMascotTo(95,true);
-    await doEmote('leaning','😎',1800);
-    if(!landingActive()){await wait(500);continue;}
-    // dance in middle
+    await doEmote('leaning',1800);
+    if(!ready())continue;
+    // dance in middle - cycle through the roster
     await moveMascotTo(-10,false);
-    await doEmote('dancing','🎉',2000);
-    if(!landingActive()){await wait(500);continue;}
+    const [dcls,ddur]=nextDance();
+    await doEmote(dcls,ddur);
+    if(!ready())continue;
     // jump
-    await doEmote('jumping',"Let's go!",1400);
-    if(!landingActive()){await wait(500);continue;}
+    await doEmote('jumping',1400);
+    if(!ready())continue;
     // walk off right, loop back
     await moveMascotTo(320,false);
     await wait(400);
-    // teleport to far left to re-enter
+    if(!gravityOn){continue;}
     const m=document.getElementById('mascot');
     m.style.transition='none';
     mascotX=-320; m.style.transform='translateX(-320px)';
     await wait(300);
   }
 }
+function ready(){ return landingActive() && gravityOn; }
 function landingActive(){return document.getElementById('screen-landing').classList.contains('active');}
 
 // boot
