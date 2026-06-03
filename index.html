@@ -1805,18 +1805,19 @@ function createInvaders(host){
     bullets=bullets.filter(b=>{ if(b.y<-10)return false; if(hitBarrier(b))return false; return true; });
     etick++;
     const alive=enemies.filter(e=>e.alive);
-    // MODERATE: slightly faster base speed, more frequent firing
-    const speed=Math.max(18,48-Math.floor((24-alive.length)*1.0));
+    // HARDER (but fair): faster base march + ramps up more as ranks thin
+    const speed=Math.max(12,42-Math.floor((24-alive.length)*1.2));
     if(etick>=speed){
       etick=0;
       let hitEdge=false;
-      alive.forEach(e=>{ if(e.x+edir*8<10||e.x+e.w+edir*8>W-10)hitEdge=true; });
-      if(hitEdge){ edir*=-1; alive.forEach(e=>e.y+=14); }
-      else alive.forEach(e=>e.x+=edir*8);
-      // slightly more frequent enemy fire
-      if(alive.length&&Math.random()<0.36){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
+      alive.forEach(e=>{ if(e.x+edir*9<10||e.x+e.w+edir*9>W-10)hitEdge=true; });
+      if(hitEdge){ edir*=-1; alive.forEach(e=>e.y+=16); }
+      else alive.forEach(e=>e.x+=edir*9);
+      // more frequent enemy fire; occasionally a double shot
+      if(alive.length&&Math.random()<0.46){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
+      if(alive.length>8&&Math.random()<0.16){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
     }
-    ebullets.forEach(b=>b.y+=3.2);
+    ebullets.forEach(b=>b.y+=3.9);
     // enemy bullets hit barriers
     ebullets=ebullets.filter(b=>{ if(b.y>H+10)return false; if(hitBarrier(b))return false; return true; });
     // player bullet -> enemy
@@ -1862,35 +1863,42 @@ function createInvaders(host){
   return { stop(){ over=true; cancelAnimationFrame(raf); } };
 }
 
-// ---------- PAC-MAN ----------
+// ---------- PAC-MAN (rewritten: authentic maze, smooth grid movement, proper ghost AI) ----------
 function createPacman(host){
-  // Classic-style 21x19 maze: 0=wall,1=dot,2=empty,3=power,4=ghost-house
-  const MAP=[
-    "0000000000000000000",
-    "0111111111111111110",
-    "0100110011001100110",  // power pellets at corners
-    "0311110111101111130",
-    "0100110100101100110",
-    "0111111111111111110",
-    "0100110100101100110",
-    "0100110111101100110",
-    "0111111001001111110",
-    "0000110444444110000",
-    "0000110400004110000",
-    "1111110044440111111",  // tunnel row (1s on edges = tunnel)
-    "0000110400004110000",
-    "0000110444444110000",
-    "0111111001001111110",
-    "0100110111101100110",
-    "0311110100101111130",
-    "0100110100101100110",
-    "0111111111111111110",
-    "0100110011001100110",
-    "0111111111111111110",
-    "0000000000000000000",
-  ].map(r=>r.split('').map(Number));
+  // Legend: # wall, . dot, o power pellet, (space) empty corridor / ghost-house, = gate
+  const RAW=[
+    "###################",
+    "#........#........#",
+    "#o##.###.#.###.##o#",
+    "#.................#",
+    "#.##.#.#####.#.##.#",
+    "#....#...#...#....#",
+    "####.### # ###.####",
+    "   #.#   =   #.#   ",
+    "####.# ##=## #.####",
+    "    .  #   #  .    ",
+    "####.# ##### #.####",
+    "   #.#       #.#   ",
+    "####.# ##### #.####",
+    "#........#........#",
+    "#.##.###.#.###.##.#",
+    "#o.#.........#..o.#",
+    "##.#.#.#####.#.#.##",
+    "#....#...#...#....#",
+    "#.######.#.######.#",
+    "#.................#",
+    "###################",
+  ];
+  // numeric grid: 0=wall,1=dot,2=empty,3=power,5=gate
+  const MAP=RAW.map(row=>row.split('').map(ch=>
+    ch==='#'?0 : ch==='.'?1 : ch==='o'?3 : ch==='='?5 : 2
+  ));
   const ROWS=MAP.length, COLS=MAP[0].length, TS=18;
   const W=COLS*TS, H=ROWS*TS;
+  // key tiles
+  const PAC_START={c:9,r:15};
+  const HOUSE={c:9,r:9};            // inside the ghost house
+  const GATE={c:9,r:8};             // gate tile (exit point)
   host.innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
       <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700;font-size:.85rem">
@@ -1910,220 +1918,247 @@ function createPacman(host){
       <p class="text-muted" style="font-size:.75rem">Swipe canvas or use d-pad • eat power pellets to hunt ghosts!</p>
     </div>`;
   const cv=document.getElementById('pm-canvas'), ctx=cv.getContext('2d');
-  // Count pellets
-  let totalPellets=0;
-  MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)totalPellets++;}));
-  let pellets=totalPellets;
+  let pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
   let score=0, lives=3, over=false, raf=null;
-  let moveAcc=0, power=0, powerBlink=false, stepCount=0, ghostEaten=0, level=1;
-  // pixel-smooth movement
+  let power=0, stepCount=0, ghostEaten=0, level=1, frightTimer=0;
   const TILE=TS;
-  let pac={ x:9*TILE+TILE/2, y:18*TILE+TILE/2, dx:0, dy:0, ndx:0, ndy:0, mouth:0, mouthDir:0 };
-  // Ghost types: Blinky(red-chase), Pinky(pink-ahead), Inky(cyan-flank), Clyde(orange-scatter)
-  const GHOST_NAMES=['Blinky','Pinky','Inky','Clyde'];
-  const GHOST_COLS=['#ff4f6d','#ffb8ff','#4fffcc','#ffb84f'];
+  const ctr=(t)=>t*TILE+TILE/2; // tile index -> pixel centre
+
+  let pac={ x:ctr(PAC_START.c), y:ctr(PAC_START.r), dx:0, dy:0, ndx:0, ndy:0, mouth:0 };
+
+  // Ghosts: each has personality target fn. Start inside house, staggered release.
+  function mkGhost(col,name,homeC,releaseStep,scatter){
+    return { x:ctr(homeC), y:ctr(HOUSE.r), dx:0, dy:-1, col, name, mode:'house',
+             releaseStep, scatter, eaten:false };
+  }
   let ghosts=[
-    {x:9*TILE+TILE/2, y:10*TILE+TILE/2, dx:0, dy:-1, col:'#ff4f6d', mode:'house', releaseStep:20,  scatter:{tc:2,tr:1}},
-    {x:9*TILE+TILE/2, y:11*TILE+TILE/2, dx:0, dy:-1, col:'#ffb8ff', mode:'house', releaseStep:60,  scatter:{tc:COLS-3,tr:1}},
-    {x:8*TILE+TILE/2, y:11*TILE+TILE/2, dx:0, dy:-1, col:'#4fffcc', mode:'house', releaseStep:100, scatter:{tc:2,tr:ROWS-2}},
-    {x:10*TILE+TILE/2, y:11*TILE+TILE/2, dx:0,dy:-1, col:'#ffb84f', mode:'house', releaseStep:140, scatter:{tc:COLS-3,tr:ROWS-2}},
+    mkGhost('#ff4f6d','Blinky',9,0,  {c:COLS-2,r:0}),
+    mkGhost('#ffb8ff','Pinky', 8,30, {c:1,r:0}),
+    mkGhost('#4fffcc','Inky',  10,70,{c:COLS-2,r:ROWS-1}),
+    mkGhost('#ffb84f','Clyde', 9,120,{c:1,r:ROWS-1}),
   ];
-  function cell(c,r){
-    if(r<0)r=ROWS-1; if(r>=ROWS)r=0;
+
+  function tileVal(c,r){
     if(c<0)c=COLS-1; if(c>=COLS)c=0;
+    if(r<0||r>=ROWS) return 0;
     return MAP[r][c];
   }
-  function walkable(c,r,forGhost){
-    const v=cell(c,r);
-    if(forGhost) return v!==0;
-    return v!==0; // pac-man can enter all non-wall
-  }
-  function tileAt(px,py){ return {c:Math.round((px-TILE/2)/TILE), r:Math.round((py-TILE/2)/TILE)}; }
+  function tileOf(px,py){ return { c:Math.floor(px/TILE), r:Math.floor(py/TILE) }; }
+  // walkable for pac (gate is solid), for ghosts in/out of house gate passable
+  function pacCanGo(c,r){ const v=tileVal(c,r); return v!==0 && v!==5; }
+  function ghostCanGo(c,r,allowGate){ const v=tileVal(c,r); if(v===0)return false; if(v===5)return !!allowGate; return true; }
+
   // Input
-  window._pmDir=(dx,dy)=>{pac.ndx=dx;pac.ndy=dy;};
-  window.pmDir=(dx,dy)=>{pac.ndx=dx;pac.ndy=dy;};
+  window.pmDir=(dx,dy)=>{ pac.ndx=dx; pac.ndy=dy; };
   let tsx=0,tsy=0;
   cv.addEventListener('touchstart',e=>{e.preventDefault();tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;},{passive:false});
   cv.addEventListener('touchend',e=>{
     e.preventDefault();
     const dx=e.changedTouches[0].clientX-tsx, dy=e.changedTouches[0].clientY-tsy;
-    if(Math.abs(dx)>Math.abs(dy)){pac.ndx=dx>0?1:-1;pac.ndy=0;}
-    else{pac.ndx=0;pac.ndy=dy>0?1:-1;}
+    if(Math.abs(dx)<8&&Math.abs(dy)<8) return;
+    if(Math.abs(dx)>Math.abs(dy)){ pac.ndx=dx>0?1:-1; pac.ndy=0; }
+    else { pac.ndx=0; pac.ndy=dy>0?1:-1; }
   },{passive:false});
   function keyHandler(e){
     if(over)return;
-    if(e.key==='ArrowLeft'){pac.ndx=-1;pac.ndy=0;}
-    else if(e.key==='ArrowRight'){pac.ndx=1;pac.ndy=0;}
-    else if(e.key==='ArrowUp'){pac.ndx=0;pac.ndy=-1;}
-    else if(e.key==='ArrowDown'){pac.ndx=0;pac.ndy=1;}
+    if(e.key==='ArrowLeft'||e.key==='a'){pac.ndx=-1;pac.ndy=0;}
+    else if(e.key==='ArrowRight'||e.key==='d'){pac.ndx=1;pac.ndy=0;}
+    else if(e.key==='ArrowUp'||e.key==='w'){pac.ndx=0;pac.ndy=-1;}
+    else if(e.key==='ArrowDown'||e.key==='s'){pac.ndx=0;pac.ndy=1;}
   }
   window.addEventListener('keydown',keyHandler);
 
-  const SPEED_PX=1.5; // pixels per frame for pac
-  const GHOST_SPEED=1.2;
-  const GHOST_FRIGHT=0.7;
+  const PAC_SPEED=2.0;
+  const GHOST_SPEED=1.7;
+  const FRIGHT_SPEED=1.05;
+  const EYES_SPEED=3.2;
+
+  // generic "snap to centre when aligned, allow turn at intersections" mover
+  function atCentre(px,py,axis){
+    const v=axis==='x'?px:py;
+    const m=((v%TILE)+TILE)%TILE;
+    return Math.abs(m-TILE/2)<PAC_SPEED;
+  }
 
   function movePac(){
-    // Try to turn into requested direction
-    const {c,r}=tileAt(pac.x,pac.y);
-    const cx=c*TILE+TILE/2, cy=r*TILE+TILE/2;
-    const aligned=(Math.abs(pac.x-cx)<SPEED_PX+0.5 && Math.abs(pac.y-cy)<SPEED_PX+0.5);
-    if(aligned && pac.ndx!==0||pac.ndy!==0){
-      const nc=c+pac.ndx, nr=r+pac.ndy;
-      if(walkable(nc,nr,false)){
+    const c=Math.floor(pac.x/TILE), r=Math.floor(pac.y/TILE);
+    const cx=ctr(c), cy=ctr(r);
+    const onCentre=Math.abs(pac.x-cx)<PAC_SPEED && Math.abs(pac.y-cy)<PAC_SPEED;
+    // turn only when centred on a tile
+    if(onCentre && (pac.ndx||pac.ndy)){
+      if(pacCanGo(c+pac.ndx, r+pac.ndy)){
         pac.dx=pac.ndx; pac.dy=pac.ndy;
-        pac.x=cx; pac.y=cy; // snap to tile centre before turning
-      }
-    }
-    // Move in current direction
-    const nc2=c+pac.dx, nr2=r+pac.dy;
-    if(pac.dx!==0||pac.dy!==0){
-      if(walkable(nc2,nr2,false)){
-        pac.x+=pac.dx*SPEED_PX; pac.y+=pac.dy*SPEED_PX;
-      } else {
-        // snap to centre
         pac.x=cx; pac.y=cy;
       }
     }
-    // tunnel wrap
-    if(pac.x<0) pac.x=W; if(pac.x>W) pac.x=0;
+    // stop if wall ahead
+    if(onCentre && (pac.dx||pac.dy) && !pacCanGo(c+pac.dx, r+pac.dy)){
+      pac.x=cx; pac.y=cy; pac.dx=0; pac.dy=0;
+    }
+    pac.x+=pac.dx*PAC_SPEED; pac.y+=pac.dy*PAC_SPEED;
+    // tunnel wrap (horizontal)
+    if(pac.x<-TILE/2) pac.x=W+TILE/2; else if(pac.x>W+TILE/2) pac.x=-TILE/2;
     // eat
-    const {c:ec,r:er}=tileAt(pac.x,pac.y);
-    const v=MAP[er]?.[ec];
-    if(v===1){ MAP[er][ec]=2; score+=10; pellets--; }
-    else if(v===3){ MAP[er][ec]=2; score+=50; pellets--; power=200; ghostEaten=0; powerBlink=false; }
-    if(pellets<=0){ score+=1000; level++; setTimeout(()=>nextLevel(),800); }
-    pac.mouth=(pac.mouth+0.15)%1;
+    const ec=Math.floor(((pac.x%W)+W)%W/TILE), er=Math.floor(pac.y/TILE);
+    if(MAP[er]&&MAP[er][ec]===1){ MAP[er][ec]=2; score+=10; pellets--; }
+    else if(MAP[er]&&MAP[er][ec]===3){ MAP[er][ec]=2; score+=50; pellets--; power=1; frightTimer=Math.max(300,420-level*30); ghostEaten=0; }
+    if(pellets<=0){ over=true; cancelAnimationFrame(raf); setTimeout(()=>nextLevel(),700); return; }
+    if(pac.dx||pac.dy) pac.mouth=(pac.mouth+0.18)%1;
+  }
+
+  function ghostTarget(g){
+    const pc=Math.floor(pac.x/TILE), pr=Math.floor(pac.y/TILE);
+    if(g.name==='Blinky') return {c:pc, r:pr};
+    if(g.name==='Pinky')  return {c:pc+pac.dx*4, r:pr+pac.dy*4};
+    if(g.name==='Inky'){
+      // vector from Blinky doubled (simplified): aim 2 ahead then mirror
+      const b=ghosts[0];
+      const ahead={c:pc+pac.dx*2, r:pr+pac.dy*2};
+      return {c:ahead.c+(ahead.c-Math.floor(b.x/TILE)), r:ahead.r+(ahead.r-Math.floor(b.y/TILE))};
+    }
+    // Clyde: chase when far, scatter when close
+    const gc=Math.floor(g.x/TILE), gr=Math.floor(g.y/TILE);
+    const d=Math.hypot(pc-gc, pr-gr);
+    return d>8?{c:pc,r:pr}:g.scatter;
   }
 
   function moveGhost(g){
-    const spd=power>0?GHOST_FRIGHT:GHOST_SPEED*(1+level*0.08);
+    // release from house
     if(g.mode==='house'){
-      if(stepCount>=g.releaseStep){ g.mode='chase'; g.x=9*TILE+TILE/2; g.y=9*TILE+TILE/2; g.dx=0; g.dy=-1; }
-      else return;
-    }
-    const {c,r}=tileAt(g.x,g.y);
-    const cx=c*TILE+TILE/2, cy=r*TILE+TILE/2;
-    const aligned=(Math.abs(g.x-cx)<spd+0.5 && Math.abs(g.y-cy)<spd+0.5);
-    if(aligned){
-      g.x=cx; g.y=cy;
-      // choose new direction
-      const {c:pc,r:pr}=tileAt(pac.x,pac.y);
-      let dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>{
-        const nc=c+d[0],nr=r+d[1];
-        return walkable(nc,nr,true) && !(d[0]===-g.dx&&d[1]===-g.dy);
-      });
-      if(!dirs.length) dirs=[[-g.dx,-g.dy]];
-      if(power>0){
-        // frightened: random
-        g.dir=dirs[Math.floor(Math.random()*dirs.length)];
-      } else {
-        // target-based
-        let tc=pc,tr=pr;
-        if(g.col==='#ff4f6d'){ tc=pc;tr=pr; } // Blinky: direct chase
-        else if(g.col==='#ffb8ff'){ tc=pc+pac.dx*4;tr=pr+pac.dy*4; } // Pinky: ahead of pac
-        else if(g.col==='#4fffcc'){ tc=pc+2;tr=pr+2; } // Inky: flank
-        else { const d=Math.hypot(pc-c,pr-r); tc=d>8?pc:g.scatter.tc; tr=d>8?pr:g.scatter.tr; } // Clyde
-        dirs.sort((a,b)=>Math.hypot(c+a[0]-tc,r+a[1]-tr)-Math.hypot(c+b[0]-tc,r+b[1]-tr));
-        g.dir=dirs[0];
+      if(stepCount>=g.releaseStep){ g.mode='exit'; }
+      else { // bob inside house
+        g.y+=g.dy*0.6; if(g.y<ctr(HOUSE.r)-4||g.y>ctr(HOUSE.r)+4) g.dy*=-1;
+        return;
       }
-      if(g.dir){ g.dx=g.dir[0]; g.dy=g.dir[1]; }
+    }
+    if(g.mode==='exit'){
+      // move to gate column then up through gate
+      const tx=ctr(GATE.c), ty=ctr(GATE.r);
+      const dx=tx-g.x, dy=ty-g.y;
+      if(Math.abs(dx)>EYES_SPEED){ g.x+=Math.sign(dx)*EYES_SPEED; }
+      else { g.x=tx; if(Math.abs(dy)>EYES_SPEED){ g.y+=Math.sign(dy)*EYES_SPEED; } else { g.y=ty; g.mode='chase'; g.dx=0; g.dy=-1; } }
+      return;
+    }
+    const eyes=g.mode==='eyes';
+    let spd= eyes?EYES_SPEED : (power>0?FRIGHT_SPEED:GHOST_SPEED+Math.min(0.6,level*0.06));
+    const c=Math.floor(g.x/TILE), r=Math.floor(g.y/TILE);
+    const cx=ctr(c), cy=ctr(r);
+    const onCentre=Math.abs(g.x-cx)<spd && Math.abs(g.y-cy)<spd;
+    if(onCentre){
+      g.x=cx; g.y=cy;
+      // eyes returning home -> re-enter house
+      if(eyes && c===GATE.c && (r===GATE.r||r===HOUSE.r)){
+        g.mode='house'; g.releaseStep=stepCount+60; g.dy=1; g.eaten=false; return;
+      }
+      const allowGate=eyes; // only eyes may use the gate (to go back in)
+      let opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>
+        ghostCanGo(c+d[0], r+d[1], allowGate) && !(d[0]===-g.dx && d[1]===-g.dy)
+      );
+      if(!opts.length) opts=[[-g.dx,-g.dy]];
+      let chosen;
+      if(power>0 && !eyes){
+        chosen=opts[Math.floor(Math.random()*opts.length)];
+      } else {
+        const t = eyes?{c:GATE.c,r:GATE.r}:ghostTarget(g);
+        opts.sort((a,b)=>
+          Math.hypot(c+a[0]-t.c, r+a[1]-t.r) - Math.hypot(c+b[0]-t.c, r+b[1]-t.r)
+        );
+        chosen=opts[0];
+      }
+      g.dx=chosen[0]; g.dy=chosen[1];
     }
     g.x+=g.dx*spd; g.y+=g.dy*spd;
-    if(g.x<0)g.x=W; if(g.x>W)g.x=0;
+    if(g.x<-TILE/2) g.x=W+TILE/2; else if(g.x>W+TILE/2) g.x=-TILE/2;
   }
 
   function nextLevel(){
-    MAP.forEach((row,r)=>row.forEach((v,c)=>{
-      if(v===2) MAP[r][c]=1;
-    }));
-    // restore power pellets (they were 3)
-    [[3,3],[3,COLS-4],[ROWS-5,3],[ROWS-5,COLS-4]].forEach(([r,c])=>{ MAP[r][c]=3; });
+    level++;
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ if(MAP[r][c]===2) MAP[r][c]=1; }
+    // re-place the 4 power pellets at their original spots
+    [[2,1],[2,COLS-2],[15,1],[15,COLS-2]].forEach(([r,c])=>{ if(MAP[r][c]!==0) MAP[r][c]=3; });
     pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
-    pac.x=9*TILE+TILE/2; pac.y=18*TILE+TILE/2; pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0;
-    ghosts.forEach((g,i)=>{ g.x=9*TILE+TILE/2; g.y=10*TILE+TILE/2; g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=stepCount+[20,60,100,140][i]; });
-    power=0;
+    pac.x=ctr(PAC_START.c); pac.y=ctr(PAC_START.r); pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0;
+    ghosts.forEach((g,i)=>{ g.x=ctr([9,8,10,9][i]); g.y=ctr(HOUSE.r); g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=stepCount+[0,30,70,120][i]; });
+    power=0; over=false; raf=requestAnimationFrame(loop);
   }
 
   function checkCollisions(){
-    const {c:pc,r:pr}=tileAt(pac.x,pac.y);
     ghosts.forEach(g=>{
-      if(g.mode==='house') return;
-      const dist=Math.hypot(g.x-pac.x,g.y-pac.y);
-      if(dist<TILE*0.7){
+      if(g.mode==='house'||g.mode==='exit'||g.mode==='eyes') return;
+      if(Math.hypot(g.x-pac.x, g.y-pac.y) < TILE*0.72){
         if(power>0){
-          ghostEaten++; score+=100*Math.pow(2,ghostEaten);
-          g.mode='house'; g.x=9*TILE+TILE/2; g.y=10*TILE+TILE/2; g.dx=0;g.dy=-1; g.releaseStep=stepCount+80;
+          ghostEaten++; score+=200*Math.pow(2,Math.min(3,ghostEaten-1));
+          g.mode='eyes';
         } else { hit(); }
       }
     });
   }
 
   function hit(){
-    lives--; document.getElementById('pm-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
-    pac.x=9*TILE+TILE/2; pac.y=18*TILE+TILE/2; pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0; stepCount=0; power=0;
-    ghosts.forEach((g,i)=>{ g.x=9*TILE+TILE/2; g.y=10*TILE+TILE/2; g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=[20,60,100,140][i]; });
+    lives--;
+    document.getElementById('pm-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
+    pac.x=ctr(PAC_START.c); pac.y=ctr(PAC_START.r); pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0;
+    power=0; frightTimer=0; stepCount=0;
+    ghosts.forEach((g,i)=>{ g.x=ctr([9,8,10,9][i]); g.y=ctr(HOUSE.r); g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=[0,30,70,120][i]; });
     if(lives<=0) endGame(false);
   }
 
   function draw(){
     ctx.clearRect(0,0,W,H);
-    // maze
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        const v=MAP[r][c], x=c*TILE, y=r*TILE;
-        if(v===0){
-          ctx.fillStyle='#1a1a6a'; ctx.fillRect(x,y,TILE,TILE);
-          ctx.strokeStyle='#4a4aee'; ctx.lineWidth=1.5;
-          ctx.strokeRect(x+1,y+1,TILE-2,TILE-2);
-        } else if(v===4){
-          ctx.fillStyle='#1a1a3a'; ctx.fillRect(x,y,TILE,TILE);
-          ctx.strokeStyle='#ff4f6d44'; ctx.lineWidth=1;
-          ctx.strokeRect(x,y,TILE,TILE);
-        } else if(v===1){
-          ctx.fillStyle='#ffd580'; ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,2,0,7); ctx.fill();
-        } else if(v===3){
-          // blinking power pellet
-          if(!powerBlink||stepCount%20<10){
-            ctx.fillStyle='#fff';
-            ctx.shadowColor='#fff'; ctx.shadowBlur=6;
-            ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,5,0,7); ctx.fill();
-            ctx.shadowBlur=0;
-          }
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      const v=MAP[r][c], x=c*TILE, y=r*TILE;
+      if(v===0){
+        ctx.fillStyle='#0a0a3a'; ctx.fillRect(x,y,TILE,TILE);
+        ctx.strokeStyle='#2a4ae0'; ctx.lineWidth=2;
+        ctx.strokeRect(x+2,y+2,TILE-4,TILE-4);
+      } else if(v===5){
+        ctx.fillStyle='#ffb8ff'; ctx.fillRect(x+1,y+TILE/2-1,TILE-2,2);
+      } else if(v===1){
+        ctx.fillStyle='#ffd9a0'; ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,2,0,7); ctx.fill();
+      } else if(v===3){
+        if(stepCount%24<14){
+          ctx.fillStyle='#fff'; ctx.shadowColor='#ffd9a0'; ctx.shadowBlur=8;
+          ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,5,0,7); ctx.fill(); ctx.shadowBlur=0;
         }
       }
     }
     // pac-man
-    ctx.fillStyle='#f0e040';
-    const mouthOpen=Math.abs(Math.sin(pac.mouth*Math.PI));
-    const open=mouthOpen*0.35+0.02;
-    let ang=Math.atan2(pac.dy,pac.dx)||(pac.dx===0&&pac.dy===0?0:0);
-    if(pac.dx===0&&pac.dy===0) ang=0;
-    ctx.beginPath();
-    ctx.moveTo(pac.x,pac.y);
+    const open=Math.abs(Math.sin(pac.mouth*Math.PI))*0.32+0.04;
+    let ang=0;
+    if(pac.dx>0)ang=0; else if(pac.dx<0)ang=Math.PI; else if(pac.dy<0)ang=-Math.PI/2; else if(pac.dy>0)ang=Math.PI/2;
+    ctx.fillStyle='#ffe11a';
+    ctx.beginPath(); ctx.moveTo(pac.x,pac.y);
     ctx.arc(pac.x,pac.y,TILE/2-1,ang+open*Math.PI,ang+(2-open)*Math.PI);
     ctx.closePath(); ctx.fill();
     // ghosts
     ghosts.forEach(g=>{
-      if(g.mode==='house') return;
-      const frightened=power>0;
-      const blinking=power>0&&power<60&&stepCount%10<5;
-      ctx.fillStyle=blinking?'#fff':(frightened?'#4f6dff':g.col);
-      const gx=g.x, gy=g.y, gr=TILE/2-1;
-      ctx.beginPath();
-      ctx.arc(gx,gy-2,gr,Math.PI,0);
-      ctx.lineTo(gx+gr,gy+gr);
-      // wavy bottom
-      const waves=3;
-      for(let i=0;i<waves;i++){
-        const wx=gx+gr-(i*(gr*2/waves));
-        ctx.quadraticCurveTo(wx-gr/waves,gy+gr+(i%2?3:-3),wx-gr*2/waves,gy+gr);
+      const gr=TILE/2-1, gx=g.x, gy=g.y;
+      const eyes=g.mode==='eyes';
+      const frightened=power>0 && !eyes;
+      const blink=frightened && frightTimer<120 && stepCount%12<6;
+      if(!eyes){
+        ctx.fillStyle=blink?'#fff':(frightened?'#3b4cff':g.col);
+        ctx.beginPath();
+        ctx.arc(gx,gy-1,gr,Math.PI,0);
+        ctx.lineTo(gx+gr,gy+gr-1);
+        const waves=3;
+        for(let i=0;i<waves;i++){
+          const wx=gx+gr-(i*(gr*2/waves));
+          ctx.quadraticCurveTo(wx-gr/waves, gy+gr+ (i%2?-3:3) -1, wx-gr*2/waves, gy+gr-1);
+        }
+        ctx.lineTo(gx-gr,gy+gr-1);
+        ctx.closePath(); ctx.fill();
       }
-      ctx.lineTo(gx-gr,gy+gr);
-      ctx.closePath(); ctx.fill();
-      if(!frightened){
-        ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(gx-3,gy-3,2.5,0,7); ctx.arc(gx+3,gy-3,2.5,0,7); ctx.fill();
-        ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(gx-2.5,gy-3,1.2,0,7); ctx.arc(gx+3.5,gy-3,1.2,0,7); ctx.fill();
+      // eyes (always)
+      const lookx=(g.dx||0)*1.6, looky=(g.dy||0)*1.6;
+      if(frightened && !blink){
+        ctx.fillStyle='#ffd9a0'; ctx.font=`${Math.round(TILE*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('▾',gx,gy+1);
+      } else {
+        ctx.fillStyle='#fff';
+        ctx.beginPath(); ctx.arc(gx-3,gy-2,2.6,0,7); ctx.arc(gx+3,gy-2,2.6,0,7); ctx.fill();
+        ctx.fillStyle='#1133aa';
+        ctx.beginPath(); ctx.arc(gx-3+lookx,gy-2+looky,1.3,0,7); ctx.arc(gx+3+lookx,gy-2+looky,1.3,0,7); ctx.fill();
       }
     });
     document.getElementById('pm-score').textContent=`Score: ${score}  Lv${level}`;
@@ -2132,8 +2167,10 @@ function createPacman(host){
   function loop(){
     if(over)return;
     stepCount++;
-    if(power>0){ power--; if(power===60) powerBlink=true; if(power===0){ powerBlink=false; } }
-    movePac(); moveGhost(ghosts[0]); moveGhost(ghosts[1]); moveGhost(ghosts[2]); moveGhost(ghosts[3]);
+    if(power>0){ frightTimer--; if(frightTimer<=0){ power=0; ghostEaten=0; } }
+    movePac();
+    if(over)return; // level cleared mid-frame
+    ghosts.forEach(moveGhost);
     checkCollisions();
     draw();
     raf=requestAnimationFrame(loop);
@@ -2142,7 +2179,7 @@ function createPacman(host){
   function endGame(won){
     over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler);
     ctx.fillStyle='rgba(0,0,0,.85)'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#f0e040'; ctx.font=`bold ${Math.round(W/12)}px DM Sans,sans-serif`; ctx.textAlign='center';
+    ctx.fillStyle='#ffe11a'; ctx.font=`bold ${Math.round(W/11)}px DM Sans,sans-serif`; ctx.textAlign='center';
     ctx.fillText(won?'YOU WIN!':'GAME OVER',W/2,H/2-10);
     ctx.fillStyle='#fff'; ctx.font=`${Math.round(W/15)}px DM Sans,sans-serif`;
     ctx.fillText('Score: '+score,W/2,H/2+20);
@@ -2829,13 +2866,22 @@ function mascotSVG(av){
   svg=svg.split('#8f6f44').join(shade(tr,-10));
   svg=svg.split('#876641').join(shade(tr,-18));
   svg=svg.split('#7a5d3a').join(shade(tr,-18));
-  // sleeve length: short = cover lower arm with skin-colour rect
+  // sleeve length: short = expose forearm (skin) with a jumper cuff hem at mid-upper-arm
   let sleeveOverlay='';
   if(a.sleeves==='short'){
-    const sk2=a.skin||DEFAULT_AVATAR.skin;
+    const sk2=a.skin||DEFAULT_AVATAR.skin, sk2d=shade(sk2,-10);
+    const jcuff=shade(j,-18);
+    // arms are at x=11..22 (left) and x=62..73 (right); sleeve rect y=64..98
+    // cover y=78..100 with skin (forearm), add a jumper cuff band at y=76..80
     sleeveOverlay=`<g class="sleeve-short-overlay">
-      <rect x="11" y="82" width="11" height="18" fill="${sk2}"/>
-      <rect x="62" y="82" width="11" height="18" fill="${sk2}"/>
+      <rect x="11" y="78" width="11" height="22" rx="3" fill="${sk2}"/>
+      <rect x="62" y="78" width="11" height="22" rx="3" fill="${sk2}"/>
+      <rect x="11" y="76" width="11" height="5" rx="2.5" fill="${jcuff}"/>
+      <rect x="62" y="76" width="11" height="5" rx="2.5" fill="${jcuff}"/>
+      <circle cx="16.5" cy="100" r="5.5" fill="${sk2}"/>
+      <circle cx="67.5" cy="100" r="5.5" fill="${sk2}"/>
+      <path d="M13 90 Q16.5 92 20 90" stroke="${sk2d}" stroke-width=".6" fill="none" opacity=".5"/>
+      <path d="M64 90 Q67.5 92 71 90" stroke="${sk2d}" stroke-width=".6" fill="none" opacity=".5"/>
     </g>`;
   }
   // hair style overlay
@@ -2920,24 +2966,39 @@ function buildHatOverlay(hat, hairCol){
   const h=hairCol||DEFAULT_AVATAR.hair;
   switch(hat){
     case 'cap':
+      // baseball cap: domed crown + curved peak + button
       return `<g class="hat-overlay">
-        <rect x="22" y="14" width="40" height="16" rx="4" fill="#222"/>
-        <rect x="16" y="26" width="52" height="6" rx="3" fill="#333"/>
-        <rect x="28" y="16" width="5" height="10" rx="2" fill="#555"/>
+        <path d="M20 22 Q42 2 64 22 Q64 26 60 26 L24 26 Q20 26 20 22 Z" fill="#c0392b"/>
+        <path d="M20 22 Q42 5 64 22" stroke="#9c2418" stroke-width="1" fill="none"/>
+        <path d="M22 23 H62" stroke="#e0e0e0" stroke-width=".6" opacity=".4"/>
+        <path d="M58 24 Q76 26 74 32 Q70 30 58 28 Z" fill="#a93226"/>
+        <circle cx="42" cy="6" r="2.5" fill="#9c2418"/>
+        <path d="M42 9 V20" stroke="#9c2418" stroke-width=".8" opacity=".5"/>
       </g>`;
     case 'beanie':
+      // knitted beanie with fold cuff + pom
       return `<g class="hat-overlay">
-        <path d="M20 26 Q42 10 64 26 L62 16 Q42 4 22 16 Z" fill="${h}"/>
-        <path d="M19 28 Q42 14 65 28 L65 32 Q42 18 19 32 Z" fill="${shade(h,-15)}"/>
-        <circle cx="42" cy="10" r="4" fill="${shade(h,-20)}"/>
+        <path d="M19 24 Q42 6 65 24 L65 26 Q42 12 19 26 Z" fill="${shade(h,10)}"/>
+        <path d="M21 22 Q42 4 63 22 Q42 14 21 22 Z" fill="${h}"/>
+        <path d="M27 16 Q42 9 57 16" stroke="${shade(h,-18)}" stroke-width="1" fill="none" opacity=".5"/>
+        <path d="M34 12 Q42 8 50 12" stroke="${shade(h,-18)}" stroke-width="1" fill="none" opacity=".5"/>
+        <rect x="18" y="23" width="48" height="6" rx="3" fill="${shade(h,-14)}"/>
+        <circle cx="42" cy="6" r="4.5" fill="${shade(h,20)}"/>
+        <circle cx="42" cy="6" r="4.5" fill="none" stroke="${shade(h,-10)}" stroke-width=".6"/>
       </g>`;
     case 'party':
+      // striped cone party hat with pom + streamers
+      const c1='#7c3aed', c2='#f0e040';
       return `<g class="hat-overlay">
-        <polygon points="42,2 28,28 56,28" fill="#f0e040" stroke="#caa24a" stroke-width="1"/>
-        <polygon points="42,2 28,28 56,28" fill="url(#partyStripes)" stroke="none"/>
-        <circle cx="42" cy="2" r="3" fill="#ff4f6d"/>
-        <line x1="34" y1="10" x2="31" y2="6" stroke="#ff4f6d" stroke-width="1.2"/>
-        <line x1="50" y1="10" x2="53" y2="6" stroke="#4fa8ff" stroke-width="1.2"/>
+        <polygon points="42,0 27,27 57,27" fill="${c1}"/>
+        <polygon points="42,0 36,11 48,11" fill="${c2}"/>
+        <polygon points="38.5,11 33,21 51,21 45.5,11" fill="${c2}" opacity=".9"/>
+        <polygon points="34,21 30,27 54,27 50,21" fill="${c2}" opacity=".85"/>
+        <polygon points="42,0 27,27 57,27" fill="none" stroke="#5b21b6" stroke-width=".8"/>
+        <ellipse cx="42" cy="27" rx="15" ry="2.5" fill="#5b21b6"/>
+        <circle cx="42" cy="1" r="3.5" fill="#ff4f6d"/>
+        <path d="M45 4 Q52 0 55 4" stroke="#4fa8ff" stroke-width="1.4" fill="none"/>
+        <path d="M39 4 Q32 0 29 4" stroke="#4fffb0" stroke-width="1.4" fill="none"/>
       </g>`;
     case 'cowboy':
       return `<g class="hat-overlay">
@@ -2951,27 +3012,34 @@ function buildHatOverlay(hat, hairCol){
 
 function buildScarfOverlay(scarf){
   if(scarf==='none'||!scarf) return '';
+  // base scarf band shape (wraps the neck) + a hanging tail
   if(scarf==='rainbow'){
-    // Multi-stripe rainbow using 6 coloured rects
-    const colors=['#e53935','#fb8c00','#fdd835','#43a047','#1e88e5','#8e24aa'];
-    const sw=6; // stripe width in SVG units (total ~36px for the scarf band)
-    const sy=57, sh=8; // scarf y position and height
-    let stripes='';
-    colors.forEach((c,i)=>{
-      stripes+=`<rect x="${14+i*sw}" y="${sy}" width="${sw}" height="${sh}" fill="${c}" opacity=".92"/>`;
+    const cols=['#e53935','#fb8c00','#fdd835','#43a047','#1e88e5','#8e24aa'];
+    // band from x=24..60 split into 6 vertical stripes following the curve
+    const x0=24, bw=(60-24)/cols.length;
+    let band='';
+    cols.forEach((c,i)=>{
+      const x=x0+i*bw;
+      band+=`<path d="M${x} ${58+ (i<3?0:0)} h${bw} v7 h${-bw} z" fill="${c}"/>`;
     });
+    // simpler: use 6 stripes on a rounded band, plus a striped tail
+    let tail='';
+    cols.forEach((c,i)=>{ tail+=`<rect x="54" y="${56+i*2}" width="9" height="2.2" fill="${c}"/>`; });
     return `<g class="scarf-overlay">
-      <clipPath id="scarf-clip"><path d="M26 57 Q42 62 58 57 L60 64 Q42 70 24 64 Z"/></clipPath>
-      <g clip-path="url(#scarf-clip)">${stripes}<rect x="14" y="${sy}" width="${sw*6}" height="${sh*3}" fill="none"/></g>
-      <path d="M52 57 L58 54 L62 66 L56 68 Z" fill="#fb8c00" opacity=".85"/>
+      <path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z" fill="#333"/>
+      ${cols.map((c,i)=>`<rect x="${24+i*((61-24)/6)}" y="57.5" width="${(61-24)/6+0.6}" height="8" fill="${c}" opacity=".95"/>`).join('')}
+      <path d="M54 60 L62 57 L64 70 L57 72 Z" fill="#8e24aa"/>
+      ${cols.map((c,i)=>`<rect x="${55+i*0.2}" y="${59+i*2}" width="8" height="2" fill="${c}"/>`).join('')}
     </g>`;
   }
   const colors={red:'#e53935',blue:'#1e88e5',green:'#43a047'};
-  const fill=colors[scarf];
-  if(!fill) return '';
+  const fill=colors[scarf]; if(!fill) return '';
+  const dk=shade(fill,-22);
   return `<g class="scarf-overlay">
-    <path d="M26 57 Q42 62 58 57 L60 64 Q42 70 24 64 Z" fill="${fill}" opacity=".92"/>
-    <path d="M52 57 L58 54 L62 66 L56 68 Z" fill="${fill}" opacity=".85"/>
+    <path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z" fill="${fill}"/>
+    <path d="M24 62 Q42 67 60 62" stroke="${dk}" stroke-width="1" fill="none" opacity=".6"/>
+    <path d="M54 60 L62 57 L64 70 L57 72 Z" fill="${fill}"/>
+    <path d="M55 62 L63 60 M55 65 L63 64" stroke="${dk}" stroke-width=".8"/>
   </g>`;
 }
 
@@ -3075,15 +3143,19 @@ function enterArcade(){
   if(arcadeRT){ arcadeRT._paused=false; fitArcadeCanvas(arcadeRT.cv); return; }
   const cv=document.getElementById('arcade-canvas');
   fitArcadeCanvas(cv);
-  const startX=ARCADE.WORLD_W*0.5;
+  // spawn in an empty gap between machines (not on top of one), unless we have a saved pos
+  const startX=330; // gap between Invaders(160) and Pac-Man(500)
+  const myX=(state.myPos&&state.myPos.x!=null?state.myPos.x*ARCADE.WORLD_W:startX);
   const rt={
     cv, ctx:cv.getContext('2d'),
-    me:{ wx:(state.myPos&&state.myPos.x!=null?state.myPos.x*ARCADE.WORLD_W:startX), f:1 },
-    camX:startX - cv.width/2,
+    me:{ wx:myX, f:1 },
+    camX:myX - cv.width/2,
     keys:{left:false,right:false},
     others:{},
     lastWrite:0, raf:null, fetchTimer:null, sub:null,
-    nearMachine:null, launchArmed:true, _paused:false,
+    // launch stays DISARMED until the player has stepped clear of every machine,
+    // so spawning near one never auto-launches a game.
+    nearMachine:null, launchArmed:false, _paused:false,
   };
   arcadeRT=rt;
   setupArcadeInput(cv, rt);
