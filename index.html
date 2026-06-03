@@ -13,8 +13,8 @@
   body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,#2a1f5e44,transparent),radial-gradient(ellipse 60% 40% at 80% 90%,#1a3a2a33,transparent);pointer-events:none;z-index:0;}
   .screen{display:none;min-height:100vh;padding:20px;position:relative;z-index:1;}
   .screen.active{display:flex;flex-direction:column;align-items:center;}
-  h1.logo{font-family:'Baloo 2',cursive,sans-serif;font-weight:800;font-size:clamp(2.6rem,9vw,5rem);letter-spacing:1px;color:var(--accent);line-height:.95;text-shadow:3px 3px 0 #c9a800, 6px 6px 0 #00000040, 0 0 40px #f0e04055;transform:rotate(-2deg);}
-  h1.logo .tm{font-size:.35em;vertical-align:super;text-shadow:1px 1px 0 #c9a800;}
+  h1.logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,10vw,6rem);letter-spacing:4px;color:var(--accent);text-shadow:0 0 40px #f0e04066;line-height:1;}
+  h1.logo .tm{font-size:.35em;vertical-align:super;}
   .tagline{color:var(--muted);font-size:.95rem;margin-top:6px;letter-spacing:2px;text-transform:uppercase;}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;border:none;transition:all .2s ease;text-decoration:none;width:100%;}
   .btn-primary{background:var(--accent);color:#111;}
@@ -61,19 +61,33 @@
   .mascot svg{width:100%;height:100%;overflow:visible;display:block;}
   .mascot.face-left{transform:translateX(var(--mx,0)) scaleX(-1);}
   /* walk leg/arm swing */
-  @keyframes legSwingL{0%,100%{transform:rotate(18deg)}50%{transform:rotate(-18deg)}}
-  @keyframes legSwingR{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(18deg)}}
+  @keyframes legSwingL{0%,100%{transform:rotate(14deg)}50%{transform:rotate(-14deg)}}
+  @keyframes legSwingR{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+  /* feet counter-rotate so the sole stays roughly flat to the floor as the leg swings */
+  @keyframes footFlatL{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+  @keyframes footFlatR{0%,100%{transform:rotate(14deg)}50%{transform:rotate(-14deg)}}
   @keyframes armSwingL{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}}
   @keyframes armSwingR{0%,100%{transform:rotate(22deg)}50%{transform:rotate(-22deg)}}
   @keyframes bodyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
   .mascot.walking .leg-l{animation:legSwingL .42s ease-in-out infinite;transform-origin:34px 112px;}
   .mascot.walking .leg-r{animation:legSwingR .42s ease-in-out infinite;transform-origin:50px 112px;}
+  .mascot.walking .foot-l{animation:footFlatL .42s ease-in-out infinite;transform-origin:30px 158px;}
+  .mascot.walking .foot-r{animation:footFlatR .42s ease-in-out infinite;transform-origin:48px 158px;}
   .mascot.walking .arm-l{animation:armSwingL .42s ease-in-out infinite;transform-origin:16px 66px;}
   .mascot.walking .arm-r{animation:armSwingR .42s ease-in-out infinite;transform-origin:68px 66px;}
   .mascot.walking .m-body{animation:bodyBob .42s ease-in-out infinite;}
-  /* wave - proper wave, hand lifted high beside head */
-  @keyframes waveArm{0%{transform:rotate(0deg)}15%{transform:rotate(-140deg)}40%{transform:rotate(-155deg)}55%{transform:rotate(-140deg)}70%{transform:rotate(-155deg)}85%{transform:rotate(-140deg)}100%{transform:rotate(0deg)}}
-  .mascot.waving .arm-r{animation:waveArm 1.6s ease-in-out 2;transform-origin:68px 66px;}
+  /* wave - whole arm raised up high beside head, forearm wiggles */
+  @keyframes waveArm{
+    0%{transform:rotate(10deg)}
+    15%{transform:rotate(-155deg)}
+    30%{transform:rotate(-140deg)}
+    45%{transform:rotate(-160deg)}
+    60%{transform:rotate(-140deg)}
+    75%{transform:rotate(-160deg)}
+    90%{transform:rotate(-148deg)}
+    100%{transform:rotate(10deg)}
+  }
+  .mascot.waving .arm-r{animation:waveArm 2.2s ease-in-out 2;transform-origin:68px 66px;}
   /* jump */
   @keyframes jumpUp{0%,100%{transform:translateY(0)}40%{transform:translateY(-46px)}55%{transform:translateY(-46px)}}
   .mascot.jumping{animation:jumpUp .7s ease-in-out 2;}
@@ -142,22 +156,22 @@
   .mascot.defaultdance .leg-r{animation:flossLegR .34s ease-in-out 10;transform-origin:50px 112px;}
 
   /* ===== FLOATING (exaggerated zero-G) ===== */
-  @keyframes floatBob{0%{transform:translateY(0) rotate(-18deg)}25%{transform:translateY(-10px) rotate(10deg)}50%{transform:translateY(4px) rotate(22deg)}75%{transform:translateY(-8px) rotate(-12deg)}100%{transform:translateY(0) rotate(-18deg)}}
-  .mascot.floating .m-inner{animation:floatBob 3s ease-in-out infinite;}
-  @keyframes floatArmL{0%,100%{transform:rotate(-70deg)}50%{transform:rotate(-30deg)}}
-  @keyframes floatArmR{0%,100%{transform:rotate(70deg)}50%{transform:rotate(30deg)}}
-  @keyframes floatLegL{0%,100%{transform:rotate(35deg)}50%{transform:rotate(10deg)}}
-  @keyframes floatLegR{0%,100%{transform:rotate(-35deg)}50%{transform:rotate(-10deg)}}
-  .mascot.floating .arm-l{animation:floatArmL 2.4s ease-in-out infinite;transform-origin:16px 66px;}
-  .mascot.floating .arm-r{animation:floatArmR 2.4s ease-in-out infinite;transform-origin:68px 66px;}
-  .mascot.floating .leg-l{animation:floatLegL 2.8s ease-in-out infinite;transform-origin:34px 112px;}
-  .mascot.floating .leg-r{animation:floatLegR 2.8s ease-in-out infinite;transform-origin:50px 112px;}
+  @keyframes floatBob{0%{transform:translateY(0) rotate(-30deg)}20%{transform:translateY(-16px) rotate(25deg)}40%{transform:translateY(8px) rotate(-20deg)}60%{transform:translateY(-12px) rotate(40deg)}80%{transform:translateY(6px) rotate(-35deg)}100%{transform:translateY(0) rotate(-30deg)}}
+  .mascot.floating .m-inner{animation:floatBob 2.4s ease-in-out infinite;}
+  @keyframes floatArmL{0%,100%{transform:rotate(-100deg)}50%{transform:rotate(-20deg)}}
+  @keyframes floatArmR{0%,100%{transform:rotate(100deg)}50%{transform:rotate(20deg)}}
+  @keyframes floatLegL{0%,100%{transform:rotate(55deg)}50%{transform:rotate(5deg)}}
+  @keyframes floatLegR{0%,100%{transform:rotate(-55deg)}50%{transform:rotate(-5deg)}}
+  .mascot.floating .arm-l{animation:floatArmL 1.8s ease-in-out infinite;transform-origin:16px 66px;}
+  .mascot.floating .arm-r{animation:floatArmR 2s ease-in-out infinite;transform-origin:68px 66px;}
+  .mascot.floating .leg-l{animation:floatLegL 2.2s ease-in-out infinite;transform-origin:34px 112px;}
+  .mascot.floating .leg-r{animation:floatLegR 2.6s ease-in-out infinite;transform-origin:50px 112px;}
 
   /* squash on landing */
   @keyframes landSquash{0%{transform:scaleY(1)}30%{transform:scaleY(.6) scaleX(1.25)}60%{transform:scaleY(1.08) scaleX(.96)}100%{transform:scaleY(1)}}
   .mascot.landing .m-inner{animation:landSquash .45s ease-out;transform-origin:42px 158px;}
 
-  .emote-bubble{position:absolute;bottom:150px;z-index:4;background:#fff;color:#222;font-family:'Baloo 2',cursive;font-weight:700;font-size:1.4rem;padding:6px 14px;border-radius:16px;opacity:0;transform:translateX(-50%) scale(.5);transform-origin:bottom center;transition:opacity .25s, transform .25s cubic-bezier(.5,1.6,.5,1);pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px #0006;}
+  .emote-bubble{position:absolute;bottom:150px;z-index:4;background:#fff;color:#222;font-family:'DM Sans',sans-serif;font-weight:700;font-size:1.1rem;padding:6px 14px;border-radius:16px;opacity:0;transform:translateX(-50%) scale(.5);transform-origin:bottom center;transition:opacity .25s, transform .25s cubic-bezier(.5,1.6,.5,1);pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px #0006;}
   .emote-bubble::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#fff;border-bottom:0;}
   .emote-bubble.show{opacity:1;transform:translateX(-50%) scale(1);}
   @media(max-width:420px){.mascot-stage{height:200px;}.mascot{width:70px;height:142px;}}
@@ -317,7 +331,7 @@
       <div id="mascot" class="mascot"></div>
       <div id="emote-bubble" class="emote-bubble"></div>
     </div>
-    <p class="tagline">The ultimate live quiz showdown</p>
+    <p class="tagline" style="display:none"></p>
   </div>
   <div class="landing-actions">
     <button class="btn btn-primary" onclick="showScreen('screen-join')">🎮 Join a Game</button>
@@ -420,6 +434,7 @@
       <div class="type-tab" data-type="tf" onclick="setQType('tf')">True / False</div>
       <div class="type-tab" data-type="number" onclick="setQType('number')">Number</div>
       <div class="type-tab" data-type="word" onclick="setQType('word')">Wordsearch</div>
+      <div class="type-tab" data-type="game" onclick="setQType('game')">🎮 Mini-Game</div>
     </div>
 
     <div class="q-editor gap">
@@ -464,6 +479,18 @@
         <label>Answer Word (hidden in grid)</label>
         <input id="word-answer" placeholder="e.g. Madrid" oninput="this.value=this.value.toUpperCase()">
         <p class="text-muted" style="font-size:.78rem;margin-top:6px">A letter grid is auto-generated with this word as a bendable snake.</p>
+      </div>
+
+      <!-- GAME -->
+      <div id="game-fields" style="display:none">
+        <label>Choose Game</label>
+        <select id="game-choice" style="margin-bottom:10px">
+          <option value="invaders">👾 Space Invaders</option>
+          <option value="pacman">🟡 Pac-Man</option>
+        </select>
+        <label>Bonus points for the top scorer</label>
+        <input id="game-bonus" type="number" value="20" min="1">
+        <p class="text-muted" style="font-size:.78rem;margin-top:6px">Everyone plays on their phone. When all players finish, the highest game score wins the bonus points. For a game, the "Question" box becomes the on-screen title (e.g. "Beat the high score!").</p>
       </div>
 
       <div class="field-row">
@@ -585,6 +612,13 @@ function setQType(t){
   document.getElementById('tf-fields').style.display = t==='tf'?'block':'none';
   document.getElementById('number-fields').style.display = t==='number'?'block':'none';
   document.getElementById('word-fields').style.display = t==='word'?'block':'none';
+  document.getElementById('game-fields').style.display = t==='game'?'block':'none';
+  // time limit not used for games
+  const timeRow=document.getElementById('q-time').closest('.field-row');
+  if(timeRow) timeRow.style.display = t==='game'?'none':'flex';
+  // relabel question box for games
+  const qlabel=document.querySelector('#new-q-text').previousElementSibling;
+  if(qlabel) qlabel.textContent = t==='game'?'On-screen title':'Question';
 }
 
 function onRoundTypeChange(){
@@ -636,6 +670,10 @@ function addQuestion(){
     const grid=generateWordGrid(w);
     if(!grid) return toast('⚠️ Could not place word, try again');
     item.wordAnswer=w; item.grid=grid.grid; item.gridSize=grid.size; item.solution=grid.path;
+  } else if(currentQType==='game'){
+    item.game=document.getElementById('game-choice').value;
+    item.bonus=parseInt(document.getElementById('game-bonus').value)||20;
+    item.time=0;
   }
   hostItems.push(item);
   // reset
@@ -662,7 +700,7 @@ function renderQList(){
   document.getElementById('q-count').textContent=qCount;
   if(!hostItems.length){list.innerHTML='';return;}
   let qNum=0;
-  const typeLabels={mc:'Multi',tf:'T/F',number:'Number',word:'Word'};
+  const typeLabels={mc:'Multi',tf:'T/F',number:'Number',word:'Word',game:'🎮 Game'};
   list.innerHTML=hostItems.map((item,i)=>{
     const arrows=`<div class="q-item-btns"><button onclick="moveItem(${i},-1)">↑</button><button onclick="moveItem(${i},1)">↓</button><button class="q-item-del" onclick="removeItem(${i})">✕</button></div>`;
     if(item.type==='round'){
@@ -768,7 +806,7 @@ async function refreshAnswers(){
   const q=getQuestion(state.currentQIdx);if(!q)return;
   const {data:answers}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
   const count=answers?answers.length:0;
-  document.getElementById('host-responses-count').textContent=`${count} / ${state.players.length} responses`;
+  document.getElementById('host-responses-count').textContent=q.qtype==='game'?`${count} / ${state.players.length} finished`:`${count} / ${state.players.length} responses`;
   if((q.qtype==='mc'||q.qtype==='tf')&&q.opts){
     const tallies=Array(q.opts.length).fill(0);
     if(answers)answers.forEach(a=>{if(a.answer_index>=0&&a.answer_index<q.opts.length)tallies[a.answer_index]++;});
@@ -843,7 +881,17 @@ function showHostQuestion(idx){
     tally.style.display='none';tally.innerHTML='';
   }
   showScreen('screen-host-question');
-  startHostTimer(q.time);
+  const timerBar=document.getElementById('host-timer-bar').parentElement;
+  const timerBadge=document.getElementById('host-timer-badge');
+  if(q.qtype==='game'){
+    timerBar.style.display='none';
+    timerBadge.textContent='🎮';
+    document.getElementById('host-responses-count').textContent=`0 / ${state.players.length} finished`;
+    clearInterval(state.timerInterval);
+  } else {
+    timerBar.style.display='block';
+    startHostTimer(q.time);
+  }
 }
 
 function startHostTimer(secs){
@@ -891,6 +939,33 @@ async function revealAnswers(){
   const round=getRoundForQuestion(state.currentQIdx);
   const {data:answers}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
   const list=(answers||[]).filter(a=>a.question_index>=0);
+
+  // ===== GAME ROUND: top scorer gets bonus =====
+  if(q.qtype==='game'){
+    const nameMap={};state.players.forEach(p=>nameMap[p.id]=p.name);
+    const sorted=[...list].sort((a,b)=>(parseInt(b.answer_text)||0)-(parseInt(a.answer_text)||0));
+    const topScore=sorted.length?(parseInt(sorted[0].answer_text)||0):0;
+    // award bonus to everyone tied for top (if score>0)
+    const winners=sorted.filter(a=>(parseInt(a.answer_text)||0)===topScore && topScore>0);
+    winners.forEach(w=>{ state.scores[w.player_id]=(state.scores[w.player_id]||0)+q.bonus; });
+    await sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
+    const revBox=document.getElementById('host-answer-reveal');
+    const gname=q.game==='pacman'?'Pac-Man':'Space Invaders';
+    revBox.innerHTML=winners.length?`🏆 <b>${winners.map(w=>escHtml(nameMap[w.player_id]||'?')).join(', ')}</b> won the ${gname} round with <b>${topScore}</b> — +${q.bonus} pts!`:`No scores recorded for the ${gname} round.`;
+    revBox.style.display='block';
+    // breakdown table of game scores
+    const rows=sorted.map((a,i)=>{
+      const sc=parseInt(a.answer_text)||0;
+      const win=(sc===topScore&&topScore>0);
+      return `<tr><td class="rank-num">${i+1}</td><td style="font-weight:600">${escHtml(nameMap[a.player_id]||'?')}</td><td class="${win?'ans-correct':''}">${sc} pts${win?' 🏆':''}</td><td class="ans-time">-</td><td style="font-weight:700;color:${win?'var(--accent3)':'var(--muted)'}">${win?'+'+q.bonus:'0'}</td></tr>`;
+    });
+    const answeredIds=new Set(list.map(a=>a.player_id));
+    state.players.filter(p=>!answeredIds.has(p.id)).forEach(p=>rows.push(`<tr><td class="rank-num">-</td><td style="font-weight:600">${escHtml(p.name)}</td><td class="ans-none">Did not play</td><td class="ans-time">-</td><td style="color:var(--muted)">0</td></tr>`));
+    document.getElementById('breakdown-tbody').innerHTML=rows.join('');
+    document.getElementById('host-breakdown-card').style.display='block';
+    toast('✓ Bonus awarded');
+    return;
+  }
 
   // find fastest correct (for closest round)
   let fastestCorrectId=null,fastestTime=Infinity;
@@ -1061,6 +1136,9 @@ async function playerClickThrough(){
 
 function showPlayerQuestion(room){
   const q=pGetQuestion(room,room.current_question);if(!q)return;
+  // guard: if we're already showing this exact question, don't restart (prevents game restart on repeated updates)
+  if(document.getElementById('screen-question').classList.contains('active') && state.shownQIdx===room.current_question && state.shownStatus==='question'){ return; }
+  state.shownQIdx=room.current_question; state.shownStatus='question';
   state.currentQIdx=room.current_question;state.answered=false;state.questionStartTime=Date.now();
   state.wsPath=[];state.calcValue='';
   const round=pGetRound(room,room.current_question);
@@ -1084,9 +1162,20 @@ function showPlayerQuestion(room){
     area.innerHTML=renderCalculator();
   } else if(q.qtype==='word'){
     area.innerHTML=renderWordsearch(q);
+  } else if(q.qtype==='game'){
+    area.innerHTML=`<div id="game-host-el"></div>`;
   }
-  // timer
-  const bar=document.getElementById('timer-bar');bar.style.transition='none';bar.style.width='100%';
+  // timer (skip for games — they end on death)
+  const bar=document.getElementById('timer-bar');
+  if(q.qtype==='game'){
+    bar.parentElement.style.display='none';
+    clearInterval(state.playerTimer);
+    showScreen('screen-question');
+    startMiniGame(q);
+    return;
+  }
+  bar.parentElement.style.display='block';
+  bar.style.transition='none';bar.style.width='100%';
   const secs=q.time;const end=Date.now()+secs*1000;
   clearInterval(state.playerTimer);
   state.playerTimer=setInterval(()=>{const left=Math.max(0,end-Date.now());bar.style.width=(left/(secs*1000)*100)+'%';if(left<=0){clearInterval(state.playerTimer);}},50);
@@ -1173,7 +1262,268 @@ async function sendAnswer(payload){
   }catch(e){console.error(e);toast('❌ Failed to submit');}
 }
 
+// ============================================================
+//  MINI-GAMES  (Space Invaders + Pac-Man) — touch friendly
+// ============================================================
+let activeGame=null;
+
+function startMiniGame(q){
+  const host=document.getElementById('game-host-el');
+  if(activeGame&&activeGame.stop) activeGame.stop();
+  if(q.game==='pacman') activeGame=createPacman(host);
+  else activeGame=createInvaders(host);
+}
+
+async function submitGameScore(score){
+  // record game score as answer_text; one submission per player
+  if(state.answered) return;
+  state.answered=true;
+  await sendAnswer({answer_index:-1,answer_text:String(score),time_taken:0});
+  document.getElementById('submitted-msg').textContent=`🎮 Final score: ${score} — waiting for others...`;
+  document.getElementById('submitted-msg').style.display='block';
+}
+
+// ---------- SPACE INVADERS ----------
+function createInvaders(host){
+  const W=300,H=420;
+  host.innerHTML=`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700">
+        <span id="iv-score">Score: 0</span><span id="iv-lives">❤️❤️❤️</span>
+      </div>
+      <canvas id="iv-canvas" width="${W}" height="${H}" style="background:#05050d;border:2px solid var(--border);border-radius:10px;max-width:100%;touch-action:none"></canvas>
+      <div style="display:flex;gap:8px;width:${W}px;max-width:100%">
+        <button class="btn btn-ghost" id="iv-left" style="flex:1;padding:18px;font-size:1.4rem">◀</button>
+        <button class="btn btn-primary" id="iv-fire" style="flex:1;padding:18px;font-size:1.1rem">FIRE</button>
+        <button class="btn btn-ghost" id="iv-right" style="flex:1;padding:18px;font-size:1.4rem">▶</button>
+      </div>
+      <p class="text-muted" style="font-size:.78rem">Tip: drag on the screen to move, tap to shoot</p>
+    </div>`;
+  const cv=document.getElementById('iv-canvas'),ctx=cv.getContext('2d');
+  let ship={x:W/2,w:26,h:14,y:H-30},bullets=[],enemies=[],ebullets=[],score=0,lives=3,over=false;
+  let dir=0,moveTo=null,raf=null,lastShot=0,etick=0,edir=1,estep=0;
+  // build enemy grid
+  function spawn(){
+    enemies=[];
+    const rows=4,cols=7;
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      enemies.push({x:30+c*36,y:40+r*30,w:22,h:16,alive:true,row:r});
+    }
+  }
+  spawn();
+  function fire(){
+    const now=Date.now();
+    if(now-lastShot<320||over)return;
+    lastShot=now;
+    bullets.push({x:ship.x,y:ship.y-10,w:3,h:10});
+  }
+  // controls
+  const L=document.getElementById('iv-left'),R=document.getElementById('iv-right'),F=document.getElementById('iv-fire');
+  const press=(el,fn)=>{el.addEventListener('touchstart',e=>{e.preventDefault();fn(true);},{passive:false});el.addEventListener('touchend',e=>{e.preventDefault();fn(false);},{passive:false});el.addEventListener('mousedown',()=>fn(true));el.addEventListener('mouseup',()=>fn(false));el.addEventListener('mouseleave',()=>fn(false));};
+  press(L,d=>dir=d?-1:0);
+  press(R,d=>dir=d?1:0);
+  F.addEventListener('click',fire);
+  F.addEventListener('touchstart',e=>{e.preventDefault();fire();},{passive:false});
+  // drag/tap on canvas
+  cv.addEventListener('touchmove',e=>{e.preventDefault();const r=cv.getBoundingClientRect();moveTo=(e.touches[0].clientX-r.left)*(W/r.width);},{passive:false});
+  cv.addEventListener('touchstart',e=>{e.preventDefault();const r=cv.getBoundingClientRect();moveTo=(e.touches[0].clientX-r.left)*(W/r.width);fire();},{passive:false});
+  cv.addEventListener('mousemove',e=>{if(e.buttons){const r=cv.getBoundingClientRect();moveTo=(e.clientX-r.left)*(W/r.width);}});
+  cv.addEventListener('mousedown',e=>{const r=cv.getBoundingClientRect();moveTo=(e.clientX-r.left)*(W/r.width);fire();});
+
+  function loop(){
+    if(over)return;
+    // move ship
+    if(moveTo!=null){ const d=moveTo-ship.x; ship.x+=Math.max(-6,Math.min(6,d)); if(Math.abs(d)<3)moveTo=null; }
+    ship.x+=dir*5;
+    ship.x=Math.max(ship.w/2,Math.min(W-ship.w/2,ship.x));
+    // bullets
+    bullets.forEach(b=>b.y-=7); bullets=bullets.filter(b=>b.y>-10);
+    // enemy movement (step every few frames)
+    etick++;
+    const alive=enemies.filter(e=>e.alive);
+    const speed=Math.max(8,40-alive.length); // faster as fewer remain
+    if(etick>=speed){
+      etick=0;
+      let hitEdge=false;
+      alive.forEach(e=>{ if(e.x+edir*8<10||e.x+e.w+edir*8>W-10)hitEdge=true; });
+      if(hitEdge){ edir*=-1; alive.forEach(e=>e.y+=16); }
+      else alive.forEach(e=>e.x+=edir*8);
+      // random enemy fire
+      if(alive.length&&Math.random()<0.5){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
+    }
+    ebullets.forEach(b=>b.y+=4); ebullets=ebullets.filter(b=>b.y<H+10);
+    // collisions bullet->enemy
+    bullets.forEach(b=>{ alive.forEach(e=>{ if(e.alive&&b.x<e.x+e.w&&b.x+b.w>e.x&&b.y<e.y+e.h&&b.y+b.h>e.y){ e.alive=false; b.y=-99; score+=(4-e.row)*10; } }); });
+    bullets=bullets.filter(b=>b.y>-10);
+    // enemy bullet -> ship
+    ebullets.forEach(b=>{ if(b.x<ship.x+ship.w/2&&b.x+b.w>ship.x-ship.w/2&&b.y<ship.y+ship.h&&b.y+b.h>ship.y){ b.y=H+99; hitShip(); } });
+    ebullets=ebullets.filter(b=>b.y<H+10);
+    // enemy reaches bottom
+    if(alive.some(e=>e.y+e.h>=ship.y-4)){ hitShip(true); }
+    // wave cleared
+    if(alive.length===0){ score+=50; spawn(); edir=1; }
+    document.getElementById('iv-score').textContent='Score: '+score;
+    draw();
+    raf=requestAnimationFrame(loop);
+  }
+  function hitShip(reset){
+    lives--;
+    document.getElementById('iv-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
+    ebullets=[];
+    if(reset){ enemies.forEach(e=>{ if(e.alive)e.y=Math.max(40,e.y-60); }); }
+    if(lives<=0) endGame();
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // ship
+    ctx.fillStyle='#4fffb0';
+    ctx.fillRect(ship.x-ship.w/2,ship.y,ship.w,ship.h);
+    ctx.fillRect(ship.x-3,ship.y-6,6,6);
+    // bullets
+    ctx.fillStyle='#f0e040'; bullets.forEach(b=>ctx.fillRect(b.x-1.5,b.y,b.w,b.h));
+    ctx.fillStyle='#ff4f6d'; ebullets.forEach(b=>ctx.fillRect(b.x-1.5,b.y,b.w,b.h));
+    // enemies
+    enemies.forEach(e=>{ if(!e.alive)return; ctx.fillStyle=['#ff4f6d','#ff9f4f','#a78bfa','#4fa8ff'][e.row]||'#fff'; ctx.fillRect(e.x,e.y,e.w,e.h); ctx.fillStyle='#05050d'; ctx.fillRect(e.x+4,e.y+5,3,3); ctx.fillRect(e.x+e.w-7,e.y+5,3,3); });
+  }
+  function endGame(){
+    over=true; cancelAnimationFrame(raf);
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#f0e040';ctx.font='bold 26px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText('GAME OVER',W/2,H/2-10);
+    ctx.fillStyle='#fff';ctx.font='18px DM Sans,sans-serif';
+    ctx.fillText('Score: '+score,W/2,H/2+22);
+    submitGameScore(score);
+  }
+  raf=requestAnimationFrame(loop);
+  return { stop(){ over=true; cancelAnimationFrame(raf); } };
+}
+
+// ---------- PAC-MAN ----------
+function createPacman(host){
+  // compact maze: 0=wall,1=pellet,2=empty,3=power
+  const MAP=[
+    "0000000000000",
+    "0111111111110",
+    "0103110011010",
+    "0111111111110",
+    "0110101101100",
+    "0111101011110",
+    "0001100110000",
+    "0111101011110",
+    "0110101101100",
+    "0111111111110",
+    "0103110011010",
+    "0111111111110",
+    "0000000000000",
+  ].map(r=>r.split('').map(Number));
+  const ROWS=MAP.length,COLS=MAP[0].length,TS=24;
+  const W=COLS*TS,H=ROWS*TS;
+  host.innerHTML=`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700">
+        <span id="pm-score">Score: 0</span><span id="pm-lives">❤️❤️❤️</span>
+      </div>
+      <canvas id="pm-canvas" width="${W}" height="${H}" style="background:#000;border:2px solid var(--border);border-radius:10px;max-width:100%;touch-action:none"></canvas>
+      <p class="text-muted" style="font-size:.78rem">Swipe to change direction • eat all the dots</p>
+    </div>`;
+  const cv=document.getElementById('pm-canvas'),ctx=cv.getContext('2d');
+  let pac={c:6,r:1,dir:[0,0],next:[0,0],mouth:0};
+  let pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
+  let score=0,lives=3,over=false,raf=null,moveAcc=0,power=0;
+  let ghosts=[
+    {c:6,r:6,col:'#ff4f6d',dir:[1,0]},
+    {c:5,r:6,col:'#4fa8ff',dir:[-1,0]},
+    {c:7,r:6,col:'#ff9f4f',dir:[0,-1]},
+  ];
+  function cell(c,r){ if(r<0||r>=ROWS||c<0||c>=COLS)return 0; return MAP[r][c]; }
+  function canMove(c,r){ return cell(c,r)!==0; }
+  // swipe controls
+  let tsx=0,tsy=0;
+  cv.addEventListener('touchstart',e=>{e.preventDefault();tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;},{passive:false});
+  cv.addEventListener('touchend',e=>{e.preventDefault();const dx=e.changedTouches[0].clientX-tsx,dy=e.changedTouches[0].clientY-tsy;if(Math.abs(dx)>Math.abs(dy)){pac.next=[dx>0?1:-1,0];}else{pac.next=[0,dy>0?1:-1];}},{passive:false});
+  // keyboard for desktop testing
+  window.addEventListener('keydown',keyHandler);
+  function keyHandler(e){ if(over)return; if(e.key==='ArrowLeft')pac.next=[-1,0]; else if(e.key==='ArrowRight')pac.next=[1,0]; else if(e.key==='ArrowUp')pac.next=[0,-1]; else if(e.key==='ArrowDown')pac.next=[0,1]; }
+
+  function step(){
+    // pac tries next dir
+    if(canMove(pac.c+pac.next[0],pac.r+pac.next[1])) pac.dir=pac.next.slice();
+    const nc=pac.c+pac.dir[0],nr=pac.r+pac.dir[1];
+    if(canMove(nc,nr)){ pac.c=nc; pac.r=nr; }
+    // eat
+    const v=MAP[pac.r][pac.c];
+    if(v===1){ MAP[pac.r][pac.c]=2; score+=10; pellets--; }
+    else if(v===3){ MAP[pac.r][pac.c]=2; score+=50; pellets--; power=18; }
+    if(pellets<=0){ score+=200; endGame(true); return; }
+    // ghosts move (simple chase/random)
+    ghosts.forEach(g=>{
+      const opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>canMove(g.c+d[0],g.r+d[1])&&!(d[0]===-g.dir[0]&&d[1]===-g.dir[1]));
+      const choices=opts.length?opts:[[-g.dir[0],-g.dir[1]]];
+      // chase pac 60% of the time
+      if(Math.random()<0.6&&choices.length){
+        choices.sort((a,b)=>{
+          const da=Math.abs(g.c+a[0]-pac.c)+Math.abs(g.r+a[1]-pac.r);
+          const db=Math.abs(g.c+b[0]-pac.c)+Math.abs(g.r+b[1]-pac.r);
+          return power>0?(db-da):(da-db);
+        });
+        g.dir=choices[0];
+      } else g.dir=choices[Math.floor(Math.random()*choices.length)];
+      g.c+=g.dir[0]; g.r+=g.dir[1];
+    });
+    if(power>0)power--;
+    // collisions
+    ghosts.forEach(g=>{ if(g.c===pac.c&&g.r===pac.r){ if(power>0){ score+=100; g.c=6;g.r=6; } else hit(); } });
+  }
+  function hit(){
+    lives--;
+    document.getElementById('pm-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
+    pac.c=6;pac.r=1;pac.dir=[0,0];pac.next=[0,0];
+    ghosts[0].c=6;ghosts[0].r=6;ghosts[1].c=5;ghosts[1].r=6;ghosts[2].c=7;ghosts[2].r=6;
+    if(lives<=0) endGame(false);
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      const v=MAP[r][c],x=c*TS,y=r*TS;
+      if(v===0){ ctx.fillStyle='#1a1a4a'; ctx.fillRect(x+2,y+2,TS-4,TS-4); }
+      else if(v===1){ ctx.fillStyle='#ffd'; ctx.beginPath();ctx.arc(x+TS/2,y+TS/2,2.5,0,7);ctx.fill(); }
+      else if(v===3){ ctx.fillStyle='#fff'; ctx.beginPath();ctx.arc(x+TS/2,y+TS/2,6,0,7);ctx.fill(); }
+    }
+    // pac
+    pac.mouth=(pac.mouth+1)%2;
+    ctx.fillStyle='#f0e040';ctx.beginPath();
+    const cx=pac.c*TS+TS/2,cy=pac.r*TS+TS/2,rad=TS/2-2;
+    const open=pac.mouth?0.25:0.05;
+    let ang=Math.atan2(pac.dir[1],pac.dir[0]);
+    ctx.moveTo(cx,cy);ctx.arc(cx,cy,rad,ang+open*Math.PI,ang+(2-open)*Math.PI);ctx.closePath();ctx.fill();
+    // ghosts
+    ghosts.forEach(g=>{ ctx.fillStyle=power>0?'#4f6dff':g.col; const gx=g.c*TS+TS/2,gy=g.r*TS+TS/2; ctx.beginPath();ctx.arc(gx,gy,rad,Math.PI,0);ctx.lineTo(gx+rad,gy+rad);ctx.lineTo(gx-rad,gy+rad);ctx.closePath();ctx.fill(); ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(gx-3,gy-2,2,0,7);ctx.arc(gx+3,gy-2,2,0,7);ctx.fill(); });
+    document.getElementById('pm-score').textContent='Score: '+score;
+  }
+  function loop(){
+    if(over)return;
+    moveAcc++;
+    if(moveAcc>=8){ moveAcc=0; step(); if(over)return; }
+    draw();
+    raf=requestAnimationFrame(loop);
+  }
+  function endGame(won){
+    over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler);
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#f0e040';ctx.font='bold 24px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText(won?'YOU WIN!':'GAME OVER',W/2,H/2-8);
+    ctx.fillStyle='#fff';ctx.font='18px DM Sans,sans-serif';
+    ctx.fillText('Score: '+score,W/2,H/2+20);
+    submitGameScore(score);
+  }
+  raf=requestAnimationFrame(loop);
+  return { stop(){ over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler); } };
+}
+
+
 function showPlayerReveal(room){
+  if(activeGame&&activeGame.stop){ activeGame.stop(); activeGame=null; }
+  state.shownStatus='reveal';
   if(!document.getElementById('screen-question').classList.contains('active'))return;
   const q=pGetQuestion(room,room.current_question);if(!q)return;
   if(q.qtype==='mc'||q.qtype==='tf'){
@@ -1220,8 +1570,8 @@ const MASCOT_SVG = `
    <!-- back arm (left) — jumper sleeve, shorter -->
    <g class="arm-l"><rect x="11" y="64" width="11" height="34" rx="5.5" fill="url(#fairisle)"/><rect x="11" y="92" width="11" height="6" rx="3" fill="#cfc0a0"/><circle cx="16.5" cy="100" r="5.5" fill="#f3c9a0"/></g>
    <!-- legs: brown corduroy with attached sneakers -->
-   <g class="leg-l"><rect x="28" y="112" width="13" height="46" rx="6" fill="#9c7b4e"/><path d="M30 114 V156 M33 114 V156 M36 114 V156 M39 114 V156" stroke="#876641" stroke-width=".8"/><g><path d="M24 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#6e4f37"/><path d="M24 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="22" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M30 153 l3 3 M34 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
-   <g class="leg-r"><rect x="44" y="112" width="13" height="46" rx="6" fill="#8f6f44"/><path d="M46 114 V156 M49 114 V156 M52 114 V156 M55 114 V156" stroke="#7a5d3a" stroke-width=".8"/><g><path d="M42 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#5e4330"/><path d="M42 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="40" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M48 153 l3 3 M52 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
+   <g class="leg-l"><rect x="28" y="112" width="13" height="44" rx="6" fill="#9c7b4e"/><path d="M30 114 V154 M33 114 V154 M36 114 V154 M39 114 V154" stroke="#876641" stroke-width=".8"/><g class="foot-l"><path d="M24 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#6e4f37"/><path d="M24 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="22" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M30 153 l3 3 M34 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
+   <g class="leg-r"><rect x="44" y="112" width="13" height="44" rx="6" fill="#8f6f44"/><path d="M46 114 V154 M49 114 V154 M52 114 V154 M55 114 V154" stroke="#7a5d3a" stroke-width=".8"/><g class="foot-r"><path d="M42 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#5e4330"/><path d="M42 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="40" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M48 153 l3 3 M52 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
    <!-- torso: Fair Isle jumper (oversized) -->
    <path d="M17 60 Q42 50 67 60 L63 118 Q42 125 21 118 Z" fill="url(#fairisle)"/>
    <!-- ribbed collar -->
@@ -1264,7 +1614,14 @@ function initMascot(){
   runMascotLoop();
 }
 
-function setEmote(text){ /* emote bubbles disabled */ }
+function setEmote(text){
+  const b=document.getElementById('emote-bubble');
+  if(!b||!text) return;
+  b.textContent=text;
+  b.style.left='calc(50% + '+mascotX+'px)';
+  b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'),1500);
+}
 
 let mascotX=-300;
 function moveMascotTo(x,faceLeft,withWalk=true){
@@ -1283,25 +1640,26 @@ function moveMascotTo(x,faceLeft,withWalk=true){
   });
 }
 
-function doEmote(cls,dur=1500){
+function doEmote(cls,dur=1500,word){
   const m=document.getElementById('mascot');
   return new Promise(res=>{
     m.classList.add(cls);
+    if(word) setEmote(word);
     setTimeout(()=>{ m.classList.remove(cls); res(); }, dur);
   });
 }
 
 function wait(ms){return new Promise(r=>setTimeout(r,ms));}
 
-// Dance roster: [cssClass, durationMs]
+// Dance roster: [cssClass, durationMs, word]
 const DANCES=[
-  ['dab',1500],
-  ['whip',2600],
-  ['woah',3000],
-  ['gangnam',3800],
-  ['orangejustice',3400],
-  ['defaultdance',3600],
-  ['dancing',2600],
+  ['dab',1500,'Dab!'],
+  ['whip',2600,'Whip it!'],
+  ['woah',3000,'Hit the woah!'],
+  ['gangnam',3800,'Gangnam style!'],
+  ['orangejustice',3400,'Orange justice!'],
+  ['defaultdance',3600,'Floss!'],
+  ['dancing',2600,'Boogie!'],
 ];
 let danceIdx=0;
 function nextDance(){ const d=DANCES[danceIdx % DANCES.length]; danceIdx++; return d; }
@@ -1318,6 +1676,7 @@ function removeGravity(){
   const m=document.getElementById('mascot');
   m.classList.remove('walking','waving','pointing','leaning','dancing','jumping','dab','whip','woah','gangnam','orangejustice','defaultdance');
   m.classList.add('floating');
+  setEmote('Weeee!');
   startFloating();
 }
 
@@ -1326,16 +1685,16 @@ function startFloating(){
   clearInterval(floatInterval);
   const drift=()=>{
     if(gravityOn) return;
-    const maxX=210, maxUp=180;
+    const maxX=230, maxUp=215;
     const x=(Math.random()*2-1)*maxX;
-    const up=20+Math.random()*maxUp;
-    const dur=1.4+Math.random()*1.4;
+    const up=40+Math.random()*maxUp;
+    const dur=1.3+Math.random()*1.3;
     m.style.transition=`transform ${dur}s ease-in-out`;
     mascotX=x; mascotY=up;
     m.style.transform=`translateX(${x}px) translateY(${-up}px)`;
   };
   drift();
-  floatInterval=setInterval(drift,1900);
+  floatInterval=setInterval(drift,1700);
 }
 
 async function restoreGravity(){
@@ -1345,12 +1704,13 @@ async function restoreGravity(){
   const m=document.getElementById('mascot');
   m.classList.remove('floating');
   // fast drop
-  const fallDur=Math.max(.18,mascotY/650);
-  m.style.transition=`transform ${fallDur}s cubic-bezier(.7,0,.9,.4)`;
+  const fallDur=Math.max(.12,mascotY/1100);
+  m.style.transition=`transform ${fallDur}s cubic-bezier(.8,0,1,.5)`;
   m.style.transform=`translateX(${mascotX}px) translateY(0)`;
   mascotY=0;
   await wait(fallDur*1000);
   m.classList.add('landing');
+  setEmote('Ouch!');
   await wait(450);
   m.classList.remove('landing');
   await wait(300);
@@ -1363,23 +1723,23 @@ async function runMascotLoop(){
     if(!ready())continue;
     // wave on left
     await moveMascotTo(-120,false);
-    await doEmote('waving',3200);
+    await doEmote('waving',4000,'Hello!');
     if(!ready())continue;
     // point on right
     await moveMascotTo(120,false);
-    await doEmote('pointing',1300);
+    await doEmote('pointing',1300,'Play here!');
     if(!ready())continue;
     // lean on title
     await moveMascotTo(95,true);
-    await doEmote('leaning',1800);
+    await doEmote('leaning',1800,'Welcome!');
     if(!ready())continue;
     // dance in middle - cycle through the roster
     await moveMascotTo(-10,false);
-    const [dcls,ddur]=nextDance();
-    await doEmote(dcls,ddur);
+    const [dcls,ddur,dword]=nextDance();
+    await doEmote(dcls,ddur,dword);
     if(!ready())continue;
     // jump
-    await doEmote('jumping',1400);
+    await doEmote('jumping',1400,"Let's go!");
     if(!ready())continue;
     // walk off right, loop back
     await moveMascotTo(320,false);
