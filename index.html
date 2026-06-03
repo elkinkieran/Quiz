@@ -58,6 +58,7 @@
   .mascot-stage{position:relative;width:100%;max-width:520px;height:230px;display:flex;align-items:center;justify-content:center;overflow:visible;}
   .mascot-stage .logo{position:relative;z-index:2;}
   .mascot{position:absolute;bottom:6px;left:50%;width:84px;height:170px;z-index:3;transform:translateX(-300px);transition:none;pointer-events:none;will-change:transform;}
+  .mascot.behind-title{z-index:1;}
   .mascot svg{width:100%;height:100%;overflow:visible;display:block;}
   .mascot.face-left{transform:translateX(var(--mx,0)) scaleX(-1);}
   /* walk leg/arm swing */
@@ -152,6 +153,62 @@
   /* squash on landing */
   @keyframes landSquash{0%{transform:scaleY(1)}30%{transform:scaleY(.6) scaleX(1.25)}60%{transform:scaleY(1.08) scaleX(.96)}100%{transform:scaleY(1)}}
   .mascot.landing .m-inner{animation:landSquash .45s ease-out;transform-origin:42px 158px;}
+
+  /* RUN — faster leg swing + forward lean */
+  @keyframes runLegL{0%,100%{transform:rotate(28deg)}50%{transform:rotate(-28deg)}}
+  @keyframes runLegR{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(28deg)}}
+  @keyframes runArmL{0%,100%{transform:rotate(-40deg)}50%{transform:rotate(40deg)}}
+  @keyframes runArmR{0%,100%{transform:rotate(40deg)}50%{transform:rotate(-40deg)}}
+  @keyframes runLean{0%,100%{transform:rotate(-14deg) translateY(-4px)}50%{transform:rotate(-14deg) translateY(0)}}
+  .mascot.running .leg-l{animation:runLegL .24s ease-in-out infinite;transform-origin:34px 112px;}
+  .mascot.running .leg-r{animation:runLegR .24s ease-in-out infinite;transform-origin:50px 112px;}
+  .mascot.running .arm-l{animation:runArmL .24s ease-in-out infinite;transform-origin:16px 66px;}
+  .mascot.running .arm-r{animation:runArmR .24s ease-in-out infinite;transform-origin:68px 66px;}
+  .mascot.running .m-body{animation:runLean .24s ease-in-out infinite;transform-origin:42px 140px;}
+
+  /* KNEE SLIDE — body tilts back, legs extend forward */
+  @keyframes kneeSlideLean{0%{transform:rotate(0)}20%{transform:rotate(18deg) translateY(8px)}80%{transform:rotate(18deg) translateY(8px)}100%{transform:rotate(0)}}
+  @keyframes kneeSlideLL{0%,100%{transform:rotate(0)}20%,80%{transform:rotate(-40deg)}}
+  @keyframes kneeSlideRL{0%,100%{transform:rotate(0)}20%,80%{transform:rotate(-40deg)}}
+  @keyframes kneeSlideLAL{0%,100%{transform:rotate(0)}20%,80%{transform:rotate(-60deg)}}
+  @keyframes kneeSlideRAL{0%,100%{transform:rotate(0)}20%,80%{transform:rotate(60deg)}}
+  .mascot.kneeslide .m-body{animation:kneeSlideLean 1.2s ease-in-out 1;transform-origin:42px 130px;}
+  .mascot.kneeslide .leg-l{animation:kneeSlideLL 1.2s ease-in-out 1;transform-origin:34px 112px;}
+  .mascot.kneeslide .leg-r{animation:kneeSlideRL 1.2s ease-in-out 1;transform-origin:50px 112px;}
+  .mascot.kneeslide .arm-l{animation:kneeSlideLAL 1.2s ease-in-out 1;transform-origin:16px 66px;}
+  .mascot.kneeslide .arm-r{animation:kneeSlideRAL 1.2s ease-in-out 1;transform-origin:68px 66px;}
+
+  /* TIPTOE — tiny quick steps, arms out slightly */
+  @keyframes tiptoeLegL{0%,100%{transform:rotate(6deg) translateY(-3px)}50%{transform:rotate(-6deg) translateY(-3px)}}
+  @keyframes tiptoeLegR{0%,100%{transform:rotate(-6deg) translateY(-3px)}50%{transform:rotate(6deg) translateY(-3px)}}
+  @keyframes tiptoeArm{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(-20deg)}}
+  @keyframes tiptoeArmR{0%,100%{transform:rotate(20deg)}50%{transform:rotate(20deg)}}
+  @keyframes tiptoeBob{0%,100%{transform:translateY(-4px)}50%{transform:translateY(-6px)}}
+  .mascot.tiptoe .leg-l{animation:tiptoeLegL .3s ease-in-out infinite;transform-origin:34px 112px;}
+  .mascot.tiptoe .leg-r{animation:tiptoeLegR .3s ease-in-out infinite;transform-origin:50px 112px;}
+  .mascot.tiptoe .arm-l{transform:rotate(-20deg);transform-origin:16px 66px;transition:transform .3s;}
+  .mascot.tiptoe .arm-r{transform:rotate(20deg);transform-origin:68px 66px;transition:transform .3s;}
+  .mascot.tiptoe .m-body{animation:tiptoeBob .3s ease-in-out infinite;transform-origin:42px 158px;}
+
+  /* MOONWALK — glide backward with feet shuffling, hunched body */
+  @keyframes moonwalkLL{0%,100%{transform:rotate(0)}30%{transform:rotate(18deg)}60%{transform:rotate(-5deg)}}
+  @keyframes moonwalkRL{0%,100%{transform:rotate(0)}30%{transform:rotate(-18deg)}60%{transform:rotate(5deg)}}
+  @keyframes moonwalkArm{0%,100%{transform:rotate(0)}50%{transform:rotate(-30deg)}}
+  @keyframes moonwalkBody{0%,100%{transform:rotate(6deg) translateY(2px)}50%{transform:rotate(6deg) translateY(0px)}}
+  .mascot.moonwalk .leg-l{animation:moonwalkLL .55s ease-in-out infinite;transform-origin:34px 112px;}
+  .mascot.moonwalk .leg-r{animation:moonwalkRL .55s ease-in-out infinite;transform-origin:50px 112px;}
+  .mascot.moonwalk .arm-l{animation:moonwalkArm .55s ease-in-out infinite;transform-origin:16px 66px;}
+  .mascot.moonwalk .arm-r{animation:moonwalkArm .55s ease-in-out reverse infinite;transform-origin:68px 66px;}
+  .mascot.moonwalk .m-body{animation:moonwalkBody .55s ease-in-out infinite;transform-origin:42px 140px;}
+
+  /* MJ LEAN — extreme forward lean on toes, one arm out */
+  @keyframes mjLean{0%,100%{transform:rotate(0)}30%{transform:rotate(-30deg) translateY(10px)}70%{transform:rotate(-30deg) translateY(10px)}}
+  @keyframes mjArmOut{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-100deg)}}
+  @keyframes mjLegP{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-12deg) translateY(8px)}}
+  .mascot.mjlean .m-body{animation:mjLean 2s ease-in-out 1;transform-origin:42px 158px;}
+  .mascot.mjlean .arm-r{animation:mjArmOut 2s ease-in-out 1;transform-origin:68px 66px;}
+  .mascot.mjlean .leg-l{animation:mjLegP 2s ease-in-out 1;transform-origin:34px 158px;}
+  .mascot.mjlean .leg-r{animation:mjLegP 2s ease-in-out 1;transform-origin:50px 158px;}
 
   .emote-bubble{position:absolute;bottom:150px;z-index:4;background:#fff;color:#222;font-family:'DM Sans',sans-serif;font-weight:700;font-size:1.1rem;padding:6px 14px;border-radius:16px;opacity:0;transform:translateX(-50%) scale(.5);transform-origin:bottom center;transition:opacity .25s, transform .25s cubic-bezier(.5,1.6,.5,1);pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px #0006;}
   .emote-bubble::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#fff;border-bottom:0;}
@@ -370,16 +427,33 @@
   .pong-bigmsg{font-family:'Bebas Neue';font-size:clamp(2rem,9vw,3.4rem);letter-spacing:2px;text-align:center;line-height:1.1;}
 
   /* ===== CHARACTER CREATOR ===== */
-  #screen-create{max-width:440px;margin:0 auto;width:100%;gap:16px;justify-content:flex-start;}
-  .creator-stage{width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);position:relative;overflow:hidden;}
+  #screen-create{max-width:480px;margin:0 auto;width:100%;gap:0;justify-content:flex-start;}
+  .creator-stage{width:100%;height:220px;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);position:relative;overflow:hidden;margin-bottom:0;}
   .creator-stage .mascot{position:static;transform:none!important;width:88px;height:178px;}
+  .creator-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;background:var(--card);border-radius:0;width:100%;overflow-x:auto;}
+  .creator-tab{flex:1;min-width:60px;padding:9px 6px;font-size:.75rem;font-weight:700;text-align:center;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+  .creator-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .creator-panel{display:none;padding:14px 0 8px;}
+  .creator-panel.active{display:block;}
+  .creator-section{margin-bottom:12px;}
+  .creator-section label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
   .swatch-row{display:flex;flex-wrap:wrap;gap:8px;}
   .swatch{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:transform .12s;}
   .swatch:active{transform:scale(.9);}
   .swatch.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent);}
+  .option-pills{display:flex;flex-wrap:wrap;gap:6px;}
+  .option-pill{padding:6px 12px;border-radius:99px;border:2px solid var(--border);background:var(--card);color:var(--text);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:5px;}
+  .option-pill:active{transform:scale(.95);}
+  .option-pill.sel{border-color:var(--accent);background:#7c3aed20;color:var(--accent);}
+  .sleeve-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .sleeve-swatch{width:40px;height:40px;border-radius:8px;border:3px solid transparent;cursor:pointer;transition:transform .12s;position:relative;}
+  .sleeve-swatch.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent);}
+  .sleeve-swatch.short::after{content:'S';position:absolute;bottom:1px;right:3px;font-size:.55rem;font-weight:700;color:#ffffffaa;}
+  .sleeve-swatch.long::after{content:'L';position:absolute;bottom:1px;right:3px;font-size:.55rem;font-weight:700;color:#ffffffaa;}
 
-  /* ===== ARCADE LOBBY (top-down) ===== */
+  /* ===== ARCADE LOBBY (side-scroll) ===== */
   #screen-arcade{max-width:560px;margin:0 auto;width:100%;gap:10px;justify-content:flex-start;}
+
   .arcade-topwrap{width:100%;display:flex;justify-content:center;}
   .arcade-canvas{background:#15101f;border:2px solid var(--border);border-radius:14px;touch-action:none;max-width:100%;display:block;box-shadow:inset 0 0 40px #000;}
   .arcade-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
@@ -417,19 +491,67 @@
     <button class="btn btn-ghost btn-sm" style="width:auto" onclick="showScreen('screen-landing')">← Back</button>
   </div>
   <div class="creator-stage"><div id="creator-mascot" class="mascot"></div></div>
-  <div class="w100">
-    <label>Skin</label>
-    <div class="swatch-row" id="sw-skin"></div>
+  <div class="creator-tabs" id="creator-tabs">
+    <button class="creator-tab active" data-tab="tab-look" onclick="switchCreatorTab('tab-look',this)">👤 Look</button>
+    <button class="creator-tab" data-tab="tab-hair" onclick="switchCreatorTab('tab-hair',this)">💇 Hair</button>
+    <button class="creator-tab" data-tab="tab-clothes" onclick="switchCreatorTab('tab-clothes',this)">👕 Clothes</button>
+    <button class="creator-tab" data-tab="tab-acc" onclick="switchCreatorTab('tab-acc',this)">🎩 Extras</button>
   </div>
-  <div class="w100">
-    <label>Hair</label>
-    <div class="swatch-row" id="sw-hair"></div>
+  <div style="width:100%">
+    <!-- LOOK TAB -->
+    <div class="creator-panel active" id="tab-look">
+      <div class="creator-section">
+        <label>Skin Tone</label>
+        <div class="swatch-row" id="sw-skin"></div>
+      </div>
+      <div class="creator-section">
+        <label>Eye Colour</label>
+        <div class="swatch-row" id="sw-eyes"></div>
+      </div>
+    </div>
+    <!-- HAIR TAB -->
+    <div class="creator-panel" id="tab-hair">
+      <div class="creator-section">
+        <label>Hair Style</label>
+        <div class="option-pills" id="sw-hairstyle"></div>
+      </div>
+      <div class="creator-section">
+        <label>Hair Colour</label>
+        <div class="swatch-row" id="sw-hair"></div>
+      </div>
+    </div>
+    <!-- CLOTHES TAB -->
+    <div class="creator-panel" id="tab-clothes">
+      <div class="creator-section">
+        <label>Sleeve Length &amp; Colour</label>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+          <button class="option-pill sel" id="sleeve-long-btn" onclick="setSleeve('long')">Long sleeve</button>
+          <button class="option-pill" id="sleeve-short-btn" onclick="setSleeve('short')">Short sleeve</button>
+        </div>
+        <div class="swatch-row" id="sw-jumper"></div>
+      </div>
+      <div class="creator-section">
+        <label>Trouser Colour</label>
+        <div class="swatch-row" id="sw-trousers"></div>
+      </div>
+    </div>
+    <!-- EXTRAS TAB -->
+    <div class="creator-panel" id="tab-acc">
+      <div class="creator-section">
+        <label>Hat</label>
+        <div class="option-pills" id="sw-hat"></div>
+      </div>
+      <div class="creator-section">
+        <label>Glasses</label>
+        <div class="option-pills" id="sw-glasses"></div>
+      </div>
+      <div class="creator-section">
+        <label>Scarf</label>
+        <div class="option-pills" id="sw-scarf"></div>
+      </div>
+    </div>
   </div>
-  <div class="w100">
-    <label>Jumper</label>
-    <div class="swatch-row" id="sw-jumper"></div>
-  </div>
-  <div class="divider"></div>
+  <div class="divider" style="margin:8px 0"></div>
   <div class="join-form">
     <div><label>Room Code</label><input id="join-code" maxlength="6" placeholder="ABC123" oninput="this.value=this.value.toUpperCase()" style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:4px;text-align:center"></div>
     <div><label>Your Name</label><input id="join-name" maxlength="20" placeholder="Enter your name"></div>
@@ -742,14 +864,18 @@
   <button class="btn btn-ghost mt8" style="width:auto" onclick="practiceExit()">← Cancel & back to lobby</button>
 </div>
 
-<!-- ===== ARCADE LOBBY (top-down, multiplayer) ===== -->
+<!-- ===== ARCADE LOBBY (side-scroll) ===== -->
 <div class="screen" id="screen-arcade">
   <div class="arcade-head">
-    <div><h2 style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px">Arcade Lobby</h2><p class="text-muted" style="font-size:.78rem" id="arcade-sub">Walk onto a machine to play</p></div>
+    <div><h2 style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px">Arcade Lobby</h2><p class="text-muted" style="font-size:.78rem" id="arcade-sub">Walk up to a machine to play</p></div>
     <span class="arcade-badge" id="arcade-count">1 here</span>
   </div>
-  <div class="arcade-topwrap"><canvas id="arcade-canvas" class="arcade-canvas" width="340" height="440"></canvas></div>
-  <p class="arcade-hint">Drag anywhere to walk • step onto 👾 🟡 🏓 machines to play • the host will start the quiz soon</p>
+  <div class="arcade-topwrap"><canvas id="arcade-canvas" class="arcade-canvas" width="340" height="280"></canvas></div>
+  <p class="arcade-hint">Tap left/right to walk • walk up to 👾 🟡 🏓 machines to play • the host will start the quiz soon</p>
+  <div style="display:flex;gap:10px;justify-content:center;width:100%">
+    <button class="btn btn-ghost" id="arcade-left-btn" style="flex:1;max-width:120px;padding:14px;font-size:1.3rem" ontouchstart="arcadeHoldLeft(true)" ontouchend="arcadeHoldLeft(false)" onmousedown="arcadeHoldLeft(true)" onmouseup="arcadeHoldLeft(false)">◀</button>
+    <button class="btn btn-ghost" id="arcade-right-btn" style="flex:1;max-width:120px;padding:14px;font-size:1.3rem" ontouchstart="arcadeHoldRight(true)" ontouchend="arcadeHoldRight(false)" onmousedown="arcadeHoldRight(true)" onmouseup="arcadeHoldRight(false)">▶</button>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1382,6 +1508,7 @@ function routePlayer(room){
         document.getElementById('screen-pong-result').classList.contains('active'))){
       return; // don't interrupt an active practice session
     }
+    arcadeStop(); // reset stale runtime before re-entering
     enterArcade();
   }
   else if(s==='pong-match'){ state.myActivity='lobby'; playerEnterPong(room); }
@@ -1678,16 +1805,16 @@ function createInvaders(host){
     bullets=bullets.filter(b=>{ if(b.y<-10)return false; if(hitBarrier(b))return false; return true; });
     etick++;
     const alive=enemies.filter(e=>e.alive);
-    // SLOWER: higher base so steps are less frequent; gentler speed-up
-    const speed=Math.max(22,55-Math.floor((24-alive.length)*0.8));
+    // MODERATE: slightly faster base speed, more frequent firing
+    const speed=Math.max(18,48-Math.floor((24-alive.length)*1.0));
     if(etick>=speed){
       etick=0;
       let hitEdge=false;
-      alive.forEach(e=>{ if(e.x+edir*7<10||e.x+e.w+edir*7>W-10)hitEdge=true; });
-      if(hitEdge){ edir*=-1; alive.forEach(e=>e.y+=12); }
-      else alive.forEach(e=>e.x+=edir*7);
-      // less frequent enemy fire
-      if(alive.length&&Math.random()<0.28){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
+      alive.forEach(e=>{ if(e.x+edir*8<10||e.x+e.w+edir*8>W-10)hitEdge=true; });
+      if(hitEdge){ edir*=-1; alive.forEach(e=>e.y+=14); }
+      else alive.forEach(e=>e.x+=edir*8);
+      // slightly more frequent enemy fire
+      if(alive.length&&Math.random()<0.36){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
     }
     ebullets.forEach(b=>b.y+=3.2);
     // enemy bullets hit barriers
@@ -1737,122 +1864,287 @@ function createInvaders(host){
 
 // ---------- PAC-MAN ----------
 function createPacman(host){
-  // compact maze: 0=wall,1=pellet,2=empty,3=power
+  // Classic-style 21x19 maze: 0=wall,1=dot,2=empty,3=power,4=ghost-house
   const MAP=[
-    "0000000000000",
-    "0111111111110",
-    "0103110011010",
-    "0111111111110",
-    "0110101101100",
-    "0111101011110",
-    "0001100110000",
-    "0111101011110",
-    "0110101101100",
-    "0111111111110",
-    "0103110011010",
-    "0111111111110",
-    "0000000000000",
+    "0000000000000000000",
+    "0111111111111111110",
+    "0100110011001100110",  // power pellets at corners
+    "0311110111101111130",
+    "0100110100101100110",
+    "0111111111111111110",
+    "0100110100101100110",
+    "0100110111101100110",
+    "0111111001001111110",
+    "0000110444444110000",
+    "0000110400004110000",
+    "1111110044440111111",  // tunnel row (1s on edges = tunnel)
+    "0000110400004110000",
+    "0000110444444110000",
+    "0111111001001111110",
+    "0100110111101100110",
+    "0311110100101111130",
+    "0100110100101100110",
+    "0111111111111111110",
+    "0100110011001100110",
+    "0111111111111111110",
+    "0000000000000000000",
   ].map(r=>r.split('').map(Number));
-  const ROWS=MAP.length,COLS=MAP[0].length,TS=24;
-  const W=COLS*TS,H=ROWS*TS;
+  const ROWS=MAP.length, COLS=MAP[0].length, TS=18;
+  const W=COLS*TS, H=ROWS*TS;
   host.innerHTML=`
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-      <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700;font-size:.85rem">
         <span id="pm-score">Score: 0</span><span id="pm-lives">❤️❤️❤️</span>
       </div>
-      <canvas id="pm-canvas" width="${W}" height="${H}" style="background:#000;border:2px solid var(--border);border-radius:10px;max-width:100%;touch-action:none"></canvas>
-      <p class="text-muted" style="font-size:.78rem">Swipe to change direction • eat all the dots</p>
+      <canvas id="pm-canvas" width="${W}" height="${H}" style="background:#000;border:2px solid #3a2a6e;border-radius:10px;max-width:100%;touch-action:none"></canvas>
+      <div style="display:flex;gap:6px;width:${W}px;max-width:100%;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;width:100%;justify-content:center">
+          <button class="btn btn-ghost" onclick="pmDir(0,-1)" style="width:60px;padding:12px;font-size:1.2rem">▲</button>
+        </div>
+        <div style="display:flex;gap:6px;width:100%;justify-content:center">
+          <button class="btn btn-ghost" onclick="pmDir(-1,0)" style="width:60px;padding:12px;font-size:1.2rem">◀</button>
+          <button class="btn btn-ghost" onclick="pmDir(0,1)" style="width:60px;padding:12px;font-size:1.2rem">▼</button>
+          <button class="btn btn-ghost" onclick="pmDir(1,0)" style="width:60px;padding:12px;font-size:1.2rem">▶</button>
+        </div>
+      </div>
+      <p class="text-muted" style="font-size:.75rem">Swipe canvas or use d-pad • eat power pellets to hunt ghosts!</p>
     </div>`;
-  const cv=document.getElementById('pm-canvas'),ctx=cv.getContext('2d');
-  let pac={c:6,r:1,dir:[0,0],next:[0,0],mouth:0};
-  let pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
-  let score=0,lives=3,over=false,raf=null,moveAcc=0,power=0,stepCount=0;
-  // ghosts start penned in the centre box and are released one at a time
-  const PEN={c:6,r:6};
+  const cv=document.getElementById('pm-canvas'), ctx=cv.getContext('2d');
+  // Count pellets
+  let totalPellets=0;
+  MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)totalPellets++;}));
+  let pellets=totalPellets;
+  let score=0, lives=3, over=false, raf=null;
+  let moveAcc=0, power=0, powerBlink=false, stepCount=0, ghostEaten=0, level=1;
+  // pixel-smooth movement
+  const TILE=TS;
+  let pac={ x:9*TILE+TILE/2, y:18*TILE+TILE/2, dx:0, dy:0, ndx:0, ndy:0, mouth:0, mouthDir:0 };
+  // Ghost types: Blinky(red-chase), Pinky(pink-ahead), Inky(cyan-flank), Clyde(orange-scatter)
+  const GHOST_NAMES=['Blinky','Pinky','Inky','Clyde'];
+  const GHOST_COLS=['#ff4f6d','#ffb8ff','#4fffcc','#ffb84f'];
   let ghosts=[
-    {c:6,r:6,col:'#ff4f6d',dir:[0,-1],out:false,release:14},
-    {c:5,r:6,col:'#4fa8ff',dir:[0,-1],out:false,release:42},
-    {c:7,r:6,col:'#ff9f4f',dir:[0,-1],out:false,release:72},
+    {x:9*TILE+TILE/2, y:10*TILE+TILE/2, dx:0, dy:-1, col:'#ff4f6d', mode:'house', releaseStep:20,  scatter:{tc:2,tr:1}},
+    {x:9*TILE+TILE/2, y:11*TILE+TILE/2, dx:0, dy:-1, col:'#ffb8ff', mode:'house', releaseStep:60,  scatter:{tc:COLS-3,tr:1}},
+    {x:8*TILE+TILE/2, y:11*TILE+TILE/2, dx:0, dy:-1, col:'#4fffcc', mode:'house', releaseStep:100, scatter:{tc:2,tr:ROWS-2}},
+    {x:10*TILE+TILE/2, y:11*TILE+TILE/2, dx:0,dy:-1, col:'#ffb84f', mode:'house', releaseStep:140, scatter:{tc:COLS-3,tr:ROWS-2}},
   ];
-  function cell(c,r){ if(r<0||r>=ROWS||c<0||c>=COLS)return 0; return MAP[r][c]; }
-  function canMove(c,r){ return cell(c,r)!==0; }
+  function cell(c,r){
+    if(r<0)r=ROWS-1; if(r>=ROWS)r=0;
+    if(c<0)c=COLS-1; if(c>=COLS)c=0;
+    return MAP[r][c];
+  }
+  function walkable(c,r,forGhost){
+    const v=cell(c,r);
+    if(forGhost) return v!==0;
+    return v!==0; // pac-man can enter all non-wall
+  }
+  function tileAt(px,py){ return {c:Math.round((px-TILE/2)/TILE), r:Math.round((py-TILE/2)/TILE)}; }
+  // Input
+  window._pmDir=(dx,dy)=>{pac.ndx=dx;pac.ndy=dy;};
+  window.pmDir=(dx,dy)=>{pac.ndx=dx;pac.ndy=dy;};
   let tsx=0,tsy=0;
   cv.addEventListener('touchstart',e=>{e.preventDefault();tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;},{passive:false});
-  cv.addEventListener('touchend',e=>{e.preventDefault();const dx=e.changedTouches[0].clientX-tsx,dy=e.changedTouches[0].clientY-tsy;if(Math.abs(dx)>Math.abs(dy)){pac.next=[dx>0?1:-1,0];}else{pac.next=[0,dy>0?1:-1];}},{passive:false});
-  window.addEventListener('keydown',keyHandler);
-  function keyHandler(e){ if(over)return; if(e.key==='ArrowLeft')pac.next=[-1,0]; else if(e.key==='ArrowRight')pac.next=[1,0]; else if(e.key==='ArrowUp')pac.next=[0,-1]; else if(e.key==='ArrowDown')pac.next=[0,1]; }
-
-  function step(){
-    stepCount++;
-    if(canMove(pac.c+pac.next[0],pac.r+pac.next[1])) pac.dir=pac.next.slice();
-    const nc=pac.c+pac.dir[0],nr=pac.r+pac.dir[1];
-    if(canMove(nc,nr)){ pac.c=nc; pac.r=nr; }
-    const v=MAP[pac.r][pac.c];
-    if(v===1){ MAP[pac.r][pac.c]=2; score+=10; pellets--; }
-    else if(v===3){ MAP[pac.r][pac.c]=2; score+=50; pellets--; power=18; }
-    if(pellets<=0){ score+=200; endGame(true); return; }
-    // release ghosts from the pen gradually
-    ghosts.forEach(g=>{ if(!g.out && stepCount>=g.release){ g.out=true; g.c=6; g.r=4; g.dir=[0,-1]; } });
-    // ghosts move only when released; only every other step (slower than pac)
-    const ghostsMoveThisStep = stepCount%2===0;
-    ghosts.forEach(g=>{
-      if(!g.out){ return; } // still penned
-      if(!ghostsMoveThisStep && power<=0) return; // slow normal speed; when power, even slower handled below
-      const opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>canMove(g.c+d[0],g.r+d[1])&&!(d[0]===-g.dir[0]&&d[1]===-g.dir[1]));
-      const choices=opts.length?opts:[[-g.dir[0],-g.dir[1]]];
-      if(Math.random()<0.55&&choices.length){
-        choices.sort((a,b)=>{
-          const da=Math.abs(g.c+a[0]-pac.c)+Math.abs(g.r+a[1]-pac.r);
-          const db=Math.abs(g.c+b[0]-pac.c)+Math.abs(g.r+b[1]-pac.r);
-          return power>0?(db-da):(da-db);
-        });
-        g.dir=choices[0];
-      } else g.dir=choices[Math.floor(Math.random()*choices.length)];
-      g.c+=g.dir[0]; g.r+=g.dir[1];
-    });
-    if(power>0)power--;
-    ghosts.forEach(g=>{ if(g.out&&g.c===pac.c&&g.r===pac.r){ if(power>0){ score+=100; g.out=false; g.c=6;g.r=6; g.release=stepCount+30; } else hit(); } });
+  cv.addEventListener('touchend',e=>{
+    e.preventDefault();
+    const dx=e.changedTouches[0].clientX-tsx, dy=e.changedTouches[0].clientY-tsy;
+    if(Math.abs(dx)>Math.abs(dy)){pac.ndx=dx>0?1:-1;pac.ndy=0;}
+    else{pac.ndx=0;pac.ndy=dy>0?1:-1;}
+  },{passive:false});
+  function keyHandler(e){
+    if(over)return;
+    if(e.key==='ArrowLeft'){pac.ndx=-1;pac.ndy=0;}
+    else if(e.key==='ArrowRight'){pac.ndx=1;pac.ndy=0;}
+    else if(e.key==='ArrowUp'){pac.ndx=0;pac.ndy=-1;}
+    else if(e.key==='ArrowDown'){pac.ndx=0;pac.ndy=1;}
   }
+  window.addEventListener('keydown',keyHandler);
+
+  const SPEED_PX=1.5; // pixels per frame for pac
+  const GHOST_SPEED=1.2;
+  const GHOST_FRIGHT=0.7;
+
+  function movePac(){
+    // Try to turn into requested direction
+    const {c,r}=tileAt(pac.x,pac.y);
+    const cx=c*TILE+TILE/2, cy=r*TILE+TILE/2;
+    const aligned=(Math.abs(pac.x-cx)<SPEED_PX+0.5 && Math.abs(pac.y-cy)<SPEED_PX+0.5);
+    if(aligned && pac.ndx!==0||pac.ndy!==0){
+      const nc=c+pac.ndx, nr=r+pac.ndy;
+      if(walkable(nc,nr,false)){
+        pac.dx=pac.ndx; pac.dy=pac.ndy;
+        pac.x=cx; pac.y=cy; // snap to tile centre before turning
+      }
+    }
+    // Move in current direction
+    const nc2=c+pac.dx, nr2=r+pac.dy;
+    if(pac.dx!==0||pac.dy!==0){
+      if(walkable(nc2,nr2,false)){
+        pac.x+=pac.dx*SPEED_PX; pac.y+=pac.dy*SPEED_PX;
+      } else {
+        // snap to centre
+        pac.x=cx; pac.y=cy;
+      }
+    }
+    // tunnel wrap
+    if(pac.x<0) pac.x=W; if(pac.x>W) pac.x=0;
+    // eat
+    const {c:ec,r:er}=tileAt(pac.x,pac.y);
+    const v=MAP[er]?.[ec];
+    if(v===1){ MAP[er][ec]=2; score+=10; pellets--; }
+    else if(v===3){ MAP[er][ec]=2; score+=50; pellets--; power=200; ghostEaten=0; powerBlink=false; }
+    if(pellets<=0){ score+=1000; level++; setTimeout(()=>nextLevel(),800); }
+    pac.mouth=(pac.mouth+0.15)%1;
+  }
+
+  function moveGhost(g){
+    const spd=power>0?GHOST_FRIGHT:GHOST_SPEED*(1+level*0.08);
+    if(g.mode==='house'){
+      if(stepCount>=g.releaseStep){ g.mode='chase'; g.x=9*TILE+TILE/2; g.y=9*TILE+TILE/2; g.dx=0; g.dy=-1; }
+      else return;
+    }
+    const {c,r}=tileAt(g.x,g.y);
+    const cx=c*TILE+TILE/2, cy=r*TILE+TILE/2;
+    const aligned=(Math.abs(g.x-cx)<spd+0.5 && Math.abs(g.y-cy)<spd+0.5);
+    if(aligned){
+      g.x=cx; g.y=cy;
+      // choose new direction
+      const {c:pc,r:pr}=tileAt(pac.x,pac.y);
+      let dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>{
+        const nc=c+d[0],nr=r+d[1];
+        return walkable(nc,nr,true) && !(d[0]===-g.dx&&d[1]===-g.dy);
+      });
+      if(!dirs.length) dirs=[[-g.dx,-g.dy]];
+      if(power>0){
+        // frightened: random
+        g.dir=dirs[Math.floor(Math.random()*dirs.length)];
+      } else {
+        // target-based
+        let tc=pc,tr=pr;
+        if(g.col==='#ff4f6d'){ tc=pc;tr=pr; } // Blinky: direct chase
+        else if(g.col==='#ffb8ff'){ tc=pc+pac.dx*4;tr=pr+pac.dy*4; } // Pinky: ahead of pac
+        else if(g.col==='#4fffcc'){ tc=pc+2;tr=pr+2; } // Inky: flank
+        else { const d=Math.hypot(pc-c,pr-r); tc=d>8?pc:g.scatter.tc; tr=d>8?pr:g.scatter.tr; } // Clyde
+        dirs.sort((a,b)=>Math.hypot(c+a[0]-tc,r+a[1]-tr)-Math.hypot(c+b[0]-tc,r+b[1]-tr));
+        g.dir=dirs[0];
+      }
+      if(g.dir){ g.dx=g.dir[0]; g.dy=g.dir[1]; }
+    }
+    g.x+=g.dx*spd; g.y+=g.dy*spd;
+    if(g.x<0)g.x=W; if(g.x>W)g.x=0;
+  }
+
+  function nextLevel(){
+    MAP.forEach((row,r)=>row.forEach((v,c)=>{
+      if(v===2) MAP[r][c]=1;
+    }));
+    // restore power pellets (they were 3)
+    [[3,3],[3,COLS-4],[ROWS-5,3],[ROWS-5,COLS-4]].forEach(([r,c])=>{ MAP[r][c]=3; });
+    pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
+    pac.x=9*TILE+TILE/2; pac.y=18*TILE+TILE/2; pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0;
+    ghosts.forEach((g,i)=>{ g.x=9*TILE+TILE/2; g.y=10*TILE+TILE/2; g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=stepCount+[20,60,100,140][i]; });
+    power=0;
+  }
+
+  function checkCollisions(){
+    const {c:pc,r:pr}=tileAt(pac.x,pac.y);
+    ghosts.forEach(g=>{
+      if(g.mode==='house') return;
+      const dist=Math.hypot(g.x-pac.x,g.y-pac.y);
+      if(dist<TILE*0.7){
+        if(power>0){
+          ghostEaten++; score+=100*Math.pow(2,ghostEaten);
+          g.mode='house'; g.x=9*TILE+TILE/2; g.y=10*TILE+TILE/2; g.dx=0;g.dy=-1; g.releaseStep=stepCount+80;
+        } else { hit(); }
+      }
+    });
+  }
+
   function hit(){
-    lives--;
-    document.getElementById('pm-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
-    pac.c=6;pac.r=1;pac.dir=[0,0];pac.next=[0,0];
-    stepCount=0;
-    ghosts[0].out=false;ghosts[0].c=6;ghosts[0].r=6;ghosts[0].release=14;
-    ghosts[1].out=false;ghosts[1].c=5;ghosts[1].r=6;ghosts[1].release=42;
-    ghosts[2].out=false;ghosts[2].c=7;ghosts[2].r=6;ghosts[2].release=72;
+    lives--; document.getElementById('pm-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
+    pac.x=9*TILE+TILE/2; pac.y=18*TILE+TILE/2; pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0; stepCount=0; power=0;
+    ghosts.forEach((g,i)=>{ g.x=9*TILE+TILE/2; g.y=10*TILE+TILE/2; g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=[20,60,100,140][i]; });
     if(lives<=0) endGame(false);
   }
+
   function draw(){
     ctx.clearRect(0,0,W,H);
-    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
-      const v=MAP[r][c],x=c*TS,y=r*TS;
-      if(v===0){ ctx.fillStyle='#1a1a4a'; ctx.fillRect(x+2,y+2,TS-4,TS-4); }
-      else if(v===1){ ctx.fillStyle='#ffd'; ctx.beginPath();ctx.arc(x+TS/2,y+TS/2,2.5,0,7);ctx.fill(); }
-      else if(v===3){ ctx.fillStyle='#fff'; ctx.beginPath();ctx.arc(x+TS/2,y+TS/2,6,0,7);ctx.fill(); }
+    // maze
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const v=MAP[r][c], x=c*TILE, y=r*TILE;
+        if(v===0){
+          ctx.fillStyle='#1a1a6a'; ctx.fillRect(x,y,TILE,TILE);
+          ctx.strokeStyle='#4a4aee'; ctx.lineWidth=1.5;
+          ctx.strokeRect(x+1,y+1,TILE-2,TILE-2);
+        } else if(v===4){
+          ctx.fillStyle='#1a1a3a'; ctx.fillRect(x,y,TILE,TILE);
+          ctx.strokeStyle='#ff4f6d44'; ctx.lineWidth=1;
+          ctx.strokeRect(x,y,TILE,TILE);
+        } else if(v===1){
+          ctx.fillStyle='#ffd580'; ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,2,0,7); ctx.fill();
+        } else if(v===3){
+          // blinking power pellet
+          if(!powerBlink||stepCount%20<10){
+            ctx.fillStyle='#fff';
+            ctx.shadowColor='#fff'; ctx.shadowBlur=6;
+            ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,5,0,7); ctx.fill();
+            ctx.shadowBlur=0;
+          }
+        }
+      }
     }
-    pac.mouth=(pac.mouth+1)%2;
-    ctx.fillStyle='#f0e040';ctx.beginPath();
-    const cx=pac.c*TS+TS/2,cy=pac.r*TS+TS/2,rad=TS/2-2;
-    const open=pac.mouth?0.25:0.05;
-    let ang=Math.atan2(pac.dir[1],pac.dir[0]);
-    ctx.moveTo(cx,cy);ctx.arc(cx,cy,rad,ang+open*Math.PI,ang+(2-open)*Math.PI);ctx.closePath();ctx.fill();
-    ghosts.forEach(g=>{ ctx.fillStyle=power>0?'#4f6dff':g.col; const gx=g.c*TS+TS/2,gy=g.r*TS+TS/2; ctx.beginPath();ctx.arc(gx,gy,rad,Math.PI,0);ctx.lineTo(gx+rad,gy+rad);ctx.lineTo(gx-rad,gy+rad);ctx.closePath();ctx.fill(); ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(gx-3,gy-2,2,0,7);ctx.arc(gx+3,gy-2,2,0,7);ctx.fill(); });
-    document.getElementById('pm-score').textContent='Score: '+score;
+    // pac-man
+    ctx.fillStyle='#f0e040';
+    const mouthOpen=Math.abs(Math.sin(pac.mouth*Math.PI));
+    const open=mouthOpen*0.35+0.02;
+    let ang=Math.atan2(pac.dy,pac.dx)||(pac.dx===0&&pac.dy===0?0:0);
+    if(pac.dx===0&&pac.dy===0) ang=0;
+    ctx.beginPath();
+    ctx.moveTo(pac.x,pac.y);
+    ctx.arc(pac.x,pac.y,TILE/2-1,ang+open*Math.PI,ang+(2-open)*Math.PI);
+    ctx.closePath(); ctx.fill();
+    // ghosts
+    ghosts.forEach(g=>{
+      if(g.mode==='house') return;
+      const frightened=power>0;
+      const blinking=power>0&&power<60&&stepCount%10<5;
+      ctx.fillStyle=blinking?'#fff':(frightened?'#4f6dff':g.col);
+      const gx=g.x, gy=g.y, gr=TILE/2-1;
+      ctx.beginPath();
+      ctx.arc(gx,gy-2,gr,Math.PI,0);
+      ctx.lineTo(gx+gr,gy+gr);
+      // wavy bottom
+      const waves=3;
+      for(let i=0;i<waves;i++){
+        const wx=gx+gr-(i*(gr*2/waves));
+        ctx.quadraticCurveTo(wx-gr/waves,gy+gr+(i%2?3:-3),wx-gr*2/waves,gy+gr);
+      }
+      ctx.lineTo(gx-gr,gy+gr);
+      ctx.closePath(); ctx.fill();
+      if(!frightened){
+        ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(gx-3,gy-3,2.5,0,7); ctx.arc(gx+3,gy-3,2.5,0,7); ctx.fill();
+        ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(gx-2.5,gy-3,1.2,0,7); ctx.arc(gx+3.5,gy-3,1.2,0,7); ctx.fill();
+      }
+    });
+    document.getElementById('pm-score').textContent=`Score: ${score}  Lv${level}`;
   }
+
   function loop(){
     if(over)return;
-    moveAcc++;
-    if(moveAcc>=11){ moveAcc=0; step(); if(over)return; } // slower pac (was 8)
+    stepCount++;
+    if(power>0){ power--; if(power===60) powerBlink=true; if(power===0){ powerBlink=false; } }
+    movePac(); moveGhost(ghosts[0]); moveGhost(ghosts[1]); moveGhost(ghosts[2]); moveGhost(ghosts[3]);
+    checkCollisions();
     draw();
     raf=requestAnimationFrame(loop);
   }
+
   function endGame(won){
     over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler);
-    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#f0e040';ctx.font='bold 24px DM Sans,sans-serif';ctx.textAlign='center';
-    ctx.fillText(won?'YOU WIN!':'GAME OVER',W/2,H/2-8);
-    ctx.fillStyle='#fff';ctx.font='18px DM Sans,sans-serif';
+    ctx.fillStyle='rgba(0,0,0,.85)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#f0e040'; ctx.font=`bold ${Math.round(W/12)}px DM Sans,sans-serif`; ctx.textAlign='center';
+    ctx.fillText(won?'YOU WIN!':'GAME OVER',W/2,H/2-10);
+    ctx.fillStyle='#fff'; ctx.font=`${Math.round(W/15)}px DM Sans,sans-serif`;
     ctx.fillText('Score: '+score,W/2,H/2+20);
     if(onGameComplete) onGameComplete(score);
   }
@@ -2331,6 +2623,7 @@ async function setMyActivity(act){
 
 // return to the arcade lobby and mark me idle
 function backToLobbyScreen(){
+  arcadeStop(); // always reset before re-entering to avoid stale RT
   enterArcade();
   setMyActivity('lobby');
 }
@@ -2460,41 +2753,228 @@ function enterPracticeMatch(match, role){
 }
 
 // ============================================================
-//  CHARACTER CREATOR
-//  Recolours the existing side-view mascot via string substitution.
-//  Stored as { skin, hair, jumper } on the player row.
+//  CHARACTER CREATOR  v2
+//  Extended avatar: skin, eyes, hairstyle, hair colour, sleeve
+//  length+colour, trouser colour, hat, glasses, scarf.
+//  Stored as { skin, eyes, hair, hairStyle, jumper, sleeves,
+//              trousers, hat, glasses, scarf } on the player row.
 // ============================================================
 const PALETTE={
   skin:['#f9d8b2','#f3c9a0','#e8b088','#c98a5e','#9c6644','#6e4b2f'],
-  hair:['#e8c560','#caa24a','#7a4a22','#3a2a1a','#111111','#d94f3d','#9b6bd6','#cfd3d8'],
-  jumper:['#a78bfa','#4fffb0','#f0e040','#ff4f6d','#4fa8ff','#ff9f4f','#e8e2d0','#2a2a3d'],
+  eyes:['#2b6fd4','#3aaa6a','#8b4513','#555555','#111111','#9b6bd6'],
+  hair:['#e8c560','#caa24a','#7a4a22','#3a2a1a','#111111','#d94f3d','#9b6bd6','#cfd3d8','#ff6eb4','#00bcd4'],
+  jumper:['#a78bfa','#4fffb0','#f0e040','#ff4f6d','#4fa8ff','#ff9f4f','#e8e2d0','#2a2a3d','#e53935','#43a047','#fb8c00','#ffffff'],
+  trousers:['#2a2a3d','#3a4a6e','#6e4b2f','#1a4a2e','#555','#222','#c0c0c0','#4a3a1e'],
 };
-const DEFAULT_AVATAR={ skin:'#f9d8b2', hair:'#e8c560', jumper:'#a78bfa' };
+const HAIRSTYLES=[
+  {key:'default', label:'Classic', emoji:'💆'},
+  {key:'spiky',   label:'Spiky',   emoji:'⚡'},
+  {key:'curly',   label:'Curly',   emoji:'🌀'},
+  {key:'long',    label:'Long',    emoji:'🧖'},
+  {key:'bun',     label:'Bun',     emoji:'🎀'},
+  {key:'shaved',  label:'Shaved',  emoji:'✨'},
+];
+const HATS=[
+  {key:'none',     label:'None',    emoji:'🚫'},
+  {key:'cap',      label:'Cap',     emoji:'🧢'},
+  {key:'beanie',   label:'Beanie',  emoji:'🎩'},
+  {key:'party',    label:'Party',   emoji:'🎉'},
+  {key:'cowboy',   label:'Cowboy',  emoji:'🤠'},
+];
+const GLASSES=[
+  {key:'none',       label:'None',      emoji:'🚫'},
+  {key:'glasses',    label:'Glasses',   emoji:'👓'},
+  {key:'sunglasses', label:'Sunnies',   emoji:'🕶️'},
+  {key:'monocle',    label:'Monocle',   emoji:'🧐'},
+];
+const SCARVES=[
+  {key:'none',    label:'None',   emoji:'🚫'},
+  {key:'red',     label:'Red',    emoji:'🔴'},
+  {key:'blue',    label:'Blue',   emoji:'🔵'},
+  {key:'green',   label:'Green',  emoji:'🟢'},
+  {key:'rainbow', label:'Rainbow',emoji:'🌈'},
+];
+const DEFAULT_AVATAR={
+  skin:'#f9d8b2', eyes:'#2b6fd4', hair:'#e8c560', hairStyle:'default',
+  jumper:'#a78bfa', sleeves:'long', trousers:'#2a2a3d',
+  hat:'none', glasses:'none', scarf:'none'
+};
 let draftAvatar={ ...DEFAULT_AVATAR };
 
-// Build a recoloured mascot SVG. If avatar is null, returns the original
-// fair-isle menu version unchanged.
+// Build a recoloured mascot SVG.
 function mascotSVG(av){
   let svg=MASCOT_SVG;
   if(!av) return svg;
-  // jumper: replace patterned fill + the knit accent fills with a solid colour + shade
-  const j=av.jumper||DEFAULT_AVATAR.jumper;
-  const jShade=shade(j,-18), jLight=shade(j,16);
+  const a={ ...DEFAULT_AVATAR, ...av };
+  // jumper colour
+  const j=a.jumper, jShade=shade(j,-18), jLight=shade(j,16);
   svg=svg.split('url(#fairisle)').join(j);
-  svg=svg.split('#ece2cc').join(jLight); // collar/hem ribbing
-  svg=svg.split('#cfc0a0').join(jShade); // cuff
-  // skin tones (face, neck, hands, ears)
-  const sk=av.skin||DEFAULT_AVATAR.skin, skShade=shade(sk,-10);
+  svg=svg.split('#ece2cc').join(jLight);
+  svg=svg.split('#cfc0a0').join(jShade);
+  // skin
+  const sk=a.skin, skShade=shade(sk,-10);
   svg=svg.split('#f9d8b2').join(sk);
   svg=svg.split('#f7d3aa').join(sk);
   svg=svg.split('#f3c9a0').join(skShade);
-  // hair (two tones)
-  const h=av.hair||DEFAULT_AVATAR.hair;
+  // hair
+  const h=a.hair;
   svg=svg.split('#e8c560').join(h);
   svg=svg.split('#f0d472').join(shade(h,18));
+  // eyes
+  const e=a.eyes;
+  svg=svg.split('#2b6fd4').join(e);
+  // trousers
+  const tr=a.trousers;
+  svg=svg.split('#9c7b4e').join(tr);
+  svg=svg.split('#8f6f44').join(shade(tr,-10));
+  svg=svg.split('#876641').join(shade(tr,-18));
+  svg=svg.split('#7a5d3a').join(shade(tr,-18));
+  // sleeve length: short = cover lower arm with skin-colour rect
+  let sleeveOverlay='';
+  if(a.sleeves==='short'){
+    const sk2=a.skin||DEFAULT_AVATAR.skin;
+    sleeveOverlay=`<g class="sleeve-short-overlay">
+      <rect x="11" y="82" width="11" height="18" fill="${sk2}"/>
+      <rect x="62" y="82" width="11" height="18" fill="${sk2}"/>
+    </g>`;
+  }
+  // hair style overlay
+  const hairOverlay=buildHairOverlay(a.hairStyle, a.hair);
+  // glasses overlay
+  const glassesOverlay=buildGlassesOverlay(a.glasses);
+  // hat overlay
+  const hatOverlay=buildHatOverlay(a.hat, a.hair);
+  // scarf overlay
+  const scarfOverlay=buildScarfOverlay(a.scarf);
+  // inject all overlays before the closing tags
+  svg=svg.replace('</g>\n</svg>', sleeveOverlay+hairOverlay+glassesOverlay+hatOverlay+scarfOverlay+'\n</g>\n</svg>');
   return svg;
 }
-// lighten/darken a hex colour by amt (-100..100)
+
+function buildHairOverlay(style, hairCol){
+  const h=hairCol||DEFAULT_AVATAR.hair;
+  const hs=shade(h,18);
+  switch(style){
+    case 'spiky':
+      return `<g class="hair-style-spiky" fill="${h}">
+        <polygon points="24,24 28,6 32,22"/>
+        <polygon points="33,18 38,2 42,16"/>
+        <polygon points="42,16 48,2 52,18"/>
+        <polygon points="52,22 56,6 60,24"/>
+      </g>`;
+    case 'curly':
+      return `<g class="hair-style-curly" fill="${h}">
+        <circle cx="22" cy="22" r="7"/><circle cx="30" cy="14" r="7"/><circle cx="42" cy="11" r="8"/>
+        <circle cx="54" cy="14" r="7"/><circle cx="62" cy="22" r="7"/>
+        <rect x="21" y="20" width="42" height="14" rx="2" fill="${h}"/>
+      </g>`;
+    case 'long':
+      return `<g class="hair-style-long" fill="${h}">
+        <path d="M20 28 Q14 55 16 90 Q18 100 22 100 Q20 70 24 50 L20 28Z"/>
+        <path d="M64 28 Q70 55 68 90 Q66 100 62 100 Q64 70 60 50 L64 28Z"/>
+      </g>`;
+    case 'bun':
+      return `<g class="hair-style-bun">
+        <circle cx="42" cy="8" r="10" fill="${h}"/>
+        <circle cx="42" cy="8" r="7" fill="${hs}"/>
+        <path d="M36 10 Q42 3 48 10" stroke="${shade(h,-20)}" stroke-width="1.5" fill="none"/>
+      </g>`;
+    case 'shaved':
+      // Just a very thin stubble line
+      return `<g class="hair-style-shaved" fill="${h}" opacity=".5">
+        <path d="M21 30 Q42 22 63 30 Q58 24 42 22 Q26 22 21 30Z"/>
+      </g>`;
+    default:
+      return ''; // default hair already in base SVG
+  }
+}
+
+function buildGlassesOverlay(type){
+  switch(type){
+    case 'glasses':
+      return `<g class="glasses-overlay" stroke="#333" stroke-width="1.4" fill="none">
+        <circle cx="33" cy="35" r="6" fill="#88ccff22" stroke="#555" stroke-width="1.5"/>
+        <circle cx="51" cy="35" r="6" fill="#88ccff22" stroke="#555" stroke-width="1.5"/>
+        <line x1="39" y1="35" x2="45" y2="35" stroke="#555" stroke-width="1.2"/>
+        <line x1="20" y1="33" x2="27" y2="35" stroke="#555" stroke-width="1.2"/>
+        <line x1="64" y1="33" x2="57" y2="35" stroke="#555" stroke-width="1.2"/>
+      </g>`;
+    case 'sunglasses':
+      return `<g class="glasses-overlay">
+        <rect x="26" y="30" width="14" height="9" rx="3" fill="#111" opacity=".88"/>
+        <rect x="44" y="30" width="14" height="9" rx="3" fill="#111" opacity=".88"/>
+        <line x1="40" y1="34" x2="44" y2="34" stroke="#444" stroke-width="1.5"/>
+        <line x1="19" y1="32" x2="26" y2="33" stroke="#444" stroke-width="1.4"/>
+        <line x1="65" y1="32" x2="58" y2="33" stroke="#444" stroke-width="1.4"/>
+      </g>`;
+    case 'monocle':
+      return `<g class="glasses-overlay">
+        <circle cx="51" cy="35" r="7" fill="#cceeff11" stroke="#aa8833" stroke-width="1.8"/>
+        <line x1="57" y1="40" x2="60" y2="50" stroke="#aa8833" stroke-width="1.2"/>
+      </g>`;
+    default: return '';
+  }
+}
+
+function buildHatOverlay(hat, hairCol){
+  const h=hairCol||DEFAULT_AVATAR.hair;
+  switch(hat){
+    case 'cap':
+      return `<g class="hat-overlay">
+        <rect x="22" y="14" width="40" height="16" rx="4" fill="#222"/>
+        <rect x="16" y="26" width="52" height="6" rx="3" fill="#333"/>
+        <rect x="28" y="16" width="5" height="10" rx="2" fill="#555"/>
+      </g>`;
+    case 'beanie':
+      return `<g class="hat-overlay">
+        <path d="M20 26 Q42 10 64 26 L62 16 Q42 4 22 16 Z" fill="${h}"/>
+        <path d="M19 28 Q42 14 65 28 L65 32 Q42 18 19 32 Z" fill="${shade(h,-15)}"/>
+        <circle cx="42" cy="10" r="4" fill="${shade(h,-20)}"/>
+      </g>`;
+    case 'party':
+      return `<g class="hat-overlay">
+        <polygon points="42,2 28,28 56,28" fill="#f0e040" stroke="#caa24a" stroke-width="1"/>
+        <polygon points="42,2 28,28 56,28" fill="url(#partyStripes)" stroke="none"/>
+        <circle cx="42" cy="2" r="3" fill="#ff4f6d"/>
+        <line x1="34" y1="10" x2="31" y2="6" stroke="#ff4f6d" stroke-width="1.2"/>
+        <line x1="50" y1="10" x2="53" y2="6" stroke="#4fa8ff" stroke-width="1.2"/>
+      </g>`;
+    case 'cowboy':
+      return `<g class="hat-overlay">
+        <ellipse cx="42" cy="26" rx="26" ry="5" fill="#8B4513"/>
+        <path d="M22 26 Q24 8 42 7 Q60 8 62 26 Z" fill="#A0522D"/>
+        <path d="M22 26 Q28 22 42 22 Q56 22 62 26" stroke="#6B3410" stroke-width="1.5" fill="none"/>
+      </g>`;
+    default: return '';
+  }
+}
+
+function buildScarfOverlay(scarf){
+  if(scarf==='none'||!scarf) return '';
+  if(scarf==='rainbow'){
+    // Multi-stripe rainbow using 6 coloured rects
+    const colors=['#e53935','#fb8c00','#fdd835','#43a047','#1e88e5','#8e24aa'];
+    const sw=6; // stripe width in SVG units (total ~36px for the scarf band)
+    const sy=57, sh=8; // scarf y position and height
+    let stripes='';
+    colors.forEach((c,i)=>{
+      stripes+=`<rect x="${14+i*sw}" y="${sy}" width="${sw}" height="${sh}" fill="${c}" opacity=".92"/>`;
+    });
+    return `<g class="scarf-overlay">
+      <clipPath id="scarf-clip"><path d="M26 57 Q42 62 58 57 L60 64 Q42 70 24 64 Z"/></clipPath>
+      <g clip-path="url(#scarf-clip)">${stripes}<rect x="14" y="${sy}" width="${sw*6}" height="${sh*3}" fill="none"/></g>
+      <path d="M52 57 L58 54 L62 66 L56 68 Z" fill="#fb8c00" opacity=".85"/>
+    </g>`;
+  }
+  const colors={red:'#e53935',blue:'#1e88e5',green:'#43a047'};
+  const fill=colors[scarf];
+  if(!fill) return '';
+  return `<g class="scarf-overlay">
+    <path d="M26 57 Q42 62 58 57 L60 64 Q42 70 24 64 Z" fill="${fill}" opacity=".92"/>
+    <path d="M52 57 L58 54 L62 66 L56 68 Z" fill="${fill}" opacity=".85"/>
+  </g>`;
+}
+
 function shade(hex,amt){
   const c=hex.replace('#',''); const num=parseInt(c.length===3?c.split('').map(x=>x+x).join(''):c,16);
   let r=(num>>16)+amt, g=((num>>8)&0xff)+amt, b=(num&0xff)+amt;
@@ -2502,16 +2982,34 @@ function shade(hex,amt){
   return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
 }
 
+function switchCreatorTab(tabId, btn){
+  document.querySelectorAll('.creator-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.creator-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
 function openCreator(){
   draftAvatar={ ...DEFAULT_AVATAR };
   buildSwatches('sw-skin','skin');
+  buildSwatches('sw-eyes','eyes');
   buildSwatches('sw-hair','hair');
   buildSwatches('sw-jumper','jumper');
+  buildSwatches('sw-trousers','trousers');
+  buildPills('sw-hairstyle', HAIRSTYLES, 'hairStyle');
+  buildPills('sw-hat', HATS, 'hat');
+  buildPills('sw-glasses', GLASSES, 'glasses');
+  buildPills('sw-scarf', SCARVES, 'scarf');
+  updateSleeveButtons();
+  // reset to first tab
+  document.querySelectorAll('.creator-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('.creator-panel').forEach((p,i)=>p.classList.toggle('active',i===0));
   renderCreatorPreview();
   showScreen('screen-create');
 }
-function buildSwatches(containerId,key){
-  const wrap=document.getElementById(containerId);
+
+function buildSwatches(containerId, key){
+  const wrap=document.getElementById(containerId); if(!wrap)return;
   wrap.innerHTML=PALETTE[key].map(col=>
     `<div class="swatch${draftAvatar[key]===col?' sel':''}" style="background:${col}" data-col="${col}" onclick="pickColor('${key}','${col}','${containerId}')"></div>`
   ).join('');
@@ -2521,55 +3019,78 @@ function pickColor(key,col,containerId){
   document.querySelectorAll('#'+containerId+' .swatch').forEach(s=>s.classList.toggle('sel',s.dataset.col===col));
   renderCreatorPreview();
 }
+function buildPills(containerId, options, key){
+  const wrap=document.getElementById(containerId); if(!wrap)return;
+  wrap.innerHTML=options.map(o=>
+    `<button class="option-pill${draftAvatar[key]===o.key?' sel':''}" data-key="${o.key}" onclick="pickOption('${key}','${o.key}','${containerId}')">${o.emoji} ${o.label}</button>`
+  ).join('');
+}
+function pickOption(key, val, containerId){
+  draftAvatar[key]=val;
+  document.querySelectorAll('#'+containerId+' .option-pill').forEach(p=>p.classList.toggle('sel',p.dataset.key===val));
+  renderCreatorPreview();
+}
+function setSleeve(len){
+  draftAvatar.sleeves=len;
+  updateSleeveButtons();
+  renderCreatorPreview();
+}
+function updateSleeveButtons(){
+  document.getElementById('sleeve-long-btn').classList.toggle('sel', draftAvatar.sleeves==='long');
+  document.getElementById('sleeve-short-btn').classList.toggle('sel', draftAvatar.sleeves==='short');
+}
 function renderCreatorPreview(){
   const m=document.getElementById('creator-mascot');
   if(m) m.innerHTML=mascotSVG(draftAvatar);
 }
 
 // ============================================================
-//  ARCADE LOBBY  (top-down, multiplayer)
-//  - Each player's normalised position syncs via players.pos (~100ms,
-//    throttled) with interpolation for everyone else (Pong-style netcode).
-//  - Three machine pads; walking your avatar onto one launches the game.
+//  ARCADE LOBBY  (side-scroll, multiplayer)
+//  Machines sit against the back wall. Player walks left/right.
+//  Approaching a machine activates it; tap/click to enter.
 // ============================================================
 const ARCADE={
-  WRITE_MS:110,        // how often I publish my position
-  FETCH_MS:1500,       // periodic full refresh of other players (backup to realtime)
-  SPEED:0.012,         // my walk speed per frame (normalised)
-  AV_R:0.045,          // avatar body radius (normalised to min dimension)
-  PAD_R:0.10,          // machine activation radius
-  // machine pads (normalised x,y). Top row of the room.
+  WRITE_MS:110,
+  FETCH_MS:1500,
+  SPEED:3.5,       // pixels per frame (canvas coords)
+  AV_W:28,         // avatar width px
+  AV_H:50,         // avatar height px
+  FLOOR_Y:0.72,    // floor line (fraction of canvas H)
+  MACHINE_W:60,
+  MACHINE_H:80,
+  NEAR_PX:50,      // activation distance
+  CAM_LERP:0.08,
+  // machines placed at fixed world X (canvas units, world is 1000px wide)
   machines:[
-    {key:'invaders', x:0.22, y:0.24, emoji:'👾', label:'INVADERS', color:'#4fffb0'},
-    {key:'pacman',   x:0.50, y:0.18, emoji:'🟡', label:'PAC-MAN',  color:'#f0e040'},
-    {key:'pong',     x:0.78, y:0.24, emoji:'🏓', label:'PONG',     color:'#a78bfa'},
+    {key:'invaders', wx:160, emoji:'👾', label:'INVADERS', color:'#4fffb0'},
+    {key:'pacman',   wx:500, emoji:'🟡', label:'PAC-MAN',  color:'#f0e040'},
+    {key:'pong',     wx:840, emoji:'🏓', label:'PONG',     color:'#a78bfa'},
   ],
+  WORLD_W:1000,
 };
 let arcadeRT=null;
 
 function enterArcade(){
   showScreen('screen-arcade');
-  // already running? un-pause and resume
   if(arcadeRT){ arcadeRT._paused=false; fitArcadeCanvas(arcadeRT.cv); return; }
   const cv=document.getElementById('arcade-canvas');
   fitArcadeCanvas(cv);
+  const startX=ARCADE.WORLD_W*0.5;
   const rt={
     cv, ctx:cv.getContext('2d'),
-    me:{ x:(state.myPos&&state.myPos.x)||0.5, y:(state.myPos&&state.myPos.y)||0.7, f:1 },
-    target:null,                 // drag destination
-    others:{},                   // id -> { x,y,f,name,avatar, shownX,shownY }
+    me:{ wx:(state.myPos&&state.myPos.x!=null?state.myPos.x*ARCADE.WORLD_W:startX), f:1 },
+    camX:startX - cv.width/2,
+    keys:{left:false,right:false},
+    others:{},
     lastWrite:0, raf:null, fetchTimer:null, sub:null,
-    nearMachine:null, launchArmed:true,
+    nearMachine:null, launchArmed:true, _paused:false,
   };
   arcadeRT=rt;
   setupArcadeInput(cv, rt);
-  // initial load of everyone
   arcadeFetchOthers(rt);
-  // realtime: other players' position/avatar updates
   rt.sub=sb.channel('arcade-'+state.roomId)
     .on('postgres_changes',{event:'*',schema:'public',table:'players',filter:`room_id=eq.${state.roomId}`},p=>arcadeOnPlayer(rt,p))
     .subscribe();
-  // periodic backup fetch (covers any missed realtime)
   rt.fetchTimer=setInterval(()=>arcadeFetchOthers(rt), ARCADE.FETCH_MS);
   arcadeLoop(rt);
 }
@@ -2585,23 +3106,23 @@ function arcadeStop(){
 }
 
 function fitArcadeCanvas(cv){
-  const w=Math.max(280,Math.min(360,window.innerWidth-40));
-  const h=Math.round(w*1.29);
+  const w=Math.max(280,Math.min(480,window.innerWidth-32));
+  const h=Math.round(w*0.62);
   cv.width=w; cv.height=h; cv.style.width=w+'px'; cv.style.height=h+'px';
 }
 
+function arcadeHoldLeft(on){ if(arcadeRT) arcadeRT.keys.left=on; }
+function arcadeHoldRight(on){ if(arcadeRT) arcadeRT.keys.right=on; }
+
 function setupArcadeInput(cv, rt){
-  const toXY=(clientX,clientY)=>{
-    const r=cv.getBoundingClientRect();
-    return { x:Math.max(0.05,Math.min(0.95,(clientX-r.left)/r.width)),
-             y:Math.max(0.06,Math.min(0.94,(clientY-r.top)/r.height)) };
-  };
-  const set=(cx,cy)=>{ rt.target=toXY(cx,cy); };
-  cv.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];set(t.clientX,t.clientY);},{passive:false});
-  cv.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];set(t.clientX,t.clientY);},{passive:false});
-  cv.addEventListener('mousedown',e=>{rt._md=true;set(e.clientX,e.clientY);});
-  cv.addEventListener('mousemove',e=>{if(rt._md)set(e.clientX,e.clientY);});
-  window.addEventListener('mouseup',()=>{if(rt)rt._md=false;});
+  // tap on canvas: move toward tap x
+  cv.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const r=cv.getBoundingClientRect();const tx=t.clientX-r.left;rt._tapTarget=rt.camX+tx;},{passive:false});
+  cv.addEventListener('touchend',e=>{rt._tapTarget=null;},{passive:false});
+  cv.addEventListener('mousedown',e=>{const r=cv.getBoundingClientRect();rt._tapTarget=rt.camX+(e.clientX-r.left);});
+  cv.addEventListener('mouseup',()=>{rt._tapTarget=null;});
+  window.addEventListener('mouseup',()=>{if(rt)rt._tapTarget=null;});
+  window.addEventListener('keydown',e=>{if(!arcadeRT)return;if(e.key==='ArrowLeft'||e.key==='a')rt.keys.left=true;if(e.key==='ArrowRight'||e.key==='d')rt.keys.right=true;});
+  window.addEventListener('keyup',e=>{if(!arcadeRT)return;if(e.key==='ArrowLeft'||e.key==='a')rt.keys.left=false;if(e.key==='ArrowRight'||e.key==='d')rt.keys.right=false;});
 }
 
 async function arcadeFetchOthers(rt){
@@ -2609,13 +3130,13 @@ async function arcadeFetchOthers(rt){
   (data||[]).forEach(p=>{
     if(p.id===state.playerId) return;
     const pos=p.pos||{};
-    const o=rt.others[p.id]||{ shownX:pos.x??0.5, shownY:pos.y??0.7 };
-    o.x=pos.x??o.shownX; o.y=pos.y??o.shownY; o.f=pos.f||1;
+    const wx=(pos.x!=null?pos.x*ARCADE.WORLD_W:ARCADE.WORLD_W*0.5);
+    const o=rt.others[p.id]||{ wx, shownX:wx };
+    o.wx=wx; o.f=pos.f||1;
     o.name=p.name; o.avatar=p.avatar||DEFAULT_AVATAR; o.activity=p.activity;
-    if(o.shownX==null){o.shownX=o.x;o.shownY=o.y;}
+    if(o.shownX==null) o.shownX=o.wx;
     rt.others[p.id]=o;
   });
-  // prune players who left
   const ids=new Set((data||[]).map(p=>p.id));
   Object.keys(rt.others).forEach(id=>{ if(!ids.has(id)) delete rt.others[id]; });
   updateArcadeCount(rt);
@@ -2625,10 +3146,11 @@ function arcadeOnPlayer(rt, payload){
   if(payload.eventType==='DELETE'){ if(payload.old&&rt.others[payload.old.id]){ delete rt.others[payload.old.id]; updateArcadeCount(rt);} return; }
   const p=payload.new; if(!p||p.id===state.playerId) return;
   const pos=p.pos||{};
-  const o=rt.others[p.id]||{ shownX:pos.x??0.5, shownY:pos.y??0.7 };
-  o.x=pos.x??o.x??0.5; o.y=pos.y??o.y??0.7; o.f=pos.f||1;
+  const wx=(pos.x!=null?pos.x*ARCADE.WORLD_W:ARCADE.WORLD_W*0.5);
+  const o=rt.others[p.id]||{ wx, shownX:wx };
+  o.wx=wx; o.f=pos.f||1;
   o.name=p.name; o.avatar=p.avatar||DEFAULT_AVATAR; o.activity=p.activity;
-  if(o.shownX==null){o.shownX=o.x;o.shownY=o.y;}
+  if(o.shownX==null) o.shownX=o.wx;
   rt.others[p.id]=o;
   updateArcadeCount(rt);
 }
@@ -2639,33 +3161,41 @@ function updateArcadeCount(rt){
 }
 
 function arcadeLoop(rt){
-  const cv=rt.cv, ctx=rt.ctx;
   function frame(){
     if(arcadeRT!==rt) return;
-    if(rt._paused){ rt.raf=requestAnimationFrame(frame); return; } // sub-game open
-    // move me toward target
-    if(rt.target){
-      const dx=rt.target.x-rt.me.x, dy=rt.target.y-rt.me.y;
-      const dist=Math.hypot(dx,dy);
-      if(dist>0.004){
-        const step=Math.min(ARCADE.SPEED,dist);
-        rt.me.x+=dx/dist*step; rt.me.y+=dy/dist*step;
-        if(Math.abs(dx)>0.001) rt.me.f = dx<0?-1:1;
-      } else { rt.target=null; }
+    if(rt._paused){ rt.raf=requestAnimationFrame(frame); return; }
+    const W=rt.cv.width, H=rt.cv.height;
+    const floorY=H*ARCADE.FLOOR_Y;
+    // move me
+    let moved=false;
+    if(rt.keys.left){ rt.me.wx-=ARCADE.SPEED; rt.me.f=-1; moved=true; }
+    if(rt.keys.right){ rt.me.wx+=ARCADE.SPEED; rt.me.f=1; moved=true; }
+    if(rt._tapTarget!=null){
+      const dx=rt._tapTarget-rt.me.wx;
+      if(Math.abs(dx)>2){ rt.me.wx+=Math.sign(dx)*ARCADE.SPEED; rt.me.f=Math.sign(dx); moved=true; }
+      else { rt._tapTarget=null; }
     }
+    rt.me.wx=Math.max(20,Math.min(ARCADE.WORLD_W-20,rt.me.wx));
+    // camera follows me
+    const targetCam=rt.me.wx-W/2;
+    rt.camX+=(targetCam-rt.camX)*ARCADE.CAM_LERP;
+    rt.camX=Math.max(0,Math.min(ARCADE.WORLD_W-W,rt.camX));
     // interpolate others
-    for(const id in rt.others){ const o=rt.others[id]; o.shownX+=((o.x??o.shownX)-o.shownX)*0.2; o.shownY+=((o.y??o.shownY)-o.shownY)*0.2; }
-    // machine proximity + auto-launch
+    for(const id in rt.others){ const o=rt.others[id]; o.shownX+=(o.wx-o.shownX)*0.18; }
+    // machine proximity
     let near=null;
-    for(const mac of ARCADE.machines){ if(Math.hypot(mac.x-rt.me.x,mac.y-rt.me.y)<=ARCADE.PAD_R){ near=mac; break; } }
+    for(const mac of ARCADE.machines){
+      if(Math.abs(mac.wx-rt.me.wx)<=ARCADE.NEAR_PX){ near=mac; break; }
+    }
     if(near){
       if(rt.launchArmed){ rt.launchArmed=false; arcadeLaunch(near.key); return; }
-    } else { rt.launchArmed=true; } // must step off before re-triggering
+    } else { rt.launchArmed=true; }
     rt.nearMachine=near;
-    // publish my position (throttled)
+    // publish position (throttled)
     const now=Date.now();
     if(now-rt.lastWrite>=ARCADE.WRITE_MS){
-      rt.lastWrite=now; state.myPos={x:rt.me.x,y:rt.me.y,f:rt.me.f};
+      rt.lastWrite=now;
+      state.myPos={x:rt.me.wx/ARCADE.WORLD_W, f:rt.me.f};
       sb.from('players').update({pos:state.myPos,pos_at:new Date().toISOString()}).eq('id',state.playerId).then(()=>{},()=>{});
     }
     drawArcade(rt);
@@ -2675,74 +3205,256 @@ function arcadeLoop(rt){
 }
 
 function arcadeLaunch(key){
-  // pause the lobby sim while the sub-game is open
   if(arcadeRT) arcadeRT._paused=true;
   if(key==='pong'){ practiceStartPong(); }
   else { practiceStart(key); }
 }
 
-// ---- top-down drawing ----
 function drawArcade(rt){
   const cv=rt.cv, ctx=rt.ctx, W=cv.width, H=cv.height;
-  const S=Math.min(W,H);
+  const floorY=H*ARCADE.FLOOR_Y;
+  const camX=rt.camX;
   ctx.clearRect(0,0,W,H);
+
+  // sky/background gradient
+  const skyGrad=ctx.createLinearGradient(0,0,0,floorY);
+  skyGrad.addColorStop(0,'#0d0820'); skyGrad.addColorStop(1,'#1e1040');
+  ctx.fillStyle=skyGrad; ctx.fillRect(0,0,W,floorY);
+
+  // back wall
+  ctx.fillStyle='#18102e'; ctx.fillRect(0,floorY*0.05,W,floorY*0.75);
+
+  // floor
+  const floorGrad=ctx.createLinearGradient(0,floorY,0,H);
+  floorGrad.addColorStop(0,'#2a1c50'); floorGrad.addColorStop(1,'#130c2a');
+  ctx.fillStyle=floorGrad; ctx.fillRect(0,floorY,W,H-floorY);
   // floor tiles
-  ctx.fillStyle='#1a1330'; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='#241a40'; ctx.lineWidth=1;
-  const tile=W/8;
-  for(let x=0;x<=W;x+=tile){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke(); }
-  for(let y=0;y<=H;y+=tile){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
-  // wall border
-  ctx.strokeStyle='#3a2a5e'; ctx.lineWidth=6; ctx.strokeRect(3,3,W-6,H-6);
-  // machines
-  for(const mac of ARCADE.machines){
-    const mx=mac.x*W, my=mac.y*H;
-    // activation pad glow
-    const near=rt.nearMachine&&rt.nearMachine.key===mac.key;
-    ctx.fillStyle=near?mac.color+'33':'#00000000';
-    if(near){ ctx.beginPath(); ctx.arc(mx,my,ARCADE.PAD_R*W,0,7); ctx.fill(); }
-    // cabinet body
-    const cw=S*0.16, ch=S*0.2;
-    ctx.fillStyle='#241638'; roundRect(ctx,mx-cw/2,my-ch/2,cw,ch,6); ctx.fill();
-    // screen
-    ctx.fillStyle=mac.color; roundRect(ctx,mx-cw*0.36,my-ch*0.34,cw*0.72,ch*0.4,4); ctx.fill();
-    // emoji on screen
-    ctx.font=`${Math.round(S*0.06)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(mac.emoji, mx, my-ch*0.13);
-    // label
-    ctx.fillStyle='#fff'; ctx.font=`bold ${Math.round(S*0.032)}px "Bebas Neue",sans-serif`;
-    ctx.fillText(mac.label, mx, my+ch*0.34);
+  ctx.strokeStyle='#3a2860'; ctx.lineWidth=1;
+  const tileW=50;
+  const tileOffX=(camX*0.3)%tileW;
+  for(let x=-tileOffX;x<W+tileW;x+=tileW){
+    ctx.beginPath(); ctx.moveTo(x,floorY); ctx.lineTo(x,H); ctx.stroke();
   }
+  const tileH=20;
+  for(let y=floorY;y<H;y+=tileH){
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  // ceiling lights strip
+  ctx.fillStyle='#7c3aed18';
+  ctx.fillRect(0,0,W,8);
+  for(let wx=80;wx<ARCADE.WORLD_W;wx+=160){
+    const sx=wx-camX;
+    if(sx<-20||sx>W+20) continue;
+    const glow=ctx.createRadialGradient(sx,4,0,sx,4,30);
+    glow.addColorStop(0,'#a78bfa55'); glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow; ctx.fillRect(sx-30,0,60,30);
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(sx,4,3,0,7); ctx.fill();
+  }
+
+  // arcade machines (back wall)
+  for(const mac of ARCADE.machines){
+    const sx=mac.wx-camX;
+    if(sx<-100||sx>W+100) continue;
+    const near=rt.nearMachine&&rt.nearMachine.key===mac.key;
+    const mw=ARCADE.MACHINE_W, mh=ARCADE.MACHINE_H;
+    const mx=sx-mw/2, my=floorY*0.18;
+    // glow when near
+    if(near){
+      const g=ctx.createRadialGradient(sx,floorY*0.5,5,sx,floorY*0.5,60);
+      g.addColorStop(0,mac.color+'55'); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(sx-70,my-10,140,mh+30);
+    }
+    // cabinet body
+    ctx.fillStyle=near?'#3a2060':'#201535';
+    roundRect(ctx,mx,my,mw,mh,6); ctx.fill();
+    ctx.strokeStyle=near?mac.color:'#4a3070'; ctx.lineWidth=near?2:1.5;
+    roundRect(ctx,mx,my,mw,mh,6); ctx.stroke();
+    // screen bezel
+    ctx.fillStyle='#111'; roundRect(ctx,mx+5,my+8,mw-10,mh*0.5,3); ctx.fill();
+    // screen glow
+    const sg=ctx.createRadialGradient(sx,my+mh*0.25+4,2,sx,my+mh*0.25+4,18);
+    sg.addColorStop(0,mac.color+'cc'); sg.addColorStop(1,mac.color+'22');
+    ctx.fillStyle=sg; roundRect(ctx,mx+7,my+10,mw-14,mh*0.5-6,2); ctx.fill();
+    // emoji
+    ctx.font=`${Math.round(mw*0.45)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(mac.emoji, sx, my+mh*0.27);
+    // label below cabinet
+    ctx.fillStyle=near?mac.color:'#888'; ctx.font=`bold ${Math.round(mw*0.22)}px "Bebas Neue",sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(mac.label, sx, my+mh+4);
+    // "PRESS" indicator
+    if(near){
+      ctx.fillStyle='#fff'; ctx.font=`bold 9px "DM Sans",sans-serif`;
+      ctx.fillText('▶ WALK IN ◀', sx, my+mh+18);
+    }
+    // cabinet legs
+    ctx.fillStyle='#0f0a1e';
+    ctx.fillRect(mx+8,my+mh,8,10); ctx.fillRect(mx+mw-16,my+mh,8,10);
+  }
+
+  // wall border
+  ctx.strokeStyle='#3a2a5e'; ctx.lineWidth=4;
+  ctx.strokeRect(2,2,W-4,H-4);
+
   // other players
-  for(const id in rt.others){ const o=rt.others[id]; drawTopAvatar(ctx,W,H,S,o.shownX,o.shownY,o.f,o.avatar,o.name,false,o.activity); }
-  // me (on top)
-  drawTopAvatar(ctx,W,H,S,rt.me.x,rt.me.y,rt.me.f,state.avatar||DEFAULT_AVATAR,state.playerName||'You',true);
+  for(const id in rt.others){
+    const o=rt.others[id];
+    drawSideAvatar(ctx,W,H,floorY,o.shownX-camX,o.f,o.avatar,o.name,false,o.activity);
+  }
+  // me
+  drawSideAvatar(ctx,W,H,floorY,rt.me.wx-camX,rt.me.f,state.avatar||DEFAULT_AVATAR,state.playerName||'You',true);
 }
 
-function drawTopAvatar(ctx,W,H,S,nx,ny,f,av,name,isMe,activity){
-  const x=nx*W, y=ny*H, r=ARCADE.AV_R*S;
+function drawSideAvatar(ctx,W,H,floorY,sx,f,av,name,isMe,activity){
+  const a={ ...DEFAULT_AVATAR, ...(av||{}) };
+  const aw=ARCADE.AV_W, ah=ARCADE.AV_H;
+  const by=floorY; // feet at floor
+  const x=sx;
   // shadow
-  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(x,y+r*0.7,r*0.9,r*0.4,0,0,7); ctx.fill();
-  // body (jumper) — viewed from above = a rounded shoulder circle
-  ctx.fillStyle=(av&&av.jumper)||DEFAULT_AVATAR.jumper;
-  ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
-  ctx.strokeStyle=shade((av&&av.jumper)||DEFAULT_AVATAR.jumper,-22); ctx.lineWidth=2; ctx.stroke();
-  // head (skin) slightly offset in facing direction
-  const hr=r*0.62, hx=x+f*r*0.12;
-  ctx.fillStyle=(av&&av.skin)||DEFAULT_AVATAR.skin;
-  ctx.beginPath(); ctx.arc(hx,y-r*0.05,hr,0,7); ctx.fill();
-  // hair cap (back of head) — arc on the trailing side
-  ctx.fillStyle=(av&&av.hair)||DEFAULT_AVATAR.hair;
-  ctx.beginPath(); ctx.arc(hx,y-r*0.05,hr,Math.PI*0.15,Math.PI*1.85); ctx.fill(); // most of the head from above is hair
-  // small face hint (skin) at front
-  ctx.fillStyle=(av&&av.skin)||DEFAULT_AVATAR.skin;
-  ctx.beginPath(); ctx.arc(hx+f*hr*0.45,y-r*0.05,hr*0.5,0,7); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.4)';
+  ctx.beginPath(); ctx.ellipse(x,by+2,aw*0.5,4,0,0,7); ctx.fill();
+  // mirror if facing left
+  ctx.save();
+  if(f===-1){ ctx.translate(x,0); ctx.scale(-1,1); ctx.translate(-x,0); }
+  // legs
+  ctx.fillStyle=a.trousers||DEFAULT_AVATAR.trousers;
+  ctx.fillRect(x-aw*0.28,by-ah*0.42,aw*0.24,ah*0.38);
+  ctx.fillRect(x+aw*0.04,by-ah*0.42,aw*0.24,ah*0.38);
+  // shoes
+  ctx.fillStyle='#333';
+  ctx.fillRect(x-aw*0.32,by-ah*0.06,aw*0.28,ah*0.08);
+  ctx.fillRect(x,by-ah*0.06,aw*0.28,ah*0.08);
+  // torso (jumper)
+  const jcol=a.jumper||DEFAULT_AVATAR.jumper;
+  ctx.fillStyle=jcol;
+  roundRect(ctx,x-aw*0.38,by-ah*0.9,aw*0.76,ah*0.5,5); ctx.fill();
+  // short/long sleeve indication
+  const sleeveLen=a.sleeves==='short'?ah*0.12:ah*0.22;
+  ctx.fillStyle=jcol;
+  ctx.fillRect(x-aw*0.62,by-ah*0.88,aw*0.26,sleeveLen); // left arm
+  ctx.fillRect(x+aw*0.36,by-ah*0.88,aw*0.26,sleeveLen); // right arm
+  // hands
+  ctx.fillStyle=a.skin||DEFAULT_AVATAR.skin;
+  ctx.beginPath(); ctx.arc(x-aw*0.49,by-ah*0.88+sleeveLen,aw*0.13,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+aw*0.49,by-ah*0.88+sleeveLen,aw*0.13,0,7); ctx.fill();
+  // neck
+  ctx.fillStyle=a.skin||DEFAULT_AVATAR.skin;
+  ctx.fillRect(x-aw*0.1,by-ah*1.0,aw*0.2,ah*0.14);
+  // scarf
+  if(a.scarf&&a.scarf!=='none'){
+    const sc={red:'#e53935',blue:'#1e88e5',green:'#43a047',rainbow:'#f0e040'}[a.scarf]||'#f0e040';
+    ctx.fillStyle=sc; ctx.globalAlpha=0.88;
+    ctx.fillRect(x-aw*0.42,by-ah*0.86,aw*0.84,ah*0.1);
+    ctx.globalAlpha=1;
+  }
+  // head
+  const sk=a.skin||DEFAULT_AVATAR.skin;
+  ctx.fillStyle=sk;
+  ctx.beginPath(); ctx.ellipse(x,by-ah*1.12,aw*0.32,aw*0.36,0,0,7); ctx.fill();
+  // ears
+  ctx.fillStyle=shade(sk,-8);
+  ctx.beginPath(); ctx.ellipse(x-aw*0.33,by-ah*1.1,aw*0.09,aw*0.13,0,0,7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+aw*0.33,by-ah*1.1,aw*0.09,aw*0.13,0,0,7); ctx.fill();
+  // hair
+  const h=a.hair||DEFAULT_AVATAR.hair;
+  ctx.fillStyle=h;
+  if(a.hat==='none'||!a.hat){
+    switch(a.hairStyle){
+      case 'spiky':
+        ctx.beginPath();
+        ctx.moveTo(x-aw*0.3,by-ah*1.22);
+        ctx.lineTo(x-aw*0.18,by-ah*1.52); ctx.lineTo(x-aw*0.05,by-ah*1.28);
+        ctx.lineTo(x+aw*0.08,by-ah*1.55); ctx.lineTo(x+aw*0.2,by-ah*1.28);
+        ctx.lineTo(x+aw*0.3,by-ah*1.42); ctx.lineTo(x+aw*0.32,by-ah*1.22);
+        ctx.closePath(); ctx.fill();
+        break;
+      case 'curly':
+        for(let i=-2;i<=2;i++){
+          ctx.beginPath(); ctx.arc(x+i*aw*0.14,by-ah*1.28,aw*0.14,0,7); ctx.fill();
+        }
+        break;
+      case 'long':
+        ctx.fillRect(x-aw*0.36,by-ah*1.42,aw*0.13,ah*0.52);
+        ctx.fillRect(x+aw*0.23,by-ah*1.42,aw*0.13,ah*0.52);
+        ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.33,Math.PI,2*Math.PI); ctx.fill();
+        break;
+      case 'bun':
+        ctx.beginPath(); ctx.arc(x,by-ah*1.44,aw*0.18,0,7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.33,Math.PI,2*Math.PI); ctx.fill();
+        break;
+      case 'shaved':
+        ctx.globalAlpha=0.4;
+        ctx.beginPath(); ctx.arc(x,by-ah*1.26,aw*0.3,Math.PI*1.1,Math.PI*1.9); ctx.fill();
+        ctx.globalAlpha=1;
+        break;
+      default: // classic
+        ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.33,Math.PI,2*Math.PI); ctx.fill();
+    }
+  }
+  // glasses
+  if(a.glasses==='glasses'){
+    ctx.strokeStyle='#555'; ctx.lineWidth=1.2; ctx.fillStyle='#aaddff22';
+    ctx.beginPath(); ctx.arc(x-aw*0.14,by-ah*1.1,aw*0.12,0,7); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x+aw*0.14,by-ah*1.1,aw*0.12,0,7); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x-aw*0.02,by-ah*1.1); ctx.lineTo(x+aw*0.02,by-ah*1.1); ctx.stroke();
+  } else if(a.glasses==='sunglasses'){
+    ctx.fillStyle='rgba(0,0,0,.85)';
+    roundRect(ctx,x-aw*0.3,by-ah*1.16,aw*0.24,aw*0.15,2); ctx.fill();
+    roundRect(ctx,x+aw*0.06,by-ah*1.16,aw*0.24,aw*0.15,2); ctx.fill();
+  } else if(a.glasses==='monocle'){
+    ctx.strokeStyle='#aa8833'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(x+aw*0.14,by-ah*1.1,aw*0.13,0,7); ctx.stroke();
+  }
+  // hat (drawn on top of hair)
+  if(a.hat&&a.hat!=='none'){
+    switch(a.hat){
+      case 'cap':
+        ctx.fillStyle='#222';
+        roundRect(ctx,x-aw*0.34,by-ah*1.38,aw*0.68,ah*0.2,3); ctx.fill();
+        ctx.fillRect(x-aw*0.38,by-ah*1.22,aw*0.5,ah*0.06);
+        break;
+      case 'beanie':
+        ctx.fillStyle=a.hair||'#e8c560';
+        roundRect(ctx,x-aw*0.34,by-ah*1.46,aw*0.68,ah*0.22,4); ctx.fill();
+        ctx.fillStyle=shade(a.hair||'#e8c560',-15);
+        ctx.fillRect(x-aw*0.34,by-ah*1.28,aw*0.68,ah*0.04);
+        ctx.beginPath(); ctx.arc(x,by-ah*1.46,aw*0.08,0,7);
+        ctx.fillStyle=shade(a.hair||'#e8c560',-25); ctx.fill();
+        break;
+      case 'party':
+        ctx.fillStyle='#f0e040';
+        ctx.beginPath(); ctx.moveTo(x,by-ah*1.7); ctx.lineTo(x-aw*0.3,by-ah*1.3); ctx.lineTo(x+aw*0.3,by-ah*1.3); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#ff4f6d'; ctx.beginPath(); ctx.arc(x,by-ah*1.7,aw*0.07,0,7); ctx.fill();
+        break;
+      case 'cowboy':
+        ctx.fillStyle='#8B4513';
+        ctx.beginPath(); ctx.ellipse(x,by-ah*1.26,aw*0.5,ah*0.05,0,0,7); ctx.fill();
+        roundRect(ctx,x-aw*0.32,by-ah*1.46,aw*0.64,ah*0.22,3); ctx.fill();
+        break;
+    }
+  }
+  // eyes
+  const ey=a.eyes||DEFAULT_AVATAR.eyes;
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.ellipse(x-aw*0.12,by-ah*1.1,aw*0.08,aw*0.1,0,0,7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+aw*0.12,by-ah*1.1,aw*0.08,aw*0.1,0,0,7); ctx.fill();
+  ctx.fillStyle=ey;
+  ctx.beginPath(); ctx.arc(x-aw*0.11,by-ah*1.1,aw*0.055,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+aw*0.13,by-ah*1.1,aw*0.055,0,7); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.arc(x-aw*0.11,by-ah*1.1,aw*0.03,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+aw*0.13,by-ah*1.1,aw*0.03,0,7); ctx.fill();
+  // smile
+  ctx.strokeStyle='#c4806a'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.arc(x,by-ah*1.04,aw*0.12,0.1,Math.PI-0.1); ctx.stroke();
+  ctx.restore();
   // name label
-  ctx.font=`bold ${Math.round(S*0.034)}px "DM Sans",sans-serif`; ctx.textAlign='center'; ctx.textBaseline='bottom';
-  const label=name+(activity&&activity!=='lobby'? ' •':'' );
+  ctx.font=`bold 10px "DM Sans",sans-serif`; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  const label=name+(activity&&activity!=='lobby'?' •':'');
   const tw=ctx.measureText(label).width;
-  ctx.fillStyle='rgba(0,0,0,.55)'; roundRect(ctx,x-tw/2-5,y-r-S*0.06,tw+10,S*0.045,4); ctx.fill();
-  ctx.fillStyle=isMe?'#f0e040':'#fff'; ctx.fillText(label, x, y-r-S*0.018);
+  ctx.fillStyle='rgba(0,0,0,.6)'; roundRect(ctx,x-tw/2-4,by-ah*1.58-13,tw+8,14,3); ctx.fill();
+  ctx.fillStyle=isMe?'#f0e040':'#fff'; ctx.fillText(label, x, by-ah*1.58);
 }
 
 function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
@@ -2761,8 +3473,12 @@ const MASCOT_SVG = `
  </defs>
  <g class="m-inner">
   <g class="m-body">
-   <!-- back arm (left) — jumper sleeve, shorter -->
-   <g class="arm-l"><rect x="11" y="64" width="11" height="34" rx="5.5" fill="url(#fairisle)"/><rect x="11" y="92" width="11" height="6" rx="3" fill="#cfc0a0"/><circle cx="16.5" cy="100" r="5.5" fill="#f3c9a0"/></g>
+   <!-- back arm (left) — jumper sleeve -->
+   <g class="arm-l">
+     <rect class="arm-sleeve-l" x="11" y="64" width="11" height="34" rx="5.5" fill="url(#fairisle)"/>
+     <rect x="11" y="92" width="11" height="6" rx="3" fill="#cfc0a0"/>
+     <circle cx="16.5" cy="100" r="5.5" fill="#f3c9a0"/>
+   </g>
    <!-- legs: brown corduroy with attached sneakers -->
    <g class="leg-l"><rect x="28" y="112" width="13" height="44" rx="6" fill="#9c7b4e"/><path d="M30 114 V154 M33 114 V154 M36 114 V154 M39 114 V154" stroke="#876641" stroke-width=".8"/><g class="foot-l"><path d="M24 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#6e4f37"/><path d="M24 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="22" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M30 153 l3 3 M34 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
    <g class="leg-r"><rect x="44" y="112" width="13" height="44" rx="6" fill="#8f6f44"/><path d="M46 114 V154 M49 114 V154 M52 114 V154 M55 114 V154" stroke="#7a5d3a" stroke-width=".8"/><g class="foot-r"><path d="M42 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#5e4330"/><path d="M42 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="40" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M48 153 l3 3 M52 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g></g>
@@ -2794,8 +3510,12 @@ const MASCOT_SVG = `
    <!-- big grin -->
    <path d="M32 45 Q42 53 52 45 Q42 50 32 45 Z" fill="#fff"/>
    <path d="M32 45 Q42 52 52 45" stroke="#c4806a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-   <!-- front arm (right) — jumper sleeve, shorter -->
-   <g class="arm-r"><rect x="62" y="64" width="11" height="34" rx="5.5" fill="url(#fairisle)"/><rect x="62" y="92" width="11" height="6" rx="3" fill="#cfc0a0"/><circle cx="67.5" cy="100" r="5.5" fill="#f7d3aa"/></g>
+   <!-- front arm (right) — jumper sleeve -->
+   <g class="arm-r">
+     <rect class="arm-sleeve-r" x="62" y="64" width="11" height="34" rx="5.5" fill="url(#fairisle)"/>
+     <rect x="62" y="92" width="11" height="6" rx="3" fill="#cfc0a0"/>
+     <circle cx="67.5" cy="100" r="5.5" fill="#f7d3aa"/>
+   </g>
   </g>
  </g>
 </svg>`;
@@ -2866,7 +3586,7 @@ function removeGravity(){
   gravityOn=false;
   document.getElementById('gravity-btn').textContent='🪐 Turn on gravity';
   const m=document.getElementById('mascot');
-  m.classList.remove('walking','waving','pointing','leaning','dancing','jumping','dab','woah','orangejustice','defaultdance');
+  m.classList.remove('walking','waving','pointing','leaning','dancing','jumping','dab','woah','orangejustice','defaultdance','running','kneeslide','tiptoe','moonwalk','mjlean','behind-title');
   m.classList.add('floating');
   setEmote('Weeee!');
   startFloating();
@@ -2909,34 +3629,93 @@ async function restoreGravity(){
 }
 
 async function runMascotLoop(){
+  let firstRun=true;
   while(true){
     if(!ready()){ await wait(500); continue; }
-    await moveMascotTo(-150,false);
+    const m=document.getElementById('mascot');
+
+    if(firstRun){
+      firstRun=false;
+      // --- INTRO: run in then knee slide ---
+      m.classList.add('running');
+      await moveMascotTo(-300,false,false); // start off-screen left, no transition yet
+      m.style.transition='none'; mascotX=-300; m.style.transform='translateX(-300px)';
+      await wait(50);
+      // run across at speed
+      m.style.transition='transform 0.9s linear';
+      m.classList.add('running');
+      await moveMascotTo(30,false,false);
+      m.classList.remove('running');
+      // knee slide to a stop
+      await doEmote('kneeslide',1200,'');
+      await wait(200);
+      if(!ready())continue;
+    } else {
+      await moveMascotTo(-150,false);
+    }
+
     if(!ready())continue;
     // wave on left
     await moveMascotTo(-120,false);
     await doEmote('waving',4000,'Hellooooo');
     if(!ready())continue;
+
     // point on right
     await moveMascotTo(120,false);
     await doEmote('pointing',1300,"Who's Joe?");
     if(!ready())continue;
-    // lean on title
+
+    // tiptoe to title then go BEHIND it
+    await moveMascotTo(40,false);
+    await doEmote('tiptoe',1600,'🤫');
+    if(!ready())continue;
+    m.classList.add('behind-title'); // go behind the title text
+    await moveMascotTo(10,false);
+    await wait(600);
+    await moveMascotTo(-30,false);
+    await wait(400);
+    m.classList.remove('behind-title');
+    if(!ready())continue;
+
+    // lean on title (right side)
     await moveMascotTo(95,true);
     await doEmote('leaning',1800,'Ave ittt');
     if(!ready())continue;
-    // dab in middle (no speech — keeps only the four phrases)
+
+    // dab
     await moveMascotTo(-10,false);
     await doEmote('dab',1500,'');
     if(!ready())continue;
-    // jump
-    await doEmote('jumping',1400,'its quiz time!');
+
+    // moonwalk (walk right, then moonwalk back left)
+    await moveMascotTo(80,false);
     if(!ready())continue;
+    // moonwalk moves character backwards so we animate position going left while moonwalk plays
+    m.classList.add('moonwalk');
+    const mwDur=1.6;
+    m.style.transition=`transform ${mwDur}s linear`;
+    const mwTarget=-20;
+    if(m.style.transform.includes('scaleX')) m.style.transform=`translateX(${mwTarget}px) scaleX(-1)`;
+    else m.style.transform=`translateX(${mwTarget}px)`;
+    mascotX=mwTarget;
+    await wait(mwDur*1000);
+    m.classList.remove('moonwalk');
+    setEmote('Hee-hee!');
+    if(!ready())continue;
+
+    // MJ lean
+    await moveMascotTo(20,false);
+    await doEmote('mjlean',2000,'🎤');
+    if(!ready())continue;
+
+    // jump with Sugma Quiz
+    await doEmote('jumping',1400,'Sugma Quiz');
+    if(!ready())continue;
+
     // walk off right, loop back
     await moveMascotTo(320,false);
     await wait(400);
     if(!gravityOn){continue;}
-    const m=document.getElementById('mascot');
     m.style.transition='none';
     mascotX=-320; m.style.transform='translateX(-320px)';
     await wait(300);
