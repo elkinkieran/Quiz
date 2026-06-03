@@ -205,6 +205,7 @@
   @keyframes mjLean{0%,100%{transform:rotate(0)}30%{transform:rotate(-30deg) translateY(10px)}70%{transform:rotate(-30deg) translateY(10px)}}
   @keyframes mjArmOut{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-100deg)}}
   @keyframes mjLegP{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-12deg) translateY(8px)}}
+  @keyframes playPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}
   .mascot.mjlean .m-body{animation:mjLean 2s ease-in-out 1;transform-origin:42px 158px;}
   .mascot.mjlean .arm-r{animation:mjArmOut 2s ease-in-out 1;transform-origin:68px 66px;}
   .mascot.mjlean .leg-l{animation:mjLegP 2s ease-in-out 1;transform-origin:34px 158px;}
@@ -867,14 +868,17 @@
 <!-- ===== ARCADE LOBBY (side-scroll) ===== -->
 <div class="screen" id="screen-arcade">
   <div class="arcade-head">
-    <div><h2 style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px">Arcade Lobby</h2><p class="text-muted" style="font-size:.78rem" id="arcade-sub">Walk up to a machine to play</p></div>
+    <div><h2 style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px">Arcade Lobby</h2><p class="text-muted" style="font-size:.78rem" id="arcade-sub">Walk up to a machine, then tap Play</p></div>
     <span class="arcade-badge" id="arcade-count">1 here</span>
   </div>
-  <div class="arcade-topwrap"><canvas id="arcade-canvas" class="arcade-canvas" width="340" height="280"></canvas></div>
-  <p class="arcade-hint">Tap left/right to walk • walk up to 👾 🟡 🏓 machines to play • the host will start the quiz soon</p>
+  <div class="arcade-topwrap" style="position:relative">
+    <canvas id="arcade-canvas" class="arcade-canvas" width="340" height="280"></canvas>
+    <button id="arcade-play-btn" style="display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 28px;font-size:1.1rem;font-weight:700;font-family:'Bebas Neue';letter-spacing:2px;border:none;border-radius:12px;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 6px 20px #0008;animation:playPulse 1s ease-in-out infinite;" onclick="arcadePlayPressed()">▶ PLAY</button>
+  </div>
+  <p class="arcade-hint">Use ◀ ▶ to walk • stand by a machine and tap <b>Play</b> • the host will start the quiz soon</p>
   <div style="display:flex;gap:10px;justify-content:center;width:100%">
-    <button class="btn btn-ghost" id="arcade-left-btn" style="flex:1;max-width:120px;padding:14px;font-size:1.3rem" ontouchstart="arcadeHoldLeft(true)" ontouchend="arcadeHoldLeft(false)" onmousedown="arcadeHoldLeft(true)" onmouseup="arcadeHoldLeft(false)">◀</button>
-    <button class="btn btn-ghost" id="arcade-right-btn" style="flex:1;max-width:120px;padding:14px;font-size:1.3rem" ontouchstart="arcadeHoldRight(true)" ontouchend="arcadeHoldRight(false)" onmousedown="arcadeHoldRight(true)" onmouseup="arcadeHoldRight(false)">▶</button>
+    <button class="btn btn-ghost" id="arcade-left-btn" style="flex:1;max-width:120px;padding:14px;font-size:1.3rem" ontouchstart="arcadeHoldLeft(true)" ontouchend="arcadeHoldLeft(false)" onmousedown="arcadeHoldLeft(true)" onmouseup="arcadeHoldLeft(false)" onmouseleave="arcadeHoldLeft(false)">◀</button>
+    <button class="btn btn-ghost" id="arcade-right-btn" style="flex:1;max-width:120px;padding:14px;font-size:1.3rem" ontouchstart="arcadeHoldRight(true)" ontouchend="arcadeHoldRight(false)" onmousedown="arcadeHoldRight(true)" onmouseup="arcadeHoldRight(false)" onmouseleave="arcadeHoldRight(false)">▶</button>
   </div>
 </div>
 
@@ -2843,13 +2847,33 @@ function mascotSVG(av){
   let svg=MASCOT_SVG;
   if(!av) return svg;
   const a={ ...DEFAULT_AVATAR, ...av };
-  // jumper colour
   const j=a.jumper, jShade=shade(j,-18), jLight=shade(j,16);
+  const sk=a.skin, skShade=shade(sk,-10);
+  // --- SLEEVE LENGTH: rebuild the two arm groups before recolouring ---
+  // Long  = jumper sleeve full length (y 64→92) + ribbed cuff + hand.
+  // Short = jumper sleeve to mid-upper-arm (y 64→78) with a hem, then a
+  //         clearly bare skin forearm (y 78→100) + hand.
+  if(a.sleeves==='short'){
+    const armL=`<g class="arm-l">
+       <rect class="arm-sleeve-l" x="11" y="64" width="11" height="15" rx="5.5" fill="url(#fairisle)"/>
+       <rect x="10.5" y="76" width="12" height="4" rx="2" fill="#ece2cc"/>
+       <rect x="12.5" y="79" width="7" height="21" rx="3.5" fill="#f3c9a0"/>
+       <circle cx="16" cy="100" r="5.5" fill="#f3c9a0"/>
+     </g>`;
+    const armR=`<g class="arm-r">
+       <rect class="arm-sleeve-r" x="62" y="64" width="11" height="15" rx="5.5" fill="url(#fairisle)"/>
+       <rect x="61.5" y="76" width="12" height="4" rx="2" fill="#ece2cc"/>
+       <rect x="63.5" y="79" width="7" height="21" rx="3.5" fill="#f7d3aa"/>
+       <circle cx="67" cy="100" r="5.5" fill="#f7d3aa"/>
+     </g>`;
+    svg=svg.replace(/<g class="arm-l">[\s\S]*?<\/g>/, armL);
+    svg=svg.replace(/<g class="arm-r">[\s\S]*?<\/g>/, armR);
+  }
+  // jumper colour
   svg=svg.split('url(#fairisle)').join(j);
   svg=svg.split('#ece2cc').join(jLight);
   svg=svg.split('#cfc0a0').join(jShade);
   // skin
-  const sk=a.skin, skShade=shade(sk,-10);
   svg=svg.split('#f9d8b2').join(sk);
   svg=svg.split('#f7d3aa').join(sk);
   svg=svg.split('#f3c9a0').join(skShade);
@@ -2866,24 +2890,6 @@ function mascotSVG(av){
   svg=svg.split('#8f6f44').join(shade(tr,-10));
   svg=svg.split('#876641').join(shade(tr,-18));
   svg=svg.split('#7a5d3a').join(shade(tr,-18));
-  // sleeve length: short = expose forearm (skin) with a jumper cuff hem at mid-upper-arm
-  let sleeveOverlay='';
-  if(a.sleeves==='short'){
-    const sk2=a.skin||DEFAULT_AVATAR.skin, sk2d=shade(sk2,-10);
-    const jcuff=shade(j,-18);
-    // arms are at x=11..22 (left) and x=62..73 (right); sleeve rect y=64..98
-    // cover y=78..100 with skin (forearm), add a jumper cuff band at y=76..80
-    sleeveOverlay=`<g class="sleeve-short-overlay">
-      <rect x="11" y="78" width="11" height="22" rx="3" fill="${sk2}"/>
-      <rect x="62" y="78" width="11" height="22" rx="3" fill="${sk2}"/>
-      <rect x="11" y="76" width="11" height="5" rx="2.5" fill="${jcuff}"/>
-      <rect x="62" y="76" width="11" height="5" rx="2.5" fill="${jcuff}"/>
-      <circle cx="16.5" cy="100" r="5.5" fill="${sk2}"/>
-      <circle cx="67.5" cy="100" r="5.5" fill="${sk2}"/>
-      <path d="M13 90 Q16.5 92 20 90" stroke="${sk2d}" stroke-width=".6" fill="none" opacity=".5"/>
-      <path d="M64 90 Q67.5 92 71 90" stroke="${sk2d}" stroke-width=".6" fill="none" opacity=".5"/>
-    </g>`;
-  }
   // hair style overlay
   const hairOverlay=buildHairOverlay(a.hairStyle, a.hair);
   // glasses overlay
@@ -2892,8 +2898,10 @@ function mascotSVG(av){
   const hatOverlay=buildHatOverlay(a.hat, a.hair);
   // scarf overlay
   const scarfOverlay=buildScarfOverlay(a.scarf);
-  // inject all overlays before the closing tags
-  svg=svg.replace('</g>\n</svg>', sleeveOverlay+hairOverlay+glassesOverlay+hatOverlay+scarfOverlay+'\n</g>\n</svg>');
+  // inject head/neck overlays INSIDE m-body, after the front arm, so they move
+  // with the lean/walk animations. Keep every closing tag so the tree balances.
+  const overlays=hairOverlay+glassesOverlay+hatOverlay+scarfOverlay;
+  svg=svg.replace('   </g>\n  </g>\n </g>\n</svg>', '   </g>\n   '+overlays+'\n  </g>\n </g>\n</svg>');
   return svg;
 }
 
@@ -2966,14 +2974,14 @@ function buildHatOverlay(hat, hairCol){
   const h=hairCol||DEFAULT_AVATAR.hair;
   switch(hat){
     case 'cap':
-      // baseball cap: domed crown + curved peak + button
+      // baseball cap: rounded crown sitting on the head + forward peak + button
       return `<g class="hat-overlay">
-        <path d="M20 22 Q42 2 64 22 Q64 26 60 26 L24 26 Q20 26 20 22 Z" fill="#c0392b"/>
-        <path d="M20 22 Q42 5 64 22" stroke="#9c2418" stroke-width="1" fill="none"/>
-        <path d="M22 23 H62" stroke="#e0e0e0" stroke-width=".6" opacity=".4"/>
-        <path d="M58 24 Q76 26 74 32 Q70 30 58 28 Z" fill="#a93226"/>
-        <circle cx="42" cy="6" r="2.5" fill="#9c2418"/>
-        <path d="M42 9 V20" stroke="#9c2418" stroke-width=".8" opacity=".5"/>
+        <path d="M20 30 Q20 9 42 9 Q64 9 64 30 Q64 31 62 31 L22 31 Q20 31 20 30 Z" fill="#c0392b"/>
+        <path d="M21 29 Q42 11 63 29" stroke="#9c2418" stroke-width="1" fill="none" opacity=".7"/>
+        <path d="M42 11 V30" stroke="#9c2418" stroke-width=".8" opacity=".35"/>
+        <path d="M30 13 V31 M54 13 V31" stroke="#9c2418" stroke-width=".7" opacity=".3"/>
+        <path d="M18 28 Q6 30 8 36 Q14 33 22 31 Q20 29 18 28 Z" fill="#a93226"/>
+        <circle cx="42" cy="9" r="2.6" fill="#9c2418"/>
       </g>`;
     case 'beanie':
       // knitted beanie with fold cuff + pom
@@ -2987,18 +2995,17 @@ function buildHatOverlay(hat, hairCol){
         <circle cx="42" cy="6" r="4.5" fill="none" stroke="${shade(h,-10)}" stroke-width=".6"/>
       </g>`;
     case 'party':
-      // striped cone party hat with pom + streamers
+      // striped cone party hat with pom on top
       const c1='#7c3aed', c2='#f0e040';
       return `<g class="hat-overlay">
-        <polygon points="42,0 27,27 57,27" fill="${c1}"/>
-        <polygon points="42,0 36,11 48,11" fill="${c2}"/>
-        <polygon points="38.5,11 33,21 51,21 45.5,11" fill="${c2}" opacity=".9"/>
-        <polygon points="34,21 30,27 54,27 50,21" fill="${c2}" opacity=".85"/>
-        <polygon points="42,0 27,27 57,27" fill="none" stroke="#5b21b6" stroke-width=".8"/>
-        <ellipse cx="42" cy="27" rx="15" ry="2.5" fill="#5b21b6"/>
-        <circle cx="42" cy="1" r="3.5" fill="#ff4f6d"/>
-        <path d="M45 4 Q52 0 55 4" stroke="#4fa8ff" stroke-width="1.4" fill="none"/>
-        <path d="M39 4 Q32 0 29 4" stroke="#4fffb0" stroke-width="1.4" fill="none"/>
+        <polygon points="42,2 28,29 56,29" fill="${c1}"/>
+        <polygon points="42,2 37,12 47,12" fill="${c2}"/>
+        <polygon points="39,12 34,21 50,21 45,12" fill="${c2}" opacity=".95"/>
+        <polygon points="35.5,21 31,29 53,29 48.5,21" fill="${c2}" opacity=".9"/>
+        <polygon points="42,2 28,29 56,29" fill="none" stroke="#5b21b6" stroke-width=".9"/>
+        <ellipse cx="42" cy="29" rx="14.5" ry="2.4" fill="#5b21b6"/>
+        <circle cx="42" cy="3" r="3.4" fill="#ff4f6d"/>
+        <circle cx="42" cy="3" r="3.4" fill="none" stroke="#d12d4a" stroke-width=".6"/>
       </g>`;
     case 'cowboy':
       return `<g class="hat-overlay">
@@ -3012,24 +3019,20 @@ function buildHatOverlay(hat, hairCol){
 
 function buildScarfOverlay(scarf){
   if(scarf==='none'||!scarf) return '';
-  // base scarf band shape (wraps the neck) + a hanging tail
+  // Neck band path: M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z  (around x23..61, y57..65)
   if(scarf==='rainbow'){
     const cols=['#e53935','#fb8c00','#fdd835','#43a047','#1e88e5','#8e24aa'];
-    // band from x=24..60 split into 6 vertical stripes following the curve
-    const x0=24, bw=(60-24)/cols.length;
-    let band='';
-    cols.forEach((c,i)=>{
-      const x=x0+i*bw;
-      band+=`<path d="M${x} ${58+ (i<3?0:0)} h${bw} v7 h${-bw} z" fill="${c}"/>`;
-    });
-    // simpler: use 6 stripes on a rounded band, plus a striped tail
-    let tail='';
-    cols.forEach((c,i)=>{ tail+=`<rect x="54" y="${56+i*2}" width="9" height="2.2" fill="${c}"/>`; });
+    const x0=23, x1=61, n=cols.length, bw=(x1-x0)/n;
+    // vertical stripes clipped to the band shape
+    const stripes=cols.map((c,i)=>`<rect x="${(x0+i*bw).toFixed(2)}" y="56.5" width="${(bw+0.4).toFixed(2)}" height="9.5" fill="${c}"/>`).join('');
+    // striped hanging tail (x54..63, angled down)
+    const tail=cols.map((c,i)=>`<rect x="55" y="${(60+i*2).toFixed(1)}" width="9" height="2.1" fill="${c}" transform="rotate(8 59 66)"/>`).join('');
     return `<g class="scarf-overlay">
-      <path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z" fill="#333"/>
-      ${cols.map((c,i)=>`<rect x="${24+i*((61-24)/6)}" y="57.5" width="${(61-24)/6+0.6}" height="8" fill="${c}" opacity=".95"/>`).join('')}
-      <path d="M54 60 L62 57 L64 70 L57 72 Z" fill="#8e24aa"/>
-      ${cols.map((c,i)=>`<rect x="${55+i*0.2}" y="${59+i*2}" width="8" height="2" fill="${c}"/>`).join('')}
+      <clipPath id="scbandR"><path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z"/></clipPath>
+      <g clip-path="url(#scbandR)">${stripes}</g>
+      <clipPath id="sctailR"><path d="M54 60 L63 58 L65 71 L57 73 Z"/></clipPath>
+      <g clip-path="url(#sctailR)">${tail}</g>
+      <path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z" fill="none" stroke="#222" stroke-width=".6" opacity=".4"/>
     </g>`;
   }
   const colors={red:'#e53935',blue:'#1e88e5',green:'#43a047'};
@@ -3038,8 +3041,8 @@ function buildScarfOverlay(scarf){
   return `<g class="scarf-overlay">
     <path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z" fill="${fill}"/>
     <path d="M24 62 Q42 67 60 62" stroke="${dk}" stroke-width="1" fill="none" opacity=".6"/>
-    <path d="M54 60 L62 57 L64 70 L57 72 Z" fill="${fill}"/>
-    <path d="M55 62 L63 60 M55 65 L63 64" stroke="${dk}" stroke-width=".8"/>
+    <path d="M54 60 L63 58 L65 71 L57 73 Z" fill="${fill}"/>
+    <path d="M56 62 L64 60 M56 65 L64 64 M56 68 L64 67" stroke="${dk}" stroke-width=".8"/>
   </g>`;
 }
 
@@ -3153,9 +3156,9 @@ function enterArcade(){
     keys:{left:false,right:false},
     others:{},
     lastWrite:0, raf:null, fetchTimer:null, sub:null,
-    // launch stays DISARMED until the player has stepped clear of every machine,
-    // so spawning near one never auto-launches a game.
-    nearMachine:null, launchArmed:false, _paused:false,
+    // nearMachine drives the Play button; nothing auto-launches, so spawning
+    // beside a cabinet is safe — the player must tap Play to enter a game.
+    nearMachine:null, _paused:false,
   };
   arcadeRT=rt;
   setupArcadeInput(cv, rt);
@@ -3174,6 +3177,7 @@ function arcadeStop(){
     if(rt.fetchTimer) clearInterval(rt.fetchTimer);
     if(rt.sub){ try{rt.sub.unsubscribe();}catch(e){} }
   }
+  const btn=document.getElementById('arcade-play-btn'); if(btn) btn.style.display='none';
   arcadeRT=null;
 }
 
@@ -3254,15 +3258,19 @@ function arcadeLoop(rt){
     rt.camX=Math.max(0,Math.min(ARCADE.WORLD_W-W,rt.camX));
     // interpolate others
     for(const id in rt.others){ const o=rt.others[id]; o.shownX+=(o.wx-o.shownX)*0.18; }
-    // machine proximity
+    // machine proximity → show the Play button (no auto-launch; selection is deliberate)
     let near=null;
     for(const mac of ARCADE.machines){
       if(Math.abs(mac.wx-rt.me.wx)<=ARCADE.NEAR_PX){ near=mac; break; }
     }
-    if(near){
-      if(rt.launchArmed){ rt.launchArmed=false; arcadeLaunch(near.key); return; }
-    } else { rt.launchArmed=true; }
-    rt.nearMachine=near;
+    if(near!==rt.nearMachine){
+      rt.nearMachine=near;
+      const btn=document.getElementById('arcade-play-btn');
+      if(btn){
+        if(near){ btn.style.display='block'; btn.textContent='▶ PLAY '+near.label; btn.style.background=near.color; btn.style.color='#15101f'; }
+        else { btn.style.display='none'; }
+      }
+    }
     // publish position (throttled)
     const now=Date.now();
     if(now-rt.lastWrite>=ARCADE.WRITE_MS){
@@ -3278,8 +3286,15 @@ function arcadeLoop(rt){
 
 function arcadeLaunch(key){
   if(arcadeRT) arcadeRT._paused=true;
+  const btn=document.getElementById('arcade-play-btn'); if(btn) btn.style.display='none';
   if(key==='pong'){ practiceStartPong(); }
   else { practiceStart(key); }
+}
+
+// player tapped the PLAY button while standing next to a machine
+function arcadePlayPressed(){
+  if(!arcadeRT||!arcadeRT.nearMachine) return;
+  arcadeLaunch(arcadeRT.nearMachine.key);
 }
 
 function drawArcade(rt){
