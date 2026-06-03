@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QuizBlast 🎯</title>
+<title>JoeQuiz 🎯</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -223,6 +223,56 @@
   .ws-cell.invalid{animation:shake .3s;}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
   .ws-current{text-align:center;font-family:'Bebas Neue';font-size:1.8rem;letter-spacing:6px;color:var(--accent);min-height:32px;}
+
+  /* ===== 3D ARCADE CABINET ===== */
+  .arcade-scene{width:100%;display:flex;justify-content:center;perspective:900px;padding:6px 0 2px;}
+  .arcade-cabinet{
+    width:340px;max-width:96vw;
+    background:linear-gradient(180deg,#26124a,#160a2e);
+    border-radius:22px 22px 12px 12px;
+    padding:10px 12px 14px;
+    box-shadow:0 18px 40px #000a, inset 0 2px 0 #ffffff14, inset 0 -8px 24px #00000060;
+    transform:rotateX(4deg);
+    transform-style:preserve-3d;
+    border:1px solid #3a2068;
+  }
+  .cab-marquee{
+    text-align:center;font-family:'Bebas Neue';letter-spacing:3px;font-size:1.5rem;
+    color:#111;background:linear-gradient(90deg,var(--cab-accent,#4fffb0),#fff 50%,var(--cab-accent,#4fffb0));
+    border-radius:10px;padding:5px 8px;margin-bottom:8px;
+    box-shadow:0 0 18px var(--cab-accent,#4fffb0), inset 0 -3px 6px #0003;
+    text-shadow:0 1px 0 #fff8;
+  }
+  .cab-screen-frame{
+    background:#0a0a12;border-radius:12px;padding:10px;
+    box-shadow:inset 0 0 0 3px #000, inset 0 0 22px #000, 0 0 0 2px #3a2068;
+    border:2px solid #1c1030;
+  }
+  .cab-screen{
+    background:#05050d;border-radius:6px;overflow:hidden;
+    display:flex;justify-content:center;align-items:flex-start;
+    box-shadow:inset 0 0 30px #000;
+    position:relative;
+  }
+  .cab-screen::after{ /* scanline sheen */
+    content:'';position:absolute;inset:0;pointer-events:none;border-radius:6px;
+    background:repeating-linear-gradient(0deg,#ffffff05 0 1px,transparent 1px 3px);
+    mix-blend-mode:overlay;
+  }
+  .cab-screen canvas{display:block;}
+  .cab-panel{
+    margin-top:10px;height:46px;border-radius:8px;
+    background:linear-gradient(180deg,#2c1850,#1a0e34);
+    box-shadow:inset 0 2px 0 #ffffff10, inset 0 -4px 10px #0006;
+    display:flex;align-items:center;justify-content:center;gap:24px;
+  }
+  .cab-joystick{width:14px;height:22px;background:#888;border-radius:6px;position:relative;}
+  .cab-joystick::before{content:'';position:absolute;top:-9px;left:-4px;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff7089,#c01030);}
+  .cab-btns{display:flex;gap:10px;}
+  .cab-btns span{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe89a,#f0a000);box-shadow:0 2px 4px #0007;}
+  .cab-btns span:last-child{background:radial-gradient(circle at 35% 30%,#9af0c0,#1aa060);}
+  .cab-coin{text-align:center;font-family:'Bebas Neue';letter-spacing:2px;color:#8a78c0;font-size:.72rem;margin-top:8px;}
+  @media(max-width:420px){ .arcade-cabinet{width:320px;padding:8px 8px 12px;} .cab-marquee{font-size:1.25rem;} }
 
   #screen-player-results{max-width:460px;margin:0 auto;width:100%;gap:16px;text-align:center;}
   .score-big{font-family:'Bebas Neue';font-size:5rem;color:var(--accent);text-shadow:0 0 30px #f0e04055;line-height:1;}
@@ -554,6 +604,7 @@
   </div>
 
   <div class="host-actions">
+    <button class="btn btn-purple" onclick="hostShowOptions()" id="btn-show-options" style="display:none">📖 Show Options</button>
     <button class="btn btn-success" onclick="revealAnswers()" id="btn-reveal">👁 Reveal Answers</button>
     <button class="btn btn-primary" onclick="nextQuestion()" id="btn-next" disabled>Next →</button>
     <button class="btn btn-danger btn-sm" style="width:auto" onclick="endGameStart()">End</button>
@@ -853,8 +904,22 @@ async function startCategoryQuestion(){ await beginQuestion(state.currentQIdx); 
 
 async function beginQuestion(idx){
   state.currentQIdx=idx;state.revealed=false;
-  await sb.from('rooms').update({status:'question',current_question:idx}).eq('id',state.roomId);
+  const q=getQuestion(idx);
+  // For multiple choice / true-false, start with options hidden so players read the question first
+  const optionsShown = !(q&&(q.qtype==='mc'||q.qtype==='tf'));
+  state.optionsShown=optionsShown;
+  await sb.from('rooms').update({status:'question',current_question:idx,options_shown:optionsShown}).eq('id',state.roomId);
   showHostQuestion(idx);
+}
+
+function hostShowOptions(){
+  state.optionsShown=true;
+  document.getElementById('btn-show-options').style.display='none';
+  // start the timer now that options are live
+  const q=getQuestion(state.currentQIdx);
+  if(q&&q.qtype!=='game'){ const tb=document.getElementById('host-timer-bar').parentElement; tb.style.display='block'; startHostTimer(q.time); }
+  sb.from('rooms').update({options_shown:true}).eq('id',state.roomId);
+  toast('📖 Options revealed to players');
 }
 
 function showHostQuestion(idx){
@@ -883,12 +948,22 @@ function showHostQuestion(idx){
   showScreen('screen-host-question');
   const timerBar=document.getElementById('host-timer-bar').parentElement;
   const timerBadge=document.getElementById('host-timer-badge');
+  const showOptBtn=document.getElementById('btn-show-options');
+  const optionsHidden=(q.qtype==='mc'||q.qtype==='tf')&&!state.optionsShown;
   if(q.qtype==='game'){
+    showOptBtn.style.display='none';
     timerBar.style.display='none';
     timerBadge.textContent='🎮';
     document.getElementById('host-responses-count').textContent=`0 / ${state.players.length} finished`;
     clearInterval(state.timerInterval);
+  } else if(optionsHidden){
+    // wait for host to reveal options before timer/answers
+    showOptBtn.style.display='block';
+    timerBar.style.display='none';
+    timerBadge.textContent='—';
+    clearInterval(state.timerInterval);
   } else {
+    showOptBtn.style.display='none';
     timerBar.style.display='block';
     startHostTimer(q.time);
   }
@@ -998,7 +1073,7 @@ function buildBreakdown(answers,q,round,fastestCorrectId){
     const pts=computePoints(round,correct,ans.time_taken||0,ans.player_id===fastestCorrectId);
     const cls=correct?'ans-correct':'ans-wrong';
     const fastTag=(ans.player_id===fastestCorrectId&&round&&round.roundType==='closest')?' ⚡':'';
-    return `<tr><td class="rank-num">${i+1}</td><td style="font-weight:600">${escHtml(nameMap[ans.player_id]||'?')}${fastTag}</td><td class="${cls}">${correct?'✓ ':'✗ '}${escHtml(answerDisplay(q,ans))}</td><td class="ans-time">${(ans.time_taken||0).toFixed?(ans.time_taken).toFixed(2):ans.time_taken}s</td><td style="font-weight:700;color:${pts>0?'var(--accent3)':pts<0?'var(--accent2)':'var(--muted)'}">${pts>0?'+'+pts:pts}</td></tr>`;
+    return `<tr><td class="rank-num">${i+1}</td><td style="font-weight:600">${escHtml(nameMap[ans.player_id]||'?')}${fastTag}</td><td class="${cls}">${correct?'✓ ':'✗ '}${escHtml(answerDisplay(q,ans))}</td><td class="ans-time">${Number(ans.time_taken||0).toFixed(2)}s</td><td style="font-weight:700;color:${pts>0?'var(--accent3)':pts<0?'var(--accent2)':'var(--muted)'}">${pts>0?'+'+pts:pts}</td></tr>`;
   });
   noAnswer.forEach(p=>rows.push(`<tr><td class="rank-num">-</td><td style="font-weight:600">${escHtml(p.name)}</td><td class="ans-none">No answer</td><td class="ans-time">-</td><td style="color:var(--muted)">0</td></tr>`));
   document.getElementById('breakdown-tbody').innerHTML=rows.join('');
@@ -1136,11 +1211,14 @@ async function playerClickThrough(){
 
 function showPlayerQuestion(room){
   const q=pGetQuestion(room,room.current_question);if(!q)return;
-  // guard: if we're already showing this exact question, don't restart (prevents game restart on repeated updates)
-  if(document.getElementById('screen-question').classList.contains('active') && state.shownQIdx===room.current_question && state.shownStatus==='question'){ return; }
-  state.shownQIdx=room.current_question; state.shownStatus='question';
-  state.currentQIdx=room.current_question;state.answered=false;state.questionStartTime=Date.now();
-  state.wsPath=[];state.calcValue='';
+  const optionsShown = room.options_shown!==false; // default true for non-mc
+  const mc=(q.qtype==='mc'||q.qtype==='tf');
+  // guard: if we're already showing this exact question with same options state, don't restart
+  if(document.getElementById('screen-question').classList.contains('active') && state.shownQIdx===room.current_question && state.shownStatus==='question' && state.shownOpts===optionsShown){ return; }
+  const sameQuestion = state.shownQIdx===room.current_question && state.shownStatus==='question';
+  state.shownQIdx=room.current_question; state.shownStatus='question'; state.shownOpts=optionsShown;
+  state.currentQIdx=room.current_question;
+  if(!sameQuestion){ state.answered=false; state.wsPath=[];state.calcValue=''; }
   const round=pGetRound(room,room.current_question);
   document.getElementById('q-number-display').textContent=`Q${room.current_question+1}/${pTotal(room)}`;
   document.getElementById('q-score-badge').textContent=(state.scores[state.playerId]||0)+' pts';
@@ -1150,11 +1228,24 @@ function showPlayerQuestion(room){
 
   // answer blanks for word round
   const blanks=document.getElementById('answer-blanks');
-  if(q.qtype==='word'){blanks.style.display='flex';blanks.innerHTML=q.wordAnswer.split('').map(()=>`<span class="blank">_</span>`).join('');}
-  else if(q.qtype==='number'){blanks.style.display='none';}
+  if(q.qtype==='word'&&optionsShown){blanks.style.display='flex';blanks.innerHTML=q.wordAnswer.split('').map(()=>`<span class="blank">_</span>`).join('');}
   else blanks.style.display='none';
 
   const area=document.getElementById('answer-area');
+  const bar=document.getElementById('timer-bar');
+
+  // MC/TF with options still hidden: show "read the question" state, no options, no timer
+  if(mc && !optionsShown){
+    area.innerHTML=`<div class="text-center" style="padding:20px 0;color:var(--muted)"><div style="font-size:2rem;margin-bottom:8px">📖</div>Read the question…<br><span style="font-size:.85rem">Options appear when the host is ready</span></div>`;
+    bar.parentElement.style.display='none';
+    clearInterval(state.playerTimer);
+    showScreen('screen-question');
+    return;
+  }
+
+  // options now shown — start the answer timer fresh
+  state.questionStartTime=Date.now();
+
   if(q.qtype==='mc'||q.qtype==='tf'){
     const letters=['A','B','C','D'];
     area.innerHTML=`<div class="options-grid ${q.qtype==='tf'?'tf':''}">`+q.opts.map((o,i)=>`<button class="option-btn ${q.qtype==='tf'?(i===0?'tf-true':'tf-false'):''}" id="opt-btn-${i}" onclick="submitMC(${i})">${q.qtype==='tf'?'':letters[i]+'. '}${escHtml(o)}</button>`).join('')+`</div>`;
@@ -1166,7 +1257,6 @@ function showPlayerQuestion(room){
     area.innerHTML=`<div id="game-host-el"></div>`;
   }
   // timer (skip for games — they end on death)
-  const bar=document.getElementById('timer-bar');
   if(q.qtype==='game'){
     bar.parentElement.style.display='none';
     clearInterval(state.playerTimer);
@@ -1266,12 +1356,32 @@ async function sendAnswer(payload){
 //  MINI-GAMES  (Space Invaders + Pac-Man) — touch friendly
 // ============================================================
 let activeGame=null;
+let onGameComplete=null;
 
 function startMiniGame(q){
   const host=document.getElementById('game-host-el');
   if(activeGame&&activeGame.stop) activeGame.stop();
-  if(q.game==='pacman') activeGame=createPacman(host);
-  else activeGame=createInvaders(host);
+  // Build a CSS-3D arcade cabinet; the game mounts on its screen
+  const gname = q.game==='pacman' ? 'PAC-MUNCH' : 'SPACE BLASTERS';
+  const accent = q.game==='pacman' ? '#f0e040' : '#4fffb0';
+  host.innerHTML=`
+    <div class="arcade-scene">
+      <div class="arcade-cabinet">
+        <div class="cab-marquee" style="--cab-accent:${accent}">${gname}</div>
+        <div class="cab-screen-frame">
+          <div class="cab-screen" id="cab-screen"></div>
+        </div>
+        <div class="cab-panel">
+          <div class="cab-joystick"></div>
+          <div class="cab-btns"><span></span><span></span></div>
+        </div>
+        <div class="cab-coin">JOEQUIZ ARCADE · INSERT COIN</div>
+      </div>
+    </div>`;
+  const screen=document.getElementById('cab-screen');
+  onGameComplete=(score)=>{ submitGameScore(score); };
+  if(q.game==='pacman') activeGame=createPacman(screen);
+  else activeGame=createInvaders(screen);
 }
 
 async function submitGameScore(score){
@@ -1297,71 +1407,91 @@ function createInvaders(host){
         <button class="btn btn-primary" id="iv-fire" style="flex:1;padding:18px;font-size:1.1rem">FIRE</button>
         <button class="btn btn-ghost" id="iv-right" style="flex:1;padding:18px;font-size:1.4rem">▶</button>
       </div>
-      <p class="text-muted" style="font-size:.78rem">Tip: drag on the screen to move, tap to shoot</p>
+      <p class="text-muted" style="font-size:.78rem">Drag to move • tap to shoot • hide behind the bunkers!</p>
     </div>`;
   const cv=document.getElementById('iv-canvas'),ctx=cv.getContext('2d');
   let ship={x:W/2,w:26,h:14,y:H-30},bullets=[],enemies=[],ebullets=[],score=0,lives=3,over=false;
-  let dir=0,moveTo=null,raf=null,lastShot=0,etick=0,edir=1,estep=0;
-  // build enemy grid
+  let dir=0,moveTo=null,raf=null,lastShot=0,etick=0,edir=1;
+  // destructible barriers: grid of small blocks
+  let barriers=[];
+  function buildBarriers(){
+    barriers=[];
+    const bunkerCount=3, bw=8, bcols=5, brows=3, blockGap=2;
+    for(let n=0;n<bunkerCount;n++){
+      const bx=40+n*((W-80)/(bunkerCount-1))-(bcols*bw)/2;
+      const by=H-90;
+      for(let r=0;r<brows;r++)for(let c=0;c<bcols;c++){
+        barriers.push({x:bx+c*(bw),y:by+r*(bw),w:bw,h:bw,hp:2});
+      }
+    }
+  }
+  buildBarriers();
   function spawn(){
     enemies=[];
-    const rows=4,cols=7;
+    const rows=4,cols=6;
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-      enemies.push({x:30+c*36,y:40+r*30,w:22,h:16,alive:true,row:r});
+      enemies.push({x:34+c*40,y:36+r*28,w:22,h:16,alive:true,row:r});
     }
   }
   spawn();
   function fire(){
     const now=Date.now();
-    if(now-lastShot<320||over)return;
+    if(now-lastShot<350||over)return;
     lastShot=now;
     bullets.push({x:ship.x,y:ship.y-10,w:3,h:10});
   }
-  // controls
   const L=document.getElementById('iv-left'),R=document.getElementById('iv-right'),F=document.getElementById('iv-fire');
   const press=(el,fn)=>{el.addEventListener('touchstart',e=>{e.preventDefault();fn(true);},{passive:false});el.addEventListener('touchend',e=>{e.preventDefault();fn(false);},{passive:false});el.addEventListener('mousedown',()=>fn(true));el.addEventListener('mouseup',()=>fn(false));el.addEventListener('mouseleave',()=>fn(false));};
   press(L,d=>dir=d?-1:0);
   press(R,d=>dir=d?1:0);
   F.addEventListener('click',fire);
   F.addEventListener('touchstart',e=>{e.preventDefault();fire();},{passive:false});
-  // drag/tap on canvas
   cv.addEventListener('touchmove',e=>{e.preventDefault();const r=cv.getBoundingClientRect();moveTo=(e.touches[0].clientX-r.left)*(W/r.width);},{passive:false});
   cv.addEventListener('touchstart',e=>{e.preventDefault();const r=cv.getBoundingClientRect();moveTo=(e.touches[0].clientX-r.left)*(W/r.width);fire();},{passive:false});
   cv.addEventListener('mousemove',e=>{if(e.buttons){const r=cv.getBoundingClientRect();moveTo=(e.clientX-r.left)*(W/r.width);}});
   cv.addEventListener('mousedown',e=>{const r=cv.getBoundingClientRect();moveTo=(e.clientX-r.left)*(W/r.width);fire();});
 
+  function hitBarrier(b){
+    for(const blk of barriers){
+      if(blk.hp>0&&b.x<blk.x+blk.w&&b.x+b.w>blk.x&&b.y<blk.y+blk.h&&b.y+b.h>blk.y){
+        blk.hp--; return true;
+      }
+    }
+    return false;
+  }
+
   function loop(){
     if(over)return;
-    // move ship
     if(moveTo!=null){ const d=moveTo-ship.x; ship.x+=Math.max(-6,Math.min(6,d)); if(Math.abs(d)<3)moveTo=null; }
     ship.x+=dir*5;
     ship.x=Math.max(ship.w/2,Math.min(W-ship.w/2,ship.x));
-    // bullets
-    bullets.forEach(b=>b.y-=7); bullets=bullets.filter(b=>b.y>-10);
-    // enemy movement (step every few frames)
+    bullets.forEach(b=>b.y-=7);
+    // player bullets hit barriers
+    bullets=bullets.filter(b=>{ if(b.y<-10)return false; if(hitBarrier(b))return false; return true; });
     etick++;
     const alive=enemies.filter(e=>e.alive);
-    const speed=Math.max(8,40-alive.length); // faster as fewer remain
+    // SLOWER: higher base so steps are less frequent; gentler speed-up
+    const speed=Math.max(22,55-Math.floor((24-alive.length)*0.8));
     if(etick>=speed){
       etick=0;
       let hitEdge=false;
-      alive.forEach(e=>{ if(e.x+edir*8<10||e.x+e.w+edir*8>W-10)hitEdge=true; });
-      if(hitEdge){ edir*=-1; alive.forEach(e=>e.y+=16); }
-      else alive.forEach(e=>e.x+=edir*8);
-      // random enemy fire
-      if(alive.length&&Math.random()<0.5){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
+      alive.forEach(e=>{ if(e.x+edir*7<10||e.x+e.w+edir*7>W-10)hitEdge=true; });
+      if(hitEdge){ edir*=-1; alive.forEach(e=>e.y+=12); }
+      else alive.forEach(e=>e.x+=edir*7);
+      // less frequent enemy fire
+      if(alive.length&&Math.random()<0.28){ const e=alive[Math.floor(Math.random()*alive.length)]; ebullets.push({x:e.x+e.w/2,y:e.y+e.h,w:3,h:9}); }
     }
-    ebullets.forEach(b=>b.y+=4); ebullets=ebullets.filter(b=>b.y<H+10);
-    // collisions bullet->enemy
+    ebullets.forEach(b=>b.y+=3.2);
+    // enemy bullets hit barriers
+    ebullets=ebullets.filter(b=>{ if(b.y>H+10)return false; if(hitBarrier(b))return false; return true; });
+    // player bullet -> enemy
     bullets.forEach(b=>{ alive.forEach(e=>{ if(e.alive&&b.x<e.x+e.w&&b.x+b.w>e.x&&b.y<e.y+e.h&&b.y+b.h>e.y){ e.alive=false; b.y=-99; score+=(4-e.row)*10; } }); });
     bullets=bullets.filter(b=>b.y>-10);
     // enemy bullet -> ship
     ebullets.forEach(b=>{ if(b.x<ship.x+ship.w/2&&b.x+b.w>ship.x-ship.w/2&&b.y<ship.y+ship.h&&b.y+b.h>ship.y){ b.y=H+99; hitShip(); } });
     ebullets=ebullets.filter(b=>b.y<H+10);
-    // enemy reaches bottom
     if(alive.some(e=>e.y+e.h>=ship.y-4)){ hitShip(true); }
-    // wave cleared
-    if(alive.length===0){ score+=50; spawn(); edir=1; }
+    if(alive.length===0){ score+=50; spawn(); buildBarriers(); edir=1; }
     document.getElementById('iv-score').textContent='Score: '+score;
     draw();
     raf=requestAnimationFrame(loop);
@@ -1370,19 +1500,18 @@ function createInvaders(host){
     lives--;
     document.getElementById('iv-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
     ebullets=[];
-    if(reset){ enemies.forEach(e=>{ if(e.alive)e.y=Math.max(40,e.y-60); }); }
+    if(reset){ enemies.forEach(e=>{ if(e.alive)e.y=Math.max(36,e.y-60); }); }
     if(lives<=0) endGame();
   }
   function draw(){
     ctx.clearRect(0,0,W,H);
-    // ship
     ctx.fillStyle='#4fffb0';
     ctx.fillRect(ship.x-ship.w/2,ship.y,ship.w,ship.h);
     ctx.fillRect(ship.x-3,ship.y-6,6,6);
-    // bullets
+    // barriers
+    barriers.forEach(blk=>{ if(blk.hp<=0)return; ctx.fillStyle=blk.hp===2?'#4fa86f':'#2f6a45'; ctx.fillRect(blk.x,blk.y,blk.w-1,blk.h-1); });
     ctx.fillStyle='#f0e040'; bullets.forEach(b=>ctx.fillRect(b.x-1.5,b.y,b.w,b.h));
     ctx.fillStyle='#ff4f6d'; ebullets.forEach(b=>ctx.fillRect(b.x-1.5,b.y,b.w,b.h));
-    // enemies
     enemies.forEach(e=>{ if(!e.alive)return; ctx.fillStyle=['#ff4f6d','#ff9f4f','#a78bfa','#4fa8ff'][e.row]||'#fff'; ctx.fillRect(e.x,e.y,e.w,e.h); ctx.fillStyle='#05050d'; ctx.fillRect(e.x+4,e.y+5,3,3); ctx.fillRect(e.x+e.w-7,e.y+5,3,3); });
   }
   function endGame(){
@@ -1392,7 +1521,7 @@ function createInvaders(host){
     ctx.fillText('GAME OVER',W/2,H/2-10);
     ctx.fillStyle='#fff';ctx.font='18px DM Sans,sans-serif';
     ctx.fillText('Score: '+score,W/2,H/2+22);
-    submitGameScore(score);
+    if(onGameComplete) onGameComplete(score);
   }
   raf=requestAnimationFrame(loop);
   return { stop(){ over=true; cancelAnimationFrame(raf); } };
@@ -1429,38 +1558,41 @@ function createPacman(host){
   const cv=document.getElementById('pm-canvas'),ctx=cv.getContext('2d');
   let pac={c:6,r:1,dir:[0,0],next:[0,0],mouth:0};
   let pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
-  let score=0,lives=3,over=false,raf=null,moveAcc=0,power=0;
+  let score=0,lives=3,over=false,raf=null,moveAcc=0,power=0,stepCount=0;
+  // ghosts start penned in the centre box and are released one at a time
+  const PEN={c:6,r:6};
   let ghosts=[
-    {c:6,r:6,col:'#ff4f6d',dir:[1,0]},
-    {c:5,r:6,col:'#4fa8ff',dir:[-1,0]},
-    {c:7,r:6,col:'#ff9f4f',dir:[0,-1]},
+    {c:6,r:6,col:'#ff4f6d',dir:[0,-1],out:false,release:14},
+    {c:5,r:6,col:'#4fa8ff',dir:[0,-1],out:false,release:42},
+    {c:7,r:6,col:'#ff9f4f',dir:[0,-1],out:false,release:72},
   ];
   function cell(c,r){ if(r<0||r>=ROWS||c<0||c>=COLS)return 0; return MAP[r][c]; }
   function canMove(c,r){ return cell(c,r)!==0; }
-  // swipe controls
   let tsx=0,tsy=0;
   cv.addEventListener('touchstart',e=>{e.preventDefault();tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;},{passive:false});
   cv.addEventListener('touchend',e=>{e.preventDefault();const dx=e.changedTouches[0].clientX-tsx,dy=e.changedTouches[0].clientY-tsy;if(Math.abs(dx)>Math.abs(dy)){pac.next=[dx>0?1:-1,0];}else{pac.next=[0,dy>0?1:-1];}},{passive:false});
-  // keyboard for desktop testing
   window.addEventListener('keydown',keyHandler);
   function keyHandler(e){ if(over)return; if(e.key==='ArrowLeft')pac.next=[-1,0]; else if(e.key==='ArrowRight')pac.next=[1,0]; else if(e.key==='ArrowUp')pac.next=[0,-1]; else if(e.key==='ArrowDown')pac.next=[0,1]; }
 
   function step(){
-    // pac tries next dir
+    stepCount++;
     if(canMove(pac.c+pac.next[0],pac.r+pac.next[1])) pac.dir=pac.next.slice();
     const nc=pac.c+pac.dir[0],nr=pac.r+pac.dir[1];
     if(canMove(nc,nr)){ pac.c=nc; pac.r=nr; }
-    // eat
     const v=MAP[pac.r][pac.c];
     if(v===1){ MAP[pac.r][pac.c]=2; score+=10; pellets--; }
     else if(v===3){ MAP[pac.r][pac.c]=2; score+=50; pellets--; power=18; }
     if(pellets<=0){ score+=200; endGame(true); return; }
-    // ghosts move (simple chase/random)
+    // release ghosts from the pen gradually
+    ghosts.forEach(g=>{ if(!g.out && stepCount>=g.release){ g.out=true; g.c=6; g.r=4; g.dir=[0,-1]; } });
+    // ghosts move only when released; only every other step (slower than pac)
+    const ghostsMoveThisStep = stepCount%2===0;
     ghosts.forEach(g=>{
+      if(!g.out){ return; } // still penned
+      if(!ghostsMoveThisStep && power<=0) return; // slow normal speed; when power, even slower handled below
       const opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>canMove(g.c+d[0],g.r+d[1])&&!(d[0]===-g.dir[0]&&d[1]===-g.dir[1]));
       const choices=opts.length?opts:[[-g.dir[0],-g.dir[1]]];
-      // chase pac 60% of the time
-      if(Math.random()<0.6&&choices.length){
+      if(Math.random()<0.55&&choices.length){
         choices.sort((a,b)=>{
           const da=Math.abs(g.c+a[0]-pac.c)+Math.abs(g.r+a[1]-pac.r);
           const db=Math.abs(g.c+b[0]-pac.c)+Math.abs(g.r+b[1]-pac.r);
@@ -1471,14 +1603,16 @@ function createPacman(host){
       g.c+=g.dir[0]; g.r+=g.dir[1];
     });
     if(power>0)power--;
-    // collisions
-    ghosts.forEach(g=>{ if(g.c===pac.c&&g.r===pac.r){ if(power>0){ score+=100; g.c=6;g.r=6; } else hit(); } });
+    ghosts.forEach(g=>{ if(g.out&&g.c===pac.c&&g.r===pac.r){ if(power>0){ score+=100; g.out=false; g.c=6;g.r=6; g.release=stepCount+30; } else hit(); } });
   }
   function hit(){
     lives--;
     document.getElementById('pm-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
     pac.c=6;pac.r=1;pac.dir=[0,0];pac.next=[0,0];
-    ghosts[0].c=6;ghosts[0].r=6;ghosts[1].c=5;ghosts[1].r=6;ghosts[2].c=7;ghosts[2].r=6;
+    stepCount=0;
+    ghosts[0].out=false;ghosts[0].c=6;ghosts[0].r=6;ghosts[0].release=14;
+    ghosts[1].out=false;ghosts[1].c=5;ghosts[1].r=6;ghosts[1].release=42;
+    ghosts[2].out=false;ghosts[2].c=7;ghosts[2].r=6;ghosts[2].release=72;
     if(lives<=0) endGame(false);
   }
   function draw(){
@@ -1489,21 +1623,19 @@ function createPacman(host){
       else if(v===1){ ctx.fillStyle='#ffd'; ctx.beginPath();ctx.arc(x+TS/2,y+TS/2,2.5,0,7);ctx.fill(); }
       else if(v===3){ ctx.fillStyle='#fff'; ctx.beginPath();ctx.arc(x+TS/2,y+TS/2,6,0,7);ctx.fill(); }
     }
-    // pac
     pac.mouth=(pac.mouth+1)%2;
     ctx.fillStyle='#f0e040';ctx.beginPath();
     const cx=pac.c*TS+TS/2,cy=pac.r*TS+TS/2,rad=TS/2-2;
     const open=pac.mouth?0.25:0.05;
     let ang=Math.atan2(pac.dir[1],pac.dir[0]);
     ctx.moveTo(cx,cy);ctx.arc(cx,cy,rad,ang+open*Math.PI,ang+(2-open)*Math.PI);ctx.closePath();ctx.fill();
-    // ghosts
     ghosts.forEach(g=>{ ctx.fillStyle=power>0?'#4f6dff':g.col; const gx=g.c*TS+TS/2,gy=g.r*TS+TS/2; ctx.beginPath();ctx.arc(gx,gy,rad,Math.PI,0);ctx.lineTo(gx+rad,gy+rad);ctx.lineTo(gx-rad,gy+rad);ctx.closePath();ctx.fill(); ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(gx-3,gy-2,2,0,7);ctx.arc(gx+3,gy-2,2,0,7);ctx.fill(); });
     document.getElementById('pm-score').textContent='Score: '+score;
   }
   function loop(){
     if(over)return;
     moveAcc++;
-    if(moveAcc>=8){ moveAcc=0; step(); if(over)return; }
+    if(moveAcc>=11){ moveAcc=0; step(); if(over)return; } // slower pac (was 8)
     draw();
     raf=requestAnimationFrame(loop);
   }
@@ -1514,7 +1646,7 @@ function createPacman(host){
     ctx.fillText(won?'YOU WIN!':'GAME OVER',W/2,H/2-8);
     ctx.fillStyle='#fff';ctx.font='18px DM Sans,sans-serif';
     ctx.fillText('Score: '+score,W/2,H/2+20);
-    submitGameScore(score);
+    if(onGameComplete) onGameComplete(score);
   }
   raf=requestAnimationFrame(loop);
   return { stop(){ over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler); } };
@@ -1523,7 +1655,7 @@ function createPacman(host){
 
 function showPlayerReveal(room){
   if(activeGame&&activeGame.stop){ activeGame.stop(); activeGame=null; }
-  state.shownStatus='reveal';
+  state.shownStatus='reveal'; state.shownOpts=undefined;
   if(!document.getElementById('screen-question').classList.contains('active'))return;
   const q=pGetQuestion(room,room.current_question);if(!q)return;
   if(q.qtype==='mc'||q.qtype==='tf'){
