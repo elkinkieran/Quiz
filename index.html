@@ -206,6 +206,9 @@
   @keyframes mjArmOut{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-100deg)}}
   @keyframes mjLegP{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-12deg) translateY(8px)}}
   @keyframes playPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}
+  @keyframes cdPulse{0%{transform:scale(.3);opacity:0}40%{transform:scale(1.1);opacity:1}100%{transform:scale(1);opacity:1}}
+  @keyframes slideInUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .anim-in{animation:slideInUp .45s cubic-bezier(.2,.8,.3,1) both;}
   .mascot.mjlean .m-body{animation:mjLean 2s ease-in-out 1;transform-origin:42px 158px;}
   .mascot.mjlean .arm-r{animation:mjArmOut 2s ease-in-out 1;transform-origin:68px 66px;}
   .mascot.mjlean .leg-l{animation:mjLegP 2s ease-in-out 1;transform-origin:34px 158px;}
@@ -480,8 +483,11 @@
   <div class="landing-actions">
     <button class="btn btn-primary" onclick="openCreator()">🎮 Join a Game</button>
     <div class="or-sep">or</div>
-    <button class="btn btn-ghost" onclick="showScreen('screen-host-setup')">🎯 Host a Game</button>
-    <button class="btn btn-ghost btn-sm" id="gravity-btn" style="width:auto;margin:6px auto 0;opacity:.8" onclick="toggleGravity()">🌍 Turn off gravity</button>
+    <button class="btn btn-ghost" onclick="showScreen('screen-host-setup');loadSavedSetList()">🎯 Host a Game</button>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:6px">
+      <button class="btn btn-ghost btn-sm" id="gravity-btn" style="width:auto;opacity:.8" onclick="toggleGravity()">🌍 Turn off gravity</button>
+      <button class="btn btn-ghost btn-sm" id="sound-btn" style="width:auto;opacity:.8" onclick="toggleSound()">🔊 Sound on</button>
+    </div>
   </div>
 </div>
 
@@ -641,6 +647,20 @@
     <button class="btn btn-purple btn-sm" style="margin-top:6px" onclick="addRoundHeader()">+ Add Round</button>
   </div>
 
+  <!-- IMPORT / QUESTION SETS -->
+  <div class="card w100" style="background:#4fffb010;border-color:#4fffb040">
+    <label>📥 Import questions or load a saved set</label>
+    <p class="text-muted" style="font-size:.8rem;margin:4px 0 10px">Build questions in Excel/Sheets, export as CSV, and import here. Or load a set you saved earlier.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="file" id="csv-file" accept=".csv,text/csv" style="display:none" onchange="importCSVFile(event)">
+      <button class="btn btn-success btn-sm" style="width:auto" onclick="document.getElementById('csv-file').click()">📄 Import CSV</button>
+      <select id="saved-set-select" style="width:auto;flex:1;min-width:140px"><option value="">— Load saved set —</option></select>
+      <button class="btn btn-ghost btn-sm" style="width:auto" onclick="loadSavedSet()">Load</button>
+      <button class="btn btn-ghost btn-sm" style="width:auto" onclick="deleteSavedSet()" title="Delete selected set">🗑️</button>
+    </div>
+    <div id="import-status" class="text-muted" style="font-size:.8rem;margin-top:8px"></div>
+  </div>
+
   <!-- QUESTION -->
   <div class="card w100">
     <label>Question Type</label>
@@ -702,6 +722,11 @@
         <select id="game-choice" style="margin-bottom:10px" onchange="onGameChoiceChange()">
           <option value="invaders">👾 Space Invaders</option>
           <option value="pacman">🟡 Pac-Man</option>
+          <option value="reaction">⚡ Reaction Challenge</option>
+          <option value="targettap">🎯 Target Tap</option>
+          <option value="memory">🧠 Memory Match</option>
+          <option value="dodge">☄️ Dodge the Meteors</option>
+          <option value="quickdraw">🤠 Quick Draw</option>
           <option value="pong">🏓 Pong Tournament</option>
         </select>
         <label id="game-bonus-label">Bonus points for the top scorer</label>
@@ -720,6 +745,7 @@
     <div class="section-title" style="margin-bottom:10px">Quiz (<span id="q-count">0</span> questions) — tap ↑↓ to reorder</div>
     <div class="q-list" id="q-list"></div>
   </div>
+  <button class="btn btn-ghost w100 btn-sm" onclick="saveCurrentSet()" style="margin-top:8px">💾 Save these questions as a set (for reuse)</button>
   <button class="btn btn-primary w100" onclick="createRoom()" id="start-btn" style="margin-top:8px">🚀 Create Room & Go Live</button>
 </div>
 
@@ -948,6 +974,113 @@ function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classL
 function toast(msg,d=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+// ============================================================
+//  GAME-SHOW PRESENTATION LAYER
+//  Sound (Web Audio), confetti, score popups, countdown overlay.
+// ============================================================
+const FX = (()=>{
+  let actx=null, muted=false;
+  function ctx(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+  function tone(freq, t0, dur, type='sine', vol=0.25){
+    const a=ctx(); if(!a||muted) return;
+    const o=a.createOscillator(), g=a.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq, a.currentTime+t0);
+    g.gain.setValueAtTime(0, a.currentTime+t0);
+    g.gain.linearRampToValueAtTime(vol, a.currentTime+t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime+t0+dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(a.currentTime+t0); o.stop(a.currentTime+t0+dur+0.02);
+  }
+  function noise(t0, dur, vol=0.3){
+    const a=ctx(); if(!a||muted) return;
+    const n=Math.floor(a.sampleRate*dur), buf=a.createBuffer(1,n,a.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    const src=a.createBufferSource(); src.buffer=buf;
+    const g=a.createGain(); g.gain.setValueAtTime(vol, a.currentTime+t0); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime+t0+dur);
+    src.connect(g); g.connect(a.destination); src.start(a.currentTime+t0);
+  }
+  return {
+    setMuted(m){ muted=m; },
+    isMuted(){ return muted; },
+    resume(){ const a=ctx(); if(a&&a.state==='suspended') a.resume(); },
+    correct(){ this.resume(); [523,659,784,1047].forEach((f,i)=>tone(f, i*0.08, 0.18, 'triangle', 0.22)); },
+    wrong(){ this.resume(); tone(220, 0, 0.18, 'sawtooth', 0.22); tone(160, 0.12, 0.28, 'sawtooth', 0.22); },
+    tick(){ this.resume(); tone(880, 0, 0.05, 'square', 0.12); },
+    go(){ this.resume(); tone(1320, 0, 0.3, 'triangle', 0.3); },
+    fanfare(){ this.resume(); const seq=[[523,0],[523,.12],[523,.24],[659,.38],[784,.56],[659,.7],[784,.84]]; seq.forEach(([f,t])=>tone(f,t,0.22,'triangle',0.24)); tone(1047,0.95,0.6,'triangle',0.26); },
+    reveal(){ this.resume(); tone(330,0,0.5,'sine',0.18); tone(440,0.25,0.5,'sine',0.18); noise(0.5,0.3,0.15); },
+    pop(){ this.resume(); tone(660,0,0.08,'sine',0.18); tone(990,0.05,0.1,'sine',0.16); },
+    blip(){ this.resume(); tone(740,0,0.05,'square',0.1); },
+    hit(){ this.resume(); tone(180,0,0.1,'square',0.18); noise(0,0.08,0.12); },
+  };
+})();
+
+function confettiBurst(opts={}){
+  const n=opts.count||90, colors=opts.colors||['#a78bfa','#4fffb0','#f0e040','#ff4f6d','#4fa8ff','#ff9f4f'];
+  let cv=document.getElementById('fx-confetti');
+  if(!cv){ cv=document.createElement('canvas'); cv.id='fx-confetti'; cv.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:600'; document.body.appendChild(cv); }
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=innerWidth*dpr; cv.height=innerHeight*dpr; const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  const ox=opts.x!=null?opts.x:innerWidth/2, oy=opts.y!=null?opts.y:innerHeight*0.35;
+  const parts=[]; for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, sp=4+Math.random()*9;
+    parts.push({x:ox,y:oy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-6,g:0.28+Math.random()*0.12,r:4+Math.random()*5,
+      col:colors[i%colors.length],rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.4,life:0,max:60+Math.random()*40}); }
+  let raf;
+  function frame(){
+    ctx.clearRect(0,0,innerWidth,innerHeight); let alive=false;
+    for(const p of parts){ if(p.life>p.max)continue; alive=true; p.life++; p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      const al=Math.max(0,1-p.life/p.max); ctx.save(); ctx.globalAlpha=al; ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.col; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); ctx.restore(); }
+    if(alive) raf=requestAnimationFrame(frame); else { ctx.clearRect(0,0,innerWidth,innerHeight); }
+  }
+  cancelAnimationFrame(raf); frame();
+}
+
+function scorePopup(text, x, y, color){
+  const el=document.createElement('div');
+  el.textContent=text;
+  el.style.cssText=`position:fixed;left:${x}px;top:${y}px;transform:translate(-50%,-50%);z-index:650;pointer-events:none;
+    font-family:'Bebas Neue',sans-serif;font-size:2.2rem;font-weight:700;color:${color||'#4fffb0'};
+    text-shadow:0 2px 8px #000a;transition:transform 1s cubic-bezier(.2,.7,.3,1),opacity 1s ease;opacity:1`;
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>{ el.style.transform='translate(-50%,-50%) translateY(-80px) scale(1.3)'; el.style.opacity='0'; });
+  setTimeout(()=>el.remove(),1050);
+}
+
+function countdownOverlay(opts={}){
+  return new Promise(res=>{
+    let ov=document.getElementById('fx-countdown');
+    if(!ov){ ov=document.createElement('div'); ov.id='fx-countdown';
+      ov.style.cssText='position:fixed;inset:0;z-index:680;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(5,5,15,.55)';
+      ov.innerHTML='<div id="fx-cd-num" style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(5rem,28vw,12rem);color:#f0e040;text-shadow:0 0 40px #f0e04088"></div>';
+      document.body.appendChild(ov);
+    }
+    ov.style.display='flex';
+    const num=document.getElementById('fx-cd-num');
+    const seq=opts.seq||['3','2','1','GO!'];
+    let i=0;
+    function step(){
+      if(i>=seq.length){ ov.style.display='none'; res(); return; }
+      const s=seq[i++];
+      num.textContent=s;
+      num.style.animation='none'; void num.offsetWidth; num.style.animation='cdPulse .7s ease-out';
+      if(s==='GO!'){ FX.go(); } else { FX.tick(); }
+      setTimeout(step, s==='GO!'?500:700);
+    }
+    step();
+  });
+}
+
+function toggleSound(){
+  const m=!FX.isMuted(); FX.setMuted(m);
+  const btn=document.getElementById('sound-btn');
+  if(btn) btn.textContent = m ? '🔇 Sound off' : '🔊 Sound on';
+  if(!m){ FX.resume(); FX.blip(); }
+}
+['pointerdown','keydown','touchstart'].forEach(ev=>{
+  window.addEventListener(ev, ()=>FX.resume(), {once:false});
+});
+
 // ============ HOST SETUP ============
 let hostItems = []; // {type:'round',name,roundType,correctPts,wrongPts} | {type:'question',qtype,...}
 let currentQType = 'mc';
@@ -1040,6 +1173,123 @@ function moveItem(idx,dir){
   renderQList();
 }
 function removeItem(idx){hostItems.splice(idx,1);renderQList();}
+
+// ============================================================
+//  CSV IMPORT  +  SAVED QUESTION SETS
+//  CSV columns: Type, Question, A, B, C, D, Correct, Time, Round
+//  Type: mc | tf | number | name   (name = MC styled for "who is this")
+// ============================================================
+function parseCSV(text){
+  const rows=[]; let row=[], field='', inQ=false;
+  text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(inQ){
+      if(ch==='"'){ if(text[i+1]==='"'){ field+='"'; i++; } else inQ=false; }
+      else field+=ch;
+    } else {
+      if(ch==='"') inQ=true;
+      else if(ch===','){ row.push(field); field=''; }
+      else if(ch==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else field+=ch;
+    }
+  }
+  if(field.length||row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r=>r.some(c=>c.trim()!==''));
+}
+
+function importCSVFile(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ try{ const added=importQuestionsFromCSV(e.target.result); setImportStatus('✓ Imported '+added+' question'+(added===1?'':'s')+' from '+file.name, '#4fffb0'); }
+    catch(err){ setImportStatus('❌ '+err.message, '#ff4f6d'); } };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+function importQuestionsFromCSV(text){
+  const rows=parseCSV(text);
+  if(!rows.length) throw new Error('File looks empty');
+  let start=0;
+  const first=(rows[0][0]||'').trim().toLowerCase();
+  if(first==='type'){ start=1; if(rows[1]&&/^(mc|tf|number|name)$/i.test((rows[1][0]||'').trim())===false) start=2; }
+  let added=0;
+  for(let r=start;r<rows.length;r++){
+    const cols=rows[r].map(c=>(c||'').trim());
+    const type=(cols[0]||'').toLowerCase();
+    const text2=cols[1]||'';
+    if(!type||!text2) continue;
+    const A=cols[2],B=cols[3],C=cols[4],D=cols[5],correct=(cols[6]||'').trim(),time=parseInt(cols[7])||10,round=(cols[8]||'').trim();
+    if(round){ hostItems.push({type:'round',name:round,roundType:'normal',correctPts:5,wrongPts:-5}); }
+    if(type==='mc'||type==='name'){
+      const opts=[A,B,C,D];
+      if(opts.some(o=>!o)) throw new Error(`Row ${r+1}: multiple-choice needs all four options A–D`);
+      const idx={A:0,B:1,C:2,D:3}[correct.toUpperCase()];
+      if(idx===undefined) throw new Error(`Row ${r+1}: "Correct" must be A, B, C or D`);
+      hostItems.push({type:'question',qtype:'mc',subtype:type,text:text2,time,opts,correct:idx});
+      added++;
+    } else if(type==='tf'){
+      const c=correct.toLowerCase();
+      const ci=(c==='true'||c==='t'||c==='1')?0:(c==='false'||c==='f'||c==='0')?1:-1;
+      if(ci<0) throw new Error(`Row ${r+1}: True/False "Correct" must be True or False`);
+      hostItems.push({type:'question',qtype:'tf',text:text2,time,opts:['True','False'],correct:ci});
+      added++;
+    } else if(type==='number'){
+      const n=parseFloat(correct);
+      if(isNaN(n)) throw new Error(`Row ${r+1}: number question needs a numeric "Correct" value`);
+      hostItems.push({type:'question',qtype:'number',text:text2,time,numberAnswer:n});
+      added++;
+    } else {
+      throw new Error(`Row ${r+1}: unknown Type "${type}" (use mc, tf, number or name)`);
+    }
+  }
+  if(added===0) throw new Error('No valid questions found — check the column order matches the template');
+  renderQList();
+  return added;
+}
+function setImportStatus(msg,color){ const el=document.getElementById('import-status'); if(el){ el.textContent=msg; el.style.color=color||'var(--muted)'; } }
+
+// ---- Saved question sets (Supabase table 'question_sets') ----
+async function saveCurrentSet(){
+  if(!hostItems.length) return toast('⚠️ Nothing to save yet');
+  const name=prompt('Name this question set (e.g. "Pub Quiz Pack 1"):');
+  if(!name||!name.trim()) return;
+  try{
+    const {error}=await sb.from('question_sets').insert({name:name.trim(),items:hostItems});
+    if(error) throw error;
+    toast('💾 Saved "'+name.trim()+'"'); loadSavedSetList();
+  }catch(e){
+    if((e.message||'').match(/relation|does not exist|table|schema cache/i)) toast('⚠️ Run the question_sets SQL first (see chat)');
+    else toast('❌ '+e.message);
+  }
+}
+async function loadSavedSetList(){
+  try{
+    const {data,error}=await sb.from('question_sets').select('id,name,created_at').order('created_at',{ascending:false});
+    if(error) throw error;
+    const sel=document.getElementById('saved-set-select'); if(!sel) return;
+    sel.innerHTML='<option value="">— Load saved set —</option>'+(data||[]).map(s=>`<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+  }catch(e){ /* table may not exist yet */ }
+}
+async function loadSavedSet(){
+  const sel=document.getElementById('saved-set-select'); const id=sel&&sel.value;
+  if(!id) return toast('⚠️ Pick a set first');
+  try{
+    const {data,error}=await sb.from('question_sets').select('items,name').eq('id',id).single();
+    if(error) throw error;
+    const items=data.items||[];
+    const replace=hostItems.length?confirm('Replace your current questions with this set?\n\nOK = replace,  Cancel = add to the end'):true;
+    hostItems=replace?items.slice():hostItems.concat(items);
+    renderQList(); toast('✓ Loaded "'+data.name+'"');
+  }catch(e){ toast('❌ '+e.message); }
+}
+async function deleteSavedSet(){
+  const sel=document.getElementById('saved-set-select'); const id=sel&&sel.value;
+  if(!id) return toast('⚠️ Pick a set first');
+  if(!confirm('Delete this saved set permanently?')) return;
+  try{ const {error}=await sb.from('question_sets').delete().eq('id',id); if(error) throw error; toast('🗑️ Deleted'); loadSavedSetList(); }
+  catch(e){ toast('❌ '+e.message); }
+}
 
 function renderQList(){
   const list=document.getElementById('q-list');
@@ -1537,6 +1787,7 @@ function showPlayerCatIntro(room){
   document.getElementById('cat-intro-btn').disabled=false;
   document.getElementById('cat-intro-btn').textContent="I'm Ready →";
   showScreen('screen-cat-intro');
+  if(state.shownRoundName!==round.name){ state.shownRoundName=round.name; FX.reveal(); }
 }
 
 async function playerClickThrough(){
@@ -1665,6 +1916,7 @@ async function submitMC(idx){
   const t=(Date.now()-state.questionStartTime)/1000;
   document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
   document.getElementById('opt-btn-'+idx).classList.add('selected');
+  FX.blip(); state._lastPick=idx;
   await sendAnswer({answer_index:idx,time_taken:t});
 }
 async function submitNumber(){
@@ -1700,13 +1952,11 @@ let onGameComplete=null;
 function startMiniGame(q){
   const host=document.getElementById('game-host-el');
   if(activeGame&&activeGame.stop) activeGame.stop();
-  // Build a CSS-3D arcade cabinet; the game mounts on its screen
-  const gname = q.game==='pacman' ? 'PAC-MUNCH' : 'SPACE BLASTERS';
-  const accent = q.game==='pacman' ? '#f0e040' : '#4fffb0';
+  const def=MINIGAMES[q.game]||MINIGAMES.invaders;
   host.innerHTML=`
     <div class="arcade-scene">
       <div class="arcade-cabinet">
-        <div class="cab-marquee" style="--cab-accent:${accent}">${gname}</div>
+        <div class="cab-marquee" style="--cab-accent:${def.accent}">${def.marquee}</div>
         <div class="cab-screen-frame">
           <div class="cab-screen" id="cab-screen"></div>
         </div>
@@ -1719,8 +1969,7 @@ function startMiniGame(q){
     </div>`;
   const screen=document.getElementById('cab-screen');
   onGameComplete=(score)=>{ submitGameScore(score); };
-  if(q.game==='pacman') activeGame=createPacman(screen);
-  else activeGame=createInvaders(screen);
+  activeGame=def.make(screen);
 }
 
 async function submitGameScore(score){
@@ -2194,16 +2443,247 @@ function createPacman(host){
 }
 
 
+// ============================================================
+//  NEW MINI-GAMES (phone-friendly, 15–60s). Each returns {stop()}
+//  and calls onGameComplete(score) when finished. Higher = better.
+// ============================================================
+
+// ---------- 1. REACTION CHALLENGE ----------
+function createReaction(host){
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px">
+    <div id="rc-stat" style="font-weight:700;font-size:.9rem">Round 1 / 5</div>
+    <div id="rc-pad" style="width:100%;max-width:300px;aspect-ratio:1;border-radius:18px;background:#3a2a5e;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Bebas Neue';font-size:1.4rem;color:#fff;cursor:pointer;user-select:none;transition:background .05s">Wait for GREEN…<br>then TAP!</div>
+    <div id="rc-log" class="text-muted" style="font-size:.8rem;min-height:1.2em"></div>
+  </div>`;
+  const pad=host.querySelector('#rc-pad'), stat=host.querySelector('#rc-stat'), log=host.querySelector('#rc-log');
+  let round=0, total=5, times=[], st='idle', t0=0, timer=null, over=false;
+  function next(){
+    if(over)return;
+    round++; if(round>total){ finish(); return; }
+    stat.textContent=`Round ${round} / ${total}`;
+    st='waiting'; pad.style.background='#c0392b'; pad.innerHTML='Wait…';
+    timer=setTimeout(()=>{ if(over)return; st='go'; t0=performance.now(); pad.style.background='#2ecc71'; pad.innerHTML='TAP!'; FX.blip(); }, 900+Math.random()*2200);
+  }
+  function tap(){
+    if(over)return;
+    if(st==='waiting'){ clearTimeout(timer); pad.style.background='#e67e22'; pad.innerHTML='Too early!<br>−penalty'; FX.wrong(); times.push(800); st='idle'; setTimeout(next,800); }
+    else if(st==='go'){ const ms=Math.round(performance.now()-t0); times.push(ms); FX.pop(); pad.style.background='#34495e'; pad.innerHTML=ms+' ms'; log.textContent='Best so far: '+Math.min(...times)+' ms'; st='idle'; setTimeout(next,650); }
+  }
+  pad.addEventListener('touchstart',e=>{e.preventDefault();tap();},{passive:false});
+  pad.addEventListener('mousedown',tap);
+  function finish(){
+    over=true;
+    const avg=times.reduce((a,b)=>a+b,0)/times.length;
+    const sc=Math.max(0, Math.round((600-avg)*2));
+    pad.style.background='#2a2a3d'; pad.innerHTML=`Avg ${Math.round(avg)}ms`;
+    stat.textContent='Done!'; if(onGameComplete) onGameComplete(sc);
+  }
+  setTimeout(next,500);
+  return { stop(){ over=true; clearTimeout(timer); } };
+}
+
+// ---------- 2. TARGET TAP ----------
+function createTargetTap(host){
+  const W=300,H=400, DUR=20000;
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700;font-size:.85rem"><span id="tt-score">Hits: 0</span><span id="tt-time">20.0s</span></div>
+    <canvas id="tt-cv" width="${W}" height="${H}" style="background:#0a0a1e;border:2px solid var(--border);border-radius:12px;max-width:100%;touch-action:none"></canvas>
+    <p class="text-muted" style="font-size:.78rem">Tap the targets — quick!</p></div>`;
+  const cv=host.querySelector('#tt-cv'), ctx=cv.getContext('2d');
+  let hits=0, miss=0, over=false, raf=null, start=performance.now();
+  let targets=[]; const MAXT=3;
+  function spawn(){ const r=18+Math.random()*14; targets.push({x:r+Math.random()*(W-2*r),y:r+Math.random()*(H-2*r),r,born:performance.now(),life:1100+Math.random()*700,hue:Math.random()*360}); }
+  for(let i=0;i<MAXT;i++) spawn();
+  function at(cx,cy){
+    const r=cv.getBoundingClientRect(); const x=(cx-r.left)*(W/r.width), y=(cy-r.top)*(H/r.height);
+    let hit=false;
+    for(let i=targets.length-1;i>=0;i--){ const t=targets[i]; if(Math.hypot(t.x-x,t.y-y)<=t.r+4){ targets.splice(i,1); hits++; hit=true; FX.pop(); spawn(); break; } }
+    if(!hit){ miss++; FX.blip(); }
+  }
+  cv.addEventListener('touchstart',e=>{e.preventDefault();for(const t of e.changedTouches)at(t.clientX,t.clientY);},{passive:false});
+  cv.addEventListener('mousedown',e=>at(e.clientX,e.clientY));
+  function loop(){
+    if(over)return;
+    const now=performance.now(), el=now-start, left=Math.max(0,DUR-el);
+    for(let i=targets.length-1;i>=0;i--){ if(now-targets[i].born>targets[i].life){ targets.splice(i,1); spawn(); } }
+    while(targets.length<MAXT) spawn();
+    ctx.clearRect(0,0,W,H);
+    for(const t of targets){ const age=(now-t.born)/t.life; const pr=t.r*(1-age*0.25);
+      ctx.fillStyle=`hsl(${t.hue},80%,60%)`; ctx.beginPath(); ctx.arc(t.x,t.y,pr,0,7); ctx.fill();
+      ctx.fillStyle='#0a0a1e'; ctx.beginPath(); ctx.arc(t.x,t.y,pr*0.55,0,7); ctx.fill();
+      ctx.fillStyle=`hsl(${t.hue},80%,70%)`; ctx.beginPath(); ctx.arc(t.x,t.y,pr*0.28,0,7); ctx.fill(); }
+    host.querySelector('#tt-score').textContent='Hits: '+hits;
+    host.querySelector('#tt-time').textContent=(left/1000).toFixed(1)+'s';
+    if(left<=0){ finish(); return; }
+    raf=requestAnimationFrame(loop);
+  }
+  function finish(){ over=true; cancelAnimationFrame(raf); const sc=Math.max(0,hits*15-miss*3); if(onGameComplete) onGameComplete(sc); }
+  raf=requestAnimationFrame(loop);
+  return { stop(){ over=true; cancelAnimationFrame(raf); } };
+}
+
+// ---------- 3. MEMORY MATCH (Simon-style) ----------
+function createMemory(host){
+  const PADS=[{c:'#ff4f6d'},{c:'#4fffb0'},{c:'#4fa8ff'},{c:'#f0e040'}];
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div id="mm-stat" style="font-weight:700">Watch the sequence…</div>
+    <div id="mm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:260px;max-width:90vw">
+      ${PADS.map((p,i)=>`<div class="mm-pad" data-i="${i}" style="aspect-ratio:1;border-radius:14px;background:${p.c};opacity:.4;cursor:pointer;transition:opacity .1s,transform .1s"></div>`).join('')}
+    </div>
+    <div id="mm-len" class="text-muted" style="font-size:.85rem">Level 1</div></div>`;
+  const pads=[...host.querySelectorAll('.mm-pad')], stat=host.querySelector('#mm-stat'), lenEl=host.querySelector('#mm-len');
+  let seq=[], inputIdx=0, accepting=false, level=0, over=false, best=0;
+  const w=(ms)=>new Promise(r=>setTimeout(r,ms));
+  function flash(i,on){ pads[i].style.opacity=on?'1':'0.4'; pads[i].style.transform=on?'scale(1.05)':'scale(1)'; }
+  async function playSeq(){
+    accepting=false; stat.textContent='Watch…';
+    await w(500);
+    for(const i of seq){ if(over)return; flash(i,true); FX.blip(); await w(420); flash(i,false); await w(180); }
+    accepting=true; inputIdx=0; stat.textContent='Your turn!';
+  }
+  function addStep(){ level++; lenEl.textContent='Level '+level; seq.push(Math.floor(Math.random()*4)); playSeq(); }
+  pads.forEach(p=>{
+    const press=()=>{
+      if(!accepting||over)return; const i=+p.dataset.i;
+      flash(i,true); FX.pop(); setTimeout(()=>flash(i,false),140);
+      if(i===seq[inputIdx]){ inputIdx++; if(inputIdx>=seq.length){ best=level; accepting=false; setTimeout(addStep,500); } }
+      else { fail(); }
+    };
+    p.addEventListener('touchstart',e=>{e.preventDefault();press();},{passive:false});
+    p.addEventListener('mousedown',press);
+  });
+  function fail(){ over=true; FX.wrong(); stat.textContent='Game over!'; const sc=Math.max(0,best*40); if(onGameComplete) onGameComplete(sc); }
+  setTimeout(addStep,600);
+  return { stop(){ over=true; } };
+}
+
+// ---------- 4. DODGE THE METEORS ----------
+function createDodge(host){
+  const W=300,H=440;
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700;font-size:.85rem"><span id="dg-time">0.0s</span><span>☄️ Survive!</span></div>
+    <canvas id="dg-cv" width="${W}" height="${H}" style="background:linear-gradient(#0a0820,#1a1040);border:2px solid var(--border);border-radius:12px;max-width:100%;touch-action:none"></canvas>
+    <p class="text-muted" style="font-size:.78rem">Drag left/right to dodge falling meteors</p></div>`;
+  const cv=host.querySelector('#dg-cv'), ctx=cv.getContext('2d');
+  let ship={x:W/2,y:H-34,r:12}, rocks=[], stars=[], over=false, raf=null, start=performance.now(), spawnT=0;
+  for(let i=0;i<40;i++) stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.5+0.3});
+  function setX(cx){ const r=cv.getBoundingClientRect(); ship.x=Math.max(ship.r,Math.min(W-ship.r,(cx-r.left)*(W/r.width))); }
+  cv.addEventListener('touchstart',e=>{e.preventDefault();setX(e.touches[0].clientX);},{passive:false});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();setX(e.touches[0].clientX);},{passive:false});
+  cv.addEventListener('mousemove',e=>{if(e.buttons)setX(e.clientX);});
+  cv.addEventListener('mousedown',e=>setX(e.clientX));
+  function loop(){
+    if(over)return;
+    const now=performance.now(), el=(now-start)/1000;
+    const diff=1+el*0.06;
+    spawnT++;
+    if(spawnT> Math.max(8, 26-el)){ spawnT=0; const r=8+Math.random()*16; rocks.push({x:r+Math.random()*(W-2*r),y:-r,r,vy:1.6+Math.random()*1.8+diff*0.5,vx:(Math.random()-0.5)*1.2,rot:0,vr:(Math.random()-0.5)*0.2}); }
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#ffffff'; for(const s of stars){ s.y+=s.s*0.6; if(s.y>H)s.y=0; ctx.globalAlpha=s.s/1.8; ctx.fillRect(s.x,s.y,s.s,s.s);} ctx.globalAlpha=1;
+    for(let i=rocks.length-1;i>=0;i--){ const k=rocks[i]; k.y+=k.vy; k.x+=k.vx; k.rot+=k.vr;
+      if(k.y>H+k.r){ rocks.splice(i,1); continue; }
+      ctx.save(); ctx.translate(k.x,k.y); ctx.rotate(k.rot); ctx.fillStyle='#9c6644'; ctx.beginPath();
+      for(let a=0;a<7;a++){ const ang=a/7*6.28, rr=k.r*(0.8+0.2*Math.sin(a*3)); ctx.lineTo(Math.cos(ang)*rr,Math.sin(ang)*rr);} ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#6e4b2f'; ctx.beginPath(); ctx.arc(-k.r*0.2,-k.r*0.2,k.r*0.25,0,7); ctx.fill(); ctx.restore();
+      if(Math.hypot(k.x-ship.x,k.y-ship.y)<k.r+ship.r-2){ finish(el); return; } }
+    ctx.save(); ctx.translate(ship.x,ship.y); ctx.fillStyle='#4fa8ff';
+    ctx.beginPath(); ctx.moveTo(0,-ship.r); ctx.lineTo(ship.r*0.8,ship.r); ctx.lineTo(-ship.r*0.8,ship.r); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#f0e040'; ctx.beginPath(); ctx.moveTo(-4,ship.r); ctx.lineTo(0,ship.r+6+Math.random()*5); ctx.lineTo(4,ship.r); ctx.closePath(); ctx.fill(); ctx.restore();
+    host.querySelector('#dg-time').textContent=el.toFixed(1)+'s';
+    raf=requestAnimationFrame(loop);
+  }
+  function finish(el){ over=true; cancelAnimationFrame(raf); FX.hit(); const sc=Math.round(el*40); if(onGameComplete) onGameComplete(sc); }
+  raf=requestAnimationFrame(loop);
+  return { stop(){ over=true; cancelAnimationFrame(raf); } };
+}
+
+// ---------- 5. QUICK DRAW ----------
+const QUICKDRAW_Q=[
+  {q:'7 × 8 = ?', a:['54','56','64','48'], c:1},
+  {q:'Capital of France?', a:['Rome','Madrid','Paris','Berlin'], c:2},
+  {q:'Which is a prime number?', a:['9','15','21','17'], c:3},
+  {q:'🐶 in Spanish?', a:['Gato','Perro','Pájaro','Pez'], c:1},
+  {q:'12 + 19 = ?', a:['29','31','32','28'], c:1},
+  {q:'Planet closest to the Sun?', a:['Venus','Earth','Mercury','Mars'], c:2},
+  {q:'Opposite of "ascend"?', a:['Climb','Descend','Rise','Soar'], c:1},
+  {q:'How many sides has a hexagon?', a:['5','6','7','8'], c:1},
+  {q:'H₂O is…', a:['Salt','Water','Gold','Air'], c:1},
+  {q:'9 × 9 = ?', a:['81','72','99','91'], c:0},
+];
+function createQuickDraw(host){
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px">
+    <div id="qd-stat" style="font-weight:700;font-size:.9rem">Get ready…</div>
+    <div id="qd-q" style="min-height:2.4em;font-family:'Bebas Neue';font-size:1.6rem;text-align:center;letter-spacing:1px"></div>
+    <div id="qd-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:300px"></div>
+    <div id="qd-log" class="text-muted" style="font-size:.82rem;min-height:1.2em"></div></div>`;
+  const stat=host.querySelector('#qd-stat'), qEl=host.querySelector('#qd-q'), opts=host.querySelector('#qd-opts'), log=host.querySelector('#qd-log');
+  let round=0, total=5, score=0, over=false, t0=0, answered=false, pool=[...QUICKDRAW_Q].sort(()=>Math.random()-0.5);
+  function ask(){
+    if(over)return;
+    if(round>=total){ finish(); return; }
+    const item=pool[round]; answered=false;
+    stat.textContent=`Question ${round+1} / ${total}`;
+    qEl.textContent='Get ready…'; opts.innerHTML='';
+    setTimeout(()=>{
+      if(over)return;
+      qEl.textContent=item.q; t0=performance.now(); FX.blip();
+      opts.innerHTML=item.a.map((a,i)=>`<button class="btn btn-ghost qd-opt" data-i="${i}" style="padding:14px;font-size:1rem">${escHtml(a)}</button>`).join('');
+      opts.querySelectorAll('.qd-opt').forEach(b=>{
+        const pick=()=>{
+          if(answered||over)return; answered=true;
+          const i=+b.dataset.i, ms=Math.round(performance.now()-t0);
+          if(i===item.c){ const pts=Math.max(20,Math.round(500 - ms/3)); score+=pts; FX.correct(); b.classList.add('correct'); log.textContent=`✓ ${ms}ms  +${pts}`; }
+          else { FX.wrong(); b.style.background='#c0392b'; const cb=opts.querySelector(`[data-i="${item.c}"]`); if(cb)cb.classList.add('correct'); log.textContent='✗ wrong'; }
+          opts.querySelectorAll('.qd-opt').forEach(x=>x.disabled=true);
+          round++; setTimeout(ask,900);
+        };
+        b.addEventListener('click',pick);
+      });
+      setTimeout(()=>{ if(!answered&&!over){ answered=true; FX.wrong(); log.textContent='⌛ too slow'; round++; setTimeout(ask,700); } },4000);
+    }, 700+Math.random()*900);
+  }
+  function finish(){ over=true; stat.textContent='Done!'; qEl.textContent='🏁'; if(onGameComplete) onGameComplete(score); }
+  setTimeout(ask,500);
+  return { stop(){ over=true; } };
+}
+
+// registry: maps game key -> {label, emoji, make, marquee, accent}
+const MINIGAMES={
+  invaders:{label:'Space Invaders', emoji:'👾', make:createInvaders, marquee:'SPACE BLASTERS', accent:'#4fffb0'},
+  pacman:{label:'Pac-Man', emoji:'🟡', make:createPacman, marquee:'PAC-MUNCH', accent:'#f0e040'},
+  reaction:{label:'Reaction Challenge', emoji:'⚡', make:createReaction, marquee:'FAST FINGERS', accent:'#ff4f6d'},
+  targettap:{label:'Target Tap', emoji:'🎯', make:createTargetTap, marquee:'BULLSEYE', accent:'#4fa8ff'},
+  memory:{label:'Memory Match', emoji:'🧠', make:createMemory, marquee:'SIMON SAYS', accent:'#a78bfa'},
+  dodge:{label:'Dodge the Meteors', emoji:'☄️', make:createDodge, marquee:'METEOR RUN', accent:'#ff9f4f'},
+  quickdraw:{label:'Quick Draw', emoji:'🤠', make:createQuickDraw, marquee:'QUICK DRAW', accent:'#4fffb0'},
+};
+
+
 function showPlayerReveal(room){
   if(activeGame&&activeGame.stop){ activeGame.stop(); activeGame=null; }
   state.shownStatus='reveal'; state.shownOpts=undefined;
   if(!document.getElementById('screen-question').classList.contains('active'))return;
   const q=pGetQuestion(room,room.current_question);if(!q)return;
+  let gotIt=false;
   if(q.qtype==='mc'||q.qtype==='tf'){
     document.querySelectorAll('.option-btn').forEach((btn,i)=>{btn.disabled=true;if(i===q.correct)btn.classList.add('correct');else if(btn.classList.contains('selected'))btn.classList.add('wrong');});
+    gotIt = state._lastPick===q.correct;
   }
+  const prevScore=state._myShownScore||0;
   state.scores=room.scores||{};
-  document.getElementById('q-score-badge').textContent=(state.scores[state.playerId]||0)+' pts';
+  const myScore=state.scores[state.playerId]||0;
+  const gained=myScore-prevScore; state._myShownScore=myScore;
+  if(gotIt){
+    FX.correct();
+    const cb=document.querySelector('.option-btn.correct');
+    const r=cb?cb.getBoundingClientRect():{left:innerWidth/2,top:innerHeight*0.4,width:0,height:0};
+    confettiBurst({x:r.left+r.width/2, y:r.top+r.height/2, count:70});
+    if(gained>0) scorePopup('+'+gained, r.left+r.width/2, r.top, '#4fffb0');
+  } else if(state._lastPick!=null){
+    FX.wrong();
+  }
+  state._lastPick=null;
+  document.getElementById('q-score-badge').textContent=myScore+' pts';
   const msg=document.getElementById('submitted-msg');msg.textContent='⏳ Waiting for next question...';msg.style.display='block';
 }
 
@@ -2215,6 +2695,11 @@ function showPlayerGameOver(room){
   const rank=all.findIndex(([id])=>id===state.playerId)+1;
   document.getElementById('player-final-rank').innerHTML=`<p style="font-size:1rem;font-weight:600">You finished <span style="color:var(--accent);font-family:'Bebas Neue';font-size:1.5rem">#${rank||'-'}</span> of ${all.length}</p>`;
   showScreen('screen-player-results');
+  if(state.shownStatus!=='results'){
+    state.shownStatus='results';
+    if(rank===1){ FX.fanfare(); confettiBurst({count:140}); setTimeout(()=>confettiBurst({count:90,x:innerWidth*0.25}),350); setTimeout(()=>confettiBurst({count:90,x:innerWidth*0.75}),600); }
+    else { FX.reveal(); confettiBurst({count:60}); }
+  }
 }
 
 function resetToLanding(){
@@ -2674,24 +3159,21 @@ let pongMatchWatch=null;     // subscription while waiting for a pong opponent
 
 function practiceStart(game){
   if(game==='pong'){ practiceStartPong(); return; }
-  // solo Invaders / Pac-Man — reuse the arcade cabinet, but local-only
   setMyActivity(game);
-  document.getElementById('practice-title').textContent = game==='pacman'?'Pac-Man Practice':'Space Invaders Practice';
+  const def=MINIGAMES[game]||MINIGAMES.invaders;
+  document.getElementById('practice-title').textContent = def.label+' Practice';
   showScreen('screen-practice-game');
   const host=document.getElementById('practice-game-el');
-  // stop any prior
   if(practiceGame&&practiceGame.stop){ try{practiceGame.stop();}catch(e){} }
-  // mount the cabinet (same visuals as the real game)
   mountPracticeCabinet(host, game);
 }
 
 function mountPracticeCabinet(host, game){
-  const gname = game==='pacman' ? 'PAC-MUNCH' : 'SPACE BLASTERS';
-  const accent = game==='pacman' ? '#f0e040' : '#4fffb0';
+  const def=MINIGAMES[game]||MINIGAMES.invaders;
   host.innerHTML=`
     <div class="arcade-scene">
       <div class="arcade-cabinet">
-        <div class="cab-marquee" style="--cab-accent:${accent}">${gname}</div>
+        <div class="cab-marquee" style="--cab-accent:${def.accent}">${def.marquee}</div>
         <div class="cab-screen-frame"><div class="cab-screen" id="practice-cab-screen"></div></div>
         <div class="cab-panel"><div class="cab-joystick"></div><div class="cab-btns"><span></span><span></span></div></div>
         <div class="cab-coin">JOEQUIZ ARCADE · PRACTICE MODE</div>
@@ -2702,13 +3184,11 @@ function mountPracticeCabinet(host, game){
       <button class="btn btn-ghost btn-sm" style="width:auto;margin-left:8px" onclick="practiceExit()">← Lobby</button>
     </p>`;
   const screen=document.getElementById('practice-cab-screen');
-  // local completion: show "play again", do NOT submit a score anywhere
   const prevCb=onGameComplete;
   onGameComplete=(score)=>{
     const w=document.getElementById('practice-again-wrap'); if(w)w.style.display='block';
   };
-  // restore global cb identity defensively when leaving
-  practiceGame = game==='pacman' ? createPacman(screen) : createInvaders(screen);
+  practiceGame = def.make(screen);
   practiceGame._restoreCb=prevCb;
 }
 
@@ -3133,11 +3613,16 @@ const ARCADE={
   CAM_LERP:0.08,
   // machines placed at fixed world X (canvas units, world is 1000px wide)
   machines:[
-    {key:'invaders', wx:160, emoji:'👾', label:'INVADERS', color:'#4fffb0'},
-    {key:'pacman',   wx:500, emoji:'🟡', label:'PAC-MAN',  color:'#f0e040'},
-    {key:'pong',     wx:840, emoji:'🏓', label:'PONG',     color:'#a78bfa'},
+    {key:'invaders',  wx:160,  emoji:'👾', label:'INVADERS',  color:'#4fffb0'},
+    {key:'pacman',    wx:420,  emoji:'🟡', label:'PAC-MAN',   color:'#f0e040'},
+    {key:'reaction',  wx:680,  emoji:'⚡', label:'REACTION',  color:'#ff4f6d'},
+    {key:'targettap', wx:940,  emoji:'🎯', label:'TARGET',    color:'#4fa8ff'},
+    {key:'memory',    wx:1200, emoji:'🧠', label:'MEMORY',    color:'#a78bfa'},
+    {key:'dodge',     wx:1460, emoji:'☄️', label:'DODGE',     color:'#ff9f4f'},
+    {key:'quickdraw', wx:1720, emoji:'🤠', label:'QUICKDRAW', color:'#4fffb0'},
+    {key:'pong',      wx:1980, emoji:'🏓', label:'PONG',      color:'#a78bfa'},
   ],
-  WORLD_W:1000,
+  WORLD_W:2140,
 };
 let arcadeRT=null;
 
