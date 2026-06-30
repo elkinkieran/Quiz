@@ -287,15 +287,15 @@
     text-shadow:0 1px 0 #fff8;
   }
   .cab-screen-frame{
-    background:#0a0a12;border-radius:12px;padding:10px;
+    background:#0a0a12;border-radius:12px;padding:8px;
     box-shadow:inset 0 0 0 3px #000, inset 0 0 22px #000, 0 0 0 2px #3a2068;
-    border:2px solid #1c1030;
+    border:2px solid #1c1030;overflow:visible;
   }
   .cab-screen{
-    background:#05050d;border-radius:6px;overflow:hidden;
+    background:#05050d;border-radius:6px;overflow:visible;
     display:flex;justify-content:center;align-items:flex-start;
     box-shadow:inset 0 0 30px #000;
-    position:relative;
+    position:relative;width:100%;
   }
   .cab-screen::after{ /* scanline sheen */
     content:'';position:absolute;inset:0;pointer-events:none;border-radius:6px;
@@ -530,16 +530,26 @@
     <!-- CLOTHES TAB -->
     <div class="creator-panel" id="tab-clothes">
       <div class="creator-section">
-        <label>Sleeve Length &amp; Colour</label>
+        <label>Top — Sleeve Length</label>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
           <button class="option-pill sel" id="sleeve-long-btn" onclick="setSleeve('long')">Long sleeve</button>
           <button class="option-pill" id="sleeve-short-btn" onclick="setSleeve('short')">Short sleeve</button>
         </div>
+        <label>Top Colour &amp; Pattern</label>
         <div class="swatch-row" id="sw-jumper"></div>
       </div>
       <div class="creator-section">
-        <label>Trouser Colour</label>
+        <label>Bottoms — Length</label>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+          <button class="option-pill sel" id="legwear-long-btn" onclick="setLegwear('long')">Long</button>
+          <button class="option-pill" id="legwear-shorts-btn" onclick="setLegwear('shorts')">Shorts</button>
+        </div>
+        <label>Bottoms Colour &amp; Pattern</label>
         <div class="swatch-row" id="sw-trousers"></div>
+      </div>
+      <div class="creator-section">
+        <label>Shoes</label>
+        <div class="option-pills" id="sw-shoes"></div>
       </div>
     </div>
     <!-- EXTRAS TAB -->
@@ -559,6 +569,7 @@
     </div>
   </div>
   <div class="divider" style="margin:8px 0"></div>
+  <button class="btn btn-ghost w100 btn-sm" onclick="randomiseAvatar()" style="margin-bottom:8px">🎲 Randomise Character</button>
   <div class="join-form">
     <div><label>Room Code</label><input id="join-code" maxlength="6" placeholder="ABC123" oninput="this.value=this.value.toUpperCase()" style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:4px;text-align:center"></div>
     <div><label>Your Name</label><input id="join-name" maxlength="20" placeholder="Enter your name"></div>
@@ -670,6 +681,7 @@
       <div class="type-tab" data-type="number" onclick="setQType('number')">Number</div>
       <div class="type-tab" data-type="word" onclick="setQType('word')">Wordsearch</div>
       <div class="type-tab" data-type="game" onclick="setQType('game')">🎮 Mini-Game</div>
+      <div class="type-tab" data-type="draw" onclick="setQType('draw')">🎨 Draw Round</div>
     </div>
 
     <div class="q-editor gap">
@@ -734,7 +746,17 @@
         <p class="text-muted" style="font-size:.78rem;margin-top:6px" id="game-hint">Everyone plays on their phone. When all players finish, the highest game score wins the bonus points. For a game, the "Question" box becomes the on-screen title (e.g. "Beat the high score!").</p>
       </div>
 
-      <div class="field-row">
+      <!-- DRAW ROUND -->
+      <div id="draw-fields" style="display:none">
+        <p class="text-muted" style="font-size:.82rem;margin-top:2px">Everyone draws the same prompt on their phone, then ranks each other's drawings. Lowest total (golf) wins the round. Put the prompt in the <b>Question</b> box above (e.g. "Shrek"). Needs at least 3 players.</p>
+        <label style="margin-top:8px">Drawing time (seconds)</label>
+        <input id="draw-time" type="number" value="60" min="20" max="300">
+        <label style="margin-top:8px">Winner gets</label>
+        <input id="draw-bonus" type="number" value="10" min="1">
+        <p class="text-muted" style="font-size:.78rem;margin-top:6px">Round places convert to quiz points: 1st gets this many, then 8, 6, 4, 2… down the line.</p>
+      </div>
+
+      <div class="field-row" id="time-row">
         <div><label>Time (seconds)</label><input id="q-time" type="number" value="10" min="3" max="120"></div>
       </div>
       <button class="btn btn-ghost" onclick="addQuestion()">+ Add Question</button>
@@ -831,6 +853,60 @@
   <div class="reveal-stage" id="reveal-stage"></div>
   <button class="btn btn-primary w100" onclick="revealNext()" id="btn-reveal-next">Reveal Next ↓</button>
   <button class="btn btn-ghost w100 btn-sm" onclick="resetToLanding()" id="btn-new-game" style="display:none">🔄 New Game</button>
+</div>
+
+<!-- ===== DRAW ROUND: HOST ===== -->
+<div class="screen" id="screen-host-draw">
+  <div class="pong-banner">🎨 Drawing Round</div>
+  <h2 style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:1px;text-align:center;margin:6px 0">"<span id="hd-prompt">Shrek</span>"</h2>
+  <div id="hd-phase-draw">
+    <p class="text-muted text-center" id="hd-draw-status">Players are drawing…</p>
+    <div style="height:10px;background:#2a2a3d;border-radius:5px;overflow:hidden;margin:10px 0"><div id="hd-timer-bar" style="height:100%;width:100%;background:#4fffb0"></div></div>
+    <p class="text-center" style="font-family:'Bebas Neue';font-size:2rem" id="hd-timer-badge">--</p>
+    <p class="text-center" id="hd-submitted">0 submitted</p>
+    <button class="btn btn-ghost w100 btn-sm" onclick="hostEndDrawEarly()">⏭ End drawing now</button>
+  </div>
+  <div id="hd-phase-rank" style="display:none">
+    <p class="text-muted text-center" id="hd-rank-status">Players are ranking the drawings…</p>
+    <p class="text-center" id="hd-ranked">0 of 0 finished ranking</p>
+    <button class="btn btn-success w100" onclick="hostScoreDraw()" id="hd-score-btn">📊 Score the round</button>
+  </div>
+  <div id="hd-phase-result" style="display:none">
+    <p class="text-muted text-center">Round results — lowest golf score wins!</p>
+    <div id="hd-results"></div>
+    <button class="btn btn-primary w100" onclick="hostDrawContinue()">Continue →</button>
+  </div>
+</div>
+
+<!-- ===== DRAW ROUND: PLAYER DRAWING ===== -->
+<div class="screen" id="screen-player-draw">
+  <div style="text-align:center;margin-bottom:6px">
+    <div class="text-muted" style="font-size:.8rem">Draw this:</div>
+    <div style="font-family:'Bebas Neue';font-size:1.8rem;letter-spacing:1px" id="pd-prompt">Shrek</div>
+    <div style="font-family:'Bebas Neue';font-size:1.4rem;color:#4fffb0" id="pd-timer">--</div>
+  </div>
+  <div id="pd-countdown" style="position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(5,5,15,.85);font-family:'Bebas Neue';font-size:8rem;color:#f0e040"></div>
+  <canvas id="pd-canvas" width="320" height="360" style="background:#fff;border-radius:10px;touch-action:none;display:block;margin:0 auto;max-width:100%"></canvas>
+  <div id="pd-palette" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:8px 0"></div>
+  <div style="display:flex;gap:6px;justify-content:center;align-items:center;margin-bottom:6px">
+    <button class="btn btn-ghost btn-sm" style="width:auto" id="pd-brush-s" onclick="pdSetSize(3)">•</button>
+    <button class="btn btn-ghost btn-sm" style="width:auto" id="pd-brush-m" onclick="pdSetSize(7)">●</button>
+    <button class="btn btn-ghost btn-sm" style="width:auto" id="pd-brush-l" onclick="pdSetSize(14)">⬤</button>
+    <button class="btn btn-ghost btn-sm" style="width:auto" id="pd-eraser" onclick="pdToggleEraser()">🧽 Eraser</button>
+    <button class="btn btn-ghost btn-sm" style="width:auto" onclick="pdUndo()">↩ Undo</button>
+    <button class="btn btn-ghost btn-sm" style="width:auto" onclick="pdClear()">🗑 Clear</button>
+  </div>
+  <button class="btn btn-primary w100" id="pd-submit" onclick="pdSubmit()">✓ Submit Drawing</button>
+  <p class="text-center text-muted" id="pd-submitted-msg" style="display:none">✓ Submitted! Waiting for others…</p>
+</div>
+
+<!-- ===== DRAW ROUND: PLAYER RANKING ===== -->
+<div class="screen" id="screen-player-rank">
+  <h2 style="font-family:'Bebas Neue';font-size:1.5rem;text-align:center;letter-spacing:1px">Rank the drawings</h2>
+  <p class="text-muted text-center" style="font-size:.82rem">Prompt was "<span id="pr-prompt"></span>". Tap drawings best → worst. Your #1 is the best!</p>
+  <div id="pr-list" style="display:flex;flex-direction:column;gap:8px;margin:10px 0"></div>
+  <button class="btn btn-primary w100" id="pr-submit" onclick="prSubmit()" disabled>Submit Ranking</button>
+  <p class="text-center text-muted" id="pr-submitted-msg" style="display:none">✓ Ranking submitted! Waiting for others…</p>
 </div>
 
 <!-- ===== PONG: HOST WATCH (host spectates the match) ===== -->
@@ -1093,12 +1169,13 @@ function setQType(t){
   document.getElementById('number-fields').style.display = t==='number'?'block':'none';
   document.getElementById('word-fields').style.display = t==='word'?'block':'none';
   document.getElementById('game-fields').style.display = t==='game'?'block':'none';
-  // time limit not used for games
+  const drawF=document.getElementById('draw-fields'); if(drawF) drawF.style.display = t==='draw'?'block':'none';
+  // time limit not used for games or draw (draw has its own time field)
   const timeRow=document.getElementById('q-time').closest('.field-row');
-  if(timeRow) timeRow.style.display = t==='game'?'none':'flex';
-  // relabel question box for games
+  if(timeRow) timeRow.style.display = (t==='game'||t==='draw')?'none':'flex';
+  // relabel question box
   const qlabel=document.querySelector('#new-q-text').previousElementSibling;
-  if(qlabel) qlabel.textContent = t==='game'?'On-screen title':'Question';
+  if(qlabel) qlabel.textContent = t==='game'?'On-screen title':(t==='draw'?'Drawing prompt (e.g. Shrek)':'Question');
 }
 
 function onRoundTypeChange(){
@@ -1154,6 +1231,9 @@ function addQuestion(){
     item.game=document.getElementById('game-choice').value;
     item.bonus=parseInt(document.getElementById('game-bonus').value)||20;
     item.time=0;
+  } else if(currentQType==='draw'){
+    item.time=parseInt(document.getElementById('draw-time').value)||60;
+    item.bonus=parseInt(document.getElementById('draw-bonus').value)||10;
   }
   hostItems.push(item);
   // reset
@@ -1297,7 +1377,7 @@ function renderQList(){
   document.getElementById('q-count').textContent=qCount;
   if(!hostItems.length){list.innerHTML='';return;}
   let qNum=0;
-  const typeLabels={mc:'Multi',tf:'T/F',number:'Number',word:'Word',game:'🎮 Game'};
+  const typeLabels={mc:'Multi',tf:'T/F',number:'Number',word:'Word',game:'🎮 Game',draw:'🎨 Draw'};
   list.innerHTML=hostItems.map((item,i)=>{
     const arrows=`<div class="q-item-btns"><button onclick="moveItem(${i},-1)">↑</button><button onclick="moveItem(${i},1)">↓</button><button class="q-item-del" onclick="removeItem(${i})">✕</button></div>`;
     if(item.type==='round'){
@@ -1470,6 +1550,7 @@ async function startCategoryQuestion(){ await beginQuestion(state.currentQIdx); 
 async function beginQuestion(idx){
   state.currentQIdx=idx;state.revealed=false;
   const q=getQuestion(idx);
+  if(q&&q.qtype==='draw'){ return hostBeginDraw(idx, q); }
   // For multiple choice / true-false, start with options hidden so players read the question first
   const optionsShown = !(q&&(q.qtype==='mc'||q.qtype==='tf'));
   state.optionsShown=optionsShown;
@@ -1483,7 +1564,11 @@ function hostShowOptions(){
   // start the timer now that options are live
   const q=getQuestion(state.currentQIdx);
   if(q&&q.qtype!=='game'){ const tb=document.getElementById('host-timer-bar').parentElement; tb.style.display='block'; startHostTimer(q.time); }
-  sb.from('rooms').update({options_shown:true}).eq('id',state.roomId);
+  // Force a clearly-detectable update for players. Bumping options_revealed_at
+  // guarantees the row changes even if options_shown was already set, so the
+  // realtime UPDATE always fires and players re-render with the options.
+  sb.from('rooms').update({options_shown:true, options_revealed_at:new Date().toISOString()}).eq('id',state.roomId)
+    .then(({error})=>{ if(error){ /* column may not exist on older schema */ sb.from('rooms').update({options_shown:true}).eq('id',state.roomId); } });
   toast('📖 Options revealed to players');
 }
 
@@ -1768,6 +1853,8 @@ function routePlayer(room){
   else if(s==='pong-match'){ state.myActivity='lobby'; playerEnterPong(room); }
   else if(s==='catintro'){ state.currentQIdx=room.current_question; showPlayerCatIntro(room); }
   else if(s==='question'){ state.currentQIdx=room.current_question; showPlayerQuestion(room); }
+  else if(s==='draw'){ state.currentQIdx=room.current_question; playerEnterDraw(room); }
+  else if(s==='drawrank'){ state.currentQIdx=room.current_question; playerEnterDrawRank(room); }
   else if(s==='reveal') showPlayerReveal(room);
   else if(s==='leaderboard'){/* host-only mid leaderboard; players keep last screen */}
   else if(s==='gameover'||s==='gameover-done') showPlayerGameOver(room);
@@ -1985,12 +2072,12 @@ async function submitGameScore(score){
 function createInvaders(host){
   const W=300,H=420;
   host.innerHTML=`
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-      <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:10px;width:100%">
+      <div style="display:flex;justify-content:space-between;width:100%;max-width:${W}px;font-weight:700;font-size:.9rem">
         <span id="iv-score">Score: 0</span><span id="iv-lives">❤️❤️❤️</span>
       </div>
       <canvas id="iv-canvas" width="${W}" height="${H}" style="background:#05050d;border:2px solid var(--border);border-radius:10px;max-width:100%;touch-action:none"></canvas>
-      <div style="display:flex;gap:8px;width:${W}px;max-width:100%">
+      <div style="display:flex;gap:8px;width:100%;max-width:${W}px">
         <button class="btn btn-ghost" id="iv-left" style="flex:1;padding:18px;font-size:1.4rem">◀</button>
         <button class="btn btn-primary" id="iv-fire" style="flex:1;padding:18px;font-size:1.1rem">FIRE</button>
         <button class="btn btn-ghost" id="iv-right" style="flex:1;padding:18px;font-size:1.4rem">▶</button>
@@ -2105,11 +2192,10 @@ function createInvaders(host){
   }
   function endGame(){
     over=true; cancelAnimationFrame(raf);
-    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#f0e040';ctx.font='bold 26px DM Sans,sans-serif';ctx.textAlign='center';
-    ctx.fillText('GAME OVER',W/2,H/2-10);
-    ctx.fillStyle='#fff';ctx.font='18px DM Sans,sans-serif';
-    ctx.fillText('Score: '+score,W/2,H/2+22);
+    const lb=mgLeaderboardAdd('invaders', score, {unit:''});
+    const idx=lb.findIndex(e=>e.score===score);
+    host.innerHTML=mgEndScreenHTML({title:'GAME OVER', big:score+'', sub:'Final score', leaderboard:lb, unit:' pts', accent:'#4fffb0', newWhen:lb[idx]?.when});
+    FX.wrong&&FX.wrong();
     if(onGameComplete) onGameComplete(score);
   }
   raf=requestAnimationFrame(loop);
@@ -2118,7 +2204,9 @@ function createInvaders(host){
 
 // ---------- PAC-MAN (rewritten: authentic maze, smooth grid movement, proper ghost AI) ----------
 function createPacman(host){
-  // Legend: # wall, . dot, o power pellet, (space) empty corridor / ghost-house, = gate
+  // Legend: # wall, . dot, o power pellet, (space) empty / ghost-house, = gate
+  // 19 wide. Ghost house is the open box rows 8-10; gate '=' is the single
+  // opening on row 8 col 9. Ghosts spawn inside and leave UP through the gate.
   const RAW=[
     "###################",
     "#........#........#",
@@ -2126,46 +2214,46 @@ function createPacman(host){
     "#.................#",
     "#.##.#.#####.#.##.#",
     "#....#...#...#....#",
-    "####.### # ###.####",
-    "   #.#   =   #.#   ",
-    "####.# ##=## #.####",
-    "    .  #   #  .    ",
-    "####.# ##### #.####",
-    "   #.#       #.#   ",
-    "####.# ##### #.####",
+    "####.###...###.####",
+    "####.#.......#.####",
+    "####.#.##-##.#.####",
+    ".......#GGG#.......",
+    "####.#.#GGG#.#.####",
+    "####.#.#####.#.####",
+    "####.#.......#.####",
+    "####.#.#####.#.####",
     "#........#........#",
-    "#.##.###.#.###.##.#",
-    "#o.#.........#..o.#",
+    "#o##.###.#.###.##o#",
+    "#..#.........#....#",
     "##.#.#.#####.#.#.##",
     "#....#...#...#....#",
-    "#.######.#.######.#",
     "#.................#",
     "###################",
   ];
-  // numeric grid: 0=wall,1=dot,2=empty,3=power,5=gate
+  // numeric grid: 0=wall, 1=dot, 2=empty/house, 3=power, 5=gate
   const MAP=RAW.map(row=>row.split('').map(ch=>
-    ch==='#'?0 : ch==='.'?1 : ch==='o'?3 : ch==='='?5 : 2
+    ch==='#'?0 : ch==='.'?1 : ch==='o'?3 : ch==='-'?5 : 2
   ));
-  const ROWS=MAP.length, COLS=MAP[0].length, TS=18;
+  const ROWS=MAP.length, COLS=MAP[0].length;
+  // size tiles to fit the phone screen (cabinet usable ~270px). 19*14=266.
+  const TS=14;
   const W=COLS*TS, H=ROWS*TS;
-  // key tiles
-  const PAC_START={c:9,r:15};
-  const HOUSE={c:9,r:9};            // inside the ghost house
-  const GATE={c:9,r:8};             // gate tile (exit point)
+  const PAC_START={c:9,r:19};  // open bottom corridor (validated walkable)
+  const HOUSE={c:9,r:9};   // inside the ghost house (open area)
+  const GATE={c:9,r:8};    // the gate tile (single exit)
+  const GATE_OUT={c:9,r:7};// the corridor tile just outside the gate
   host.innerHTML=`
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-      <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700;font-size:.85rem">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px;width:100%">
+      <div style="display:flex;justify-content:space-between;width:100%;max-width:${W}px;font-weight:700;font-size:.9rem">
         <span id="pm-score">Score: 0</span><span id="pm-lives">❤️❤️❤️</span>
       </div>
       <canvas id="pm-canvas" width="${W}" height="${H}" style="background:#000;border:2px solid #3a2a6e;border-radius:10px;max-width:100%;touch-action:none"></canvas>
-      <div style="display:flex;gap:6px;width:${W}px;max-width:100%;flex-wrap:wrap">
-        <div style="display:flex;gap:6px;width:100%;justify-content:center">
-          <button class="btn btn-ghost" onclick="pmDir(0,-1)" style="width:60px;padding:12px;font-size:1.2rem">▲</button>
-        </div>
-        <div style="display:flex;gap:6px;width:100%;justify-content:center">
-          <button class="btn btn-ghost" onclick="pmDir(-1,0)" style="width:60px;padding:12px;font-size:1.2rem">◀</button>
-          <button class="btn btn-ghost" onclick="pmDir(0,1)" style="width:60px;padding:12px;font-size:1.2rem">▼</button>
-          <button class="btn btn-ghost" onclick="pmDir(1,0)" style="width:60px;padding:12px;font-size:1.2rem">▶</button>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:center;width:100%">
+        <button class="btn btn-ghost" onclick="pmDir(0,-1)" style="width:56px;padding:10px;font-size:1.2rem">▲</button>
+        <div style="display:flex;gap:6px;justify-content:center">
+          <button class="btn btn-ghost" onclick="pmDir(-1,0)" style="width:56px;padding:10px;font-size:1.2rem">◀</button>
+          <button class="btn btn-ghost" onclick="pmDir(0,1)" style="width:56px;padding:10px;font-size:1.2rem">▼</button>
+          <button class="btn btn-ghost" onclick="pmDir(1,0)" style="width:56px;padding:10px;font-size:1.2rem">▶</button>
         </div>
       </div>
       <p class="text-muted" style="font-size:.75rem">Swipe canvas or use d-pad • eat power pellets to hunt ghosts!</p>
@@ -2285,11 +2373,16 @@ function createPacman(host){
       }
     }
     if(g.mode==='exit'){
-      // move to gate column then up through gate
-      const tx=ctr(GATE.c), ty=ctr(GATE.r);
-      const dx=tx-g.x, dy=ty-g.y;
+      // Step 1: slide to the gate column. Step 2: rise up through the gate to
+      // the corridor tile just outside (GATE_OUT). Only then start chasing.
+      const tx=ctr(GATE.c), ty=ctr(GATE_OUT.r);
+      const dx=tx-g.x;
       if(Math.abs(dx)>EYES_SPEED){ g.x+=Math.sign(dx)*EYES_SPEED; }
-      else { g.x=tx; if(Math.abs(dy)>EYES_SPEED){ g.y+=Math.sign(dy)*EYES_SPEED; } else { g.y=ty; g.mode='chase'; g.dx=0; g.dy=-1; } }
+      else {
+        g.x=tx; const dy=ty-g.y;
+        if(Math.abs(dy)>EYES_SPEED){ g.y+=Math.sign(dy)*EYES_SPEED; }
+        else { g.y=ty; g.mode='chase'; g.dx=(Math.random()<0.5?-1:1); g.dy=0; }
+      }
       return;
     }
     const eyes=g.mode==='eyes';
@@ -2299,9 +2392,9 @@ function createPacman(host){
     const onCentre=Math.abs(g.x-cx)<spd && Math.abs(g.y-cy)<spd;
     if(onCentre){
       g.x=cx; g.y=cy;
-      // eyes returning home -> re-enter house
-      if(eyes && c===GATE.c && (r===GATE.r||r===HOUSE.r)){
-        g.mode='house'; g.releaseStep=stepCount+60; g.dy=1; g.eaten=false; return;
+      // eyes returning home -> drop back into the house through the gate
+      if(eyes && c===GATE.c && r>=GATE.r){
+        g.x=ctr(HOUSE.c); g.y=ctr(HOUSE.r); g.mode='house'; g.releaseStep=stepCount+50; g.dy=-1; g.eaten=false; return;
       }
       const allowGate=eyes; // only eyes may use the gate (to go back in)
       let opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>
@@ -2431,11 +2524,10 @@ function createPacman(host){
 
   function endGame(won){
     over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler);
-    ctx.fillStyle='rgba(0,0,0,.85)'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#ffe11a'; ctx.font=`bold ${Math.round(W/11)}px DM Sans,sans-serif`; ctx.textAlign='center';
-    ctx.fillText(won?'YOU WIN!':'GAME OVER',W/2,H/2-10);
-    ctx.fillStyle='#fff'; ctx.font=`${Math.round(W/15)}px DM Sans,sans-serif`;
-    ctx.fillText('Score: '+score,W/2,H/2+20);
+    const lb=mgLeaderboardAdd('pacman', score, {unit:''});
+    const idx=lb.findIndex(e=>e.score===score);
+    host.innerHTML=mgEndScreenHTML({title:won?'YOU WIN! 🎉':'GAME OVER', big:score+'', sub:won?'You cleared the board!':'Munched '+score+' points', leaderboard:lb, unit:' pts', accent:'#ffe11a', newWhen:lb[idx]?.when});
+    if(won) FX.fanfare(); else FX.wrong();
     if(onGameComplete) onGameComplete(score);
   }
   raf=requestAnimationFrame(loop);
@@ -2448,56 +2540,95 @@ function createPacman(host){
 //  and calls onGameComplete(score) when finished. Higher = better.
 // ============================================================
 
+// ---- Shared local leaderboard (per game, stored on this device) ----
+function mgLeaderboardGet(game){
+  try{ return JSON.parse(localStorage.getItem('mg_lb_'+game)||'[]'); }catch(e){ return []; }
+}
+function mgLeaderboardAdd(game, score, opts={}){
+  let lb=mgLeaderboardGet(game);
+  const name=(state&&state.playerName)||'You';
+  lb.push({name, score, unit:opts.unit||'', when:Date.now()});
+  // sort: higher score better unless lowerBetter
+  lb.sort((a,b)=> opts.lowerBetter ? a.score-b.score : b.score-a.score);
+  lb=lb.slice(0,10);
+  try{ localStorage.setItem('mg_lb_'+game, JSON.stringify(lb)); }catch(e){}
+  return lb;
+}
+// Build a standard end-screen with score + leaderboard. Returns HTML string.
+function mgEndScreenHTML(opts){
+  const {title, big, sub, leaderboard, unit, accent} = opts;
+  const ac=accent||'#4fffb0';
+  const rows=(leaderboard||[]).map((e,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+    const val=e.score+(e.unit||unit||'');
+    const isNew=opts.newWhen && e.when===opts.newWhen;
+    return `<div style="display:flex;justify-content:space-between;padding:5px 10px;border-radius:7px;${isNew?'background:'+ac+'22;font-weight:700':''}">
+      <span style="color:${i<3?ac:'#fff'}">${medal} ${escHtml(e.name)}</span><span style="color:#cbb8ff">${val}</span></div>`;
+  }).join('');
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;width:100%;max-width:300px;margin:0 auto">
+    <div style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px;color:${ac};text-shadow:0 0 16px ${ac}66">${title||'GAME OVER'}</div>
+    <div style="font-family:'Bebas Neue';font-size:3rem;line-height:1;color:#fff;text-shadow:0 2px 8px #000">${big}</div>
+    ${sub?`<div class="text-muted" style="font-size:.85rem">${sub}</div>`:''}
+    <div style="width:100%;margin-top:6px">
+      <div style="font-size:.72rem;letter-spacing:1px;color:#8a78c0;text-transform:uppercase;margin-bottom:4px;text-align:center">🏆 Best on this device</div>
+      ${rows||'<div class="text-muted" style="text-align:center;font-size:.8rem">No scores yet</div>'}
+    </div>
+  </div>`;
+}
+
 // ---------- 1. REACTION CHALLENGE ----------
 function createReaction(host){
-  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px">
-    <div id="rc-stat" style="font-weight:700;font-size:.9rem">Round 1 / 5</div>
-    <div id="rc-pad" style="width:100%;max-width:300px;aspect-ratio:1;border-radius:18px;background:#3a2a5e;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Bebas Neue';font-size:1.4rem;color:#fff;cursor:pointer;user-select:none;transition:background .05s">Wait for GREEN…<br>then TAP!</div>
-    <div id="rc-log" class="text-muted" style="font-size:.8rem;min-height:1.2em"></div>
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 6px 6px;width:100%">
+    <div id="rc-stat" style="font-weight:700;font-size:.95rem">Round 1 / 5</div>
+    <div id="rc-pad" style="width:100%;max-width:280px;aspect-ratio:1;border-radius:18px;background:#3a2a5e;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Bebas Neue';font-size:1.4rem;color:#fff;cursor:pointer;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .05s">Wait for GREEN…<br>then TAP!</div>
+    <div id="rc-log" class="text-muted" style="font-size:.82rem;min-height:1.2em"></div>
   </div>`;
   const pad=host.querySelector('#rc-pad'), stat=host.querySelector('#rc-stat'), log=host.querySelector('#rc-log');
-  let round=0, total=5, times=[], st='idle', t0=0, timer=null, over=false;
+  let round=0, total=5, times=[], st='idle', t0=0, timer=null, over=false, lock=false;
   function next(){
     if(over)return;
     round++; if(round>total){ finish(); return; }
     stat.textContent=`Round ${round} / ${total}`;
-    st='waiting'; pad.style.background='#c0392b'; pad.innerHTML='Wait…';
-    timer=setTimeout(()=>{ if(over)return; st='go'; t0=performance.now(); pad.style.background='#2ecc71'; pad.innerHTML='TAP!'; FX.blip(); }, 900+Math.random()*2200);
+    st='waiting'; pad.style.background='#c0392b'; pad.innerHTML='Wait for green…';
+    timer=setTimeout(()=>{ if(over)return; st='go'; t0=performance.now(); pad.style.background='#2ecc71'; pad.innerHTML='TAP NOW!'; FX.blip(); }, 1000+Math.random()*2400);
   }
-  function tap(){
-    if(over)return;
-    if(st==='waiting'){ clearTimeout(timer); pad.style.background='#e67e22'; pad.innerHTML='Too early!<br>−penalty'; FX.wrong(); times.push(800); st='idle'; setTimeout(next,800); }
-    else if(st==='go'){ const ms=Math.round(performance.now()-t0); times.push(ms); FX.pop(); pad.style.background='#34495e'; pad.innerHTML=ms+' ms'; log.textContent='Best so far: '+Math.min(...times)+' ms'; st='idle'; setTimeout(next,650); }
+  function tap(ev){
+    if(ev){ ev.preventDefault(); }
+    if(over||lock)return; lock=true; setTimeout(()=>lock=false,80);
+    if(st==='waiting'){ clearTimeout(timer); pad.style.background='#e67e22'; pad.innerHTML='Too early! 😅'; FX.wrong(); times.push(900); st='idle'; setTimeout(next,1000); }
+    else if(st==='go'){ const ms=Math.round(performance.now()-t0); times.push(ms); FX.pop(); pad.style.background='#34495e'; pad.innerHTML=ms+' ms'; log.textContent='Best so far: '+Math.min(...times)+' ms'; st='idle'; setTimeout(next,750); }
   }
-  pad.addEventListener('touchstart',e=>{e.preventDefault();tap();},{passive:false});
-  pad.addEventListener('mousedown',tap);
+  pad.addEventListener('pointerdown',tap);
   function finish(){
     over=true;
-    const avg=times.reduce((a,b)=>a+b,0)/times.length;
+    const avg=Math.round(times.reduce((a,b)=>a+b,0)/times.length);
     const sc=Math.max(0, Math.round((600-avg)*2));
-    pad.style.background='#2a2a3d'; pad.innerHTML=`Avg ${Math.round(avg)}ms`;
-    stat.textContent='Done!'; if(onGameComplete) onGameComplete(sc);
+    const lb=mgLeaderboardAdd('reaction', avg, {unit:'ms', lowerBetter:true});
+    const idx=lb.findIndex(e=>e.score===avg);
+    host.innerHTML=mgEndScreenHTML({title:'FINISHED!', big:avg+'ms', sub:'Average reaction time (lower is better)', leaderboard:lb, unit:'ms', accent:'#ff4f6d', newWhen:lb[idx]?.when});
+    FX.fanfare(); if(onGameComplete) onGameComplete(sc);
   }
-  setTimeout(next,500);
+  setTimeout(next,600);
   return { stop(){ over=true; clearTimeout(timer); } };
 }
 
 // ---------- 2. TARGET TAP ----------
 function createTargetTap(host){
   const W=300,H=400, DUR=20000;
-  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-    <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700;font-size:.85rem"><span id="tt-score">Hits: 0</span><span id="tt-time">20.0s</span></div>
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:10px">
+    <div style="display:flex;justify-content:space-between;width:${W}px;max-width:96%;font-weight:700;font-size:.9rem"><span id="tt-score">✓ 0</span><span id="tt-miss" style="color:#ff6b6b">✗ 0</span><span id="tt-time">20.0s</span></div>
     <canvas id="tt-cv" width="${W}" height="${H}" style="background:#0a0a1e;border:2px solid var(--border);border-radius:12px;max-width:100%;touch-action:none"></canvas>
-    <p class="text-muted" style="font-size:.78rem">Tap the targets — quick!</p></div>`;
+    <p class="text-muted" style="font-size:.78rem">Tap the targets — each miss costs a point!</p></div>`;
   const cv=host.querySelector('#tt-cv'), ctx=cv.getContext('2d');
   let hits=0, miss=0, over=false, raf=null, start=performance.now();
   let targets=[]; const MAXT=3;
   function spawn(){ const r=18+Math.random()*14; targets.push({x:r+Math.random()*(W-2*r),y:r+Math.random()*(H-2*r),r,born:performance.now(),life:1100+Math.random()*700,hue:Math.random()*360}); }
   for(let i=0;i<MAXT;i++) spawn();
   function at(cx,cy){
+    if(over)return;
     const r=cv.getBoundingClientRect(); const x=(cx-r.left)*(W/r.width), y=(cy-r.top)*(H/r.height);
     let hit=false;
-    for(let i=targets.length-1;i>=0;i--){ const t=targets[i]; if(Math.hypot(t.x-x,t.y-y)<=t.r+4){ targets.splice(i,1); hits++; hit=true; FX.pop(); spawn(); break; } }
+    for(let i=targets.length-1;i>=0;i--){ const t=targets[i]; if(Math.hypot(t.x-x,t.y-y)<=t.r+6){ targets.splice(i,1); hits++; hit=true; FX.pop(); spawn(); break; } }
     if(!hit){ miss++; FX.blip(); }
   }
   cv.addEventListener('touchstart',e=>{e.preventDefault();for(const t of e.changedTouches)at(t.clientX,t.clientY);},{passive:false});
@@ -2512,56 +2643,85 @@ function createTargetTap(host){
       ctx.fillStyle=`hsl(${t.hue},80%,60%)`; ctx.beginPath(); ctx.arc(t.x,t.y,pr,0,7); ctx.fill();
       ctx.fillStyle='#0a0a1e'; ctx.beginPath(); ctx.arc(t.x,t.y,pr*0.55,0,7); ctx.fill();
       ctx.fillStyle=`hsl(${t.hue},80%,70%)`; ctx.beginPath(); ctx.arc(t.x,t.y,pr*0.28,0,7); ctx.fill(); }
-    host.querySelector('#tt-score').textContent='Hits: '+hits;
+    host.querySelector('#tt-score').textContent='✓ '+hits;
+    host.querySelector('#tt-miss').textContent='✗ '+miss;
     host.querySelector('#tt-time').textContent=(left/1000).toFixed(1)+'s';
     if(left<=0){ finish(); return; }
     raf=requestAnimationFrame(loop);
   }
-  function finish(){ over=true; cancelAnimationFrame(raf); const sc=Math.max(0,hits*15-miss*3); if(onGameComplete) onGameComplete(sc); }
+  function finish(){
+    over=true; cancelAnimationFrame(raf);
+    const sc=Math.max(0, hits-miss); // hits minus misses, as requested
+    const lb=mgLeaderboardAdd('targettap', sc, {unit:''});
+    const idx=lb.findIndex(e=>e.score===sc);
+    host.innerHTML=mgEndScreenHTML({title:"TIME'S UP!", big:sc+' pts', sub:`${hits} hits − ${miss} misses`, leaderboard:lb, unit:'', accent:'#4fa8ff', newWhen:lb[idx]?.when});
+    FX.fanfare(); if(onGameComplete) onGameComplete(sc);
+  }
   raf=requestAnimationFrame(loop);
   return { stop(){ over=true; cancelAnimationFrame(raf); } };
 }
 
 // ---------- 3. MEMORY MATCH (Simon-style) ----------
 function createMemory(host){
-  const PADS=[{c:'#ff4f6d'},{c:'#4fffb0'},{c:'#4fa8ff'},{c:'#f0e040'}];
-  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-    <div id="mm-stat" style="font-weight:700">Watch the sequence…</div>
-    <div id="mm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:260px;max-width:90vw">
-      ${PADS.map((p,i)=>`<div class="mm-pad" data-i="${i}" style="aspect-ratio:1;border-radius:14px;background:${p.c};opacity:.4;cursor:pointer;transition:opacity .1s,transform .1s"></div>`).join('')}
+  const PADS=[{c:'#ff4f6d',f:330},{c:'#4fffb0',f:415},{c:'#4fa8ff',f:494},{c:'#f0e040',f:587}];
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 6px 6px;width:100%">
+    <div id="mm-stat" style="font-weight:700;font-size:.95rem">Watch carefully…</div>
+    <div id="mm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:240px;max-width:80vw">
+      ${PADS.map((p,i)=>`<div class="mm-pad" data-i="${i}" style="aspect-ratio:1;border-radius:16px;background:${p.c};opacity:.35;cursor:pointer;transition:opacity .08s ease,transform .08s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent"></div>`).join('')}
     </div>
-    <div id="mm-len" class="text-muted" style="font-size:.85rem">Level 1</div></div>`;
+    <div id="mm-len" class="text-muted" style="font-size:.9rem">Level 1</div></div>`;
   const pads=[...host.querySelectorAll('.mm-pad')], stat=host.querySelector('#mm-stat'), lenEl=host.querySelector('#mm-len');
   let seq=[], inputIdx=0, accepting=false, level=0, over=false, best=0;
   const w=(ms)=>new Promise(r=>setTimeout(r,ms));
-  function flash(i,on){ pads[i].style.opacity=on?'1':'0.4'; pads[i].style.transform=on?'scale(1.05)':'scale(1)'; }
+  // beep per pad
+  function beep(i){ try{ FX.resume(); const a=FX._actx||(window.AudioContext&&new AudioContext()); }catch(e){} FX.blip&&FX.blip(); }
+  function flash(i){ pads[i].style.opacity='1'; pads[i].style.transform='scale(1.06)'; }
+  function unflash(i){ pads[i].style.opacity='0.35'; pads[i].style.transform='scale(1)'; }
   async function playSeq(){
     accepting=false; stat.textContent='Watch…';
-    await w(500);
-    for(const i of seq){ if(over)return; flash(i,true); FX.blip(); await w(420); flash(i,false); await w(180); }
-    accepting=true; inputIdx=0; stat.textContent='Your turn!';
+    pads.forEach((_,i)=>unflash(i));
+    await w(600);
+    for(const i of seq){ if(over)return; flash(i); FX.blip(); await w(450); unflash(i); await w(220); }
+    if(over)return;
+    accepting=true; inputIdx=0; stat.textContent='Your turn! 👆';
   }
   function addStep(){ level++; lenEl.textContent='Level '+level; seq.push(Math.floor(Math.random()*4)); playSeq(); }
+  // single pointer handler avoids the touch+mouse double-fire that skipped taps
+  let lock=false;
   pads.forEach(p=>{
-    const press=()=>{
-      if(!accepting||over)return; const i=+p.dataset.i;
-      flash(i,true); FX.pop(); setTimeout(()=>flash(i,false),140);
-      if(i===seq[inputIdx]){ inputIdx++; if(inputIdx>=seq.length){ best=level; accepting=false; setTimeout(addStep,500); } }
-      else { fail(); }
+    const press=(ev)=>{
+      if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+      if(!accepting||over||lock) return;
+      const i=+p.dataset.i;
+      lock=true; setTimeout(()=>lock=false,90); // debounce duplicate events
+      flash(i); FX.pop(); setTimeout(()=>{ if(accepting) unflash(i); },160);
+      if(i===seq[inputIdx]){
+        inputIdx++;
+        if(inputIdx>=seq.length){ best=level; accepting=false; stat.textContent='✓ Nice!'; setTimeout(()=>{ if(!over) addStep(); },650); }
+      } else {
+        fail();
+      }
     };
-    p.addEventListener('touchstart',e=>{e.preventDefault();press();},{passive:false});
-    p.addEventListener('mousedown',press);
+    p.addEventListener('pointerdown',press);
   });
-  function fail(){ over=true; FX.wrong(); stat.textContent='Game over!'; const sc=Math.max(0,best*40); if(onGameComplete) onGameComplete(sc); }
-  setTimeout(addStep,600);
+  function fail(){
+    over=true; accepting=false; FX.wrong();
+    const sc=Math.max(0,best*40);
+    const lb=mgLeaderboardAdd('memory', best, {unit:''});
+    setTimeout(()=>{
+      host.innerHTML=mgEndScreenHTML({title:'GAME OVER', big:'Lvl '+best, sub:`You remembered ${best} step${best===1?'':'s'}`, leaderboard:lb.map(e=>({...e,unit:''})), unit:' lvl', accent:'#a78bfa', newWhen:lb[lb.findIndex(e=>e.score===best)]?.when});
+    }, 700);
+    if(onGameComplete) onGameComplete(sc);
+  }
+  setTimeout(addStep,700);
   return { stop(){ over=true; } };
 }
 
 // ---------- 4. DODGE THE METEORS ----------
 function createDodge(host){
   const W=300,H=440;
-  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-    <div style="display:flex;justify-content:space-between;width:${W}px;max-width:100%;font-weight:700;font-size:.85rem"><span id="dg-time">0.0s</span><span>☄️ Survive!</span></div>
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:10px">
+    <div style="display:flex;justify-content:space-between;width:${W}px;max-width:96%;font-weight:700;font-size:.9rem"><span id="dg-time">0.0s</span><span>☄️ Survive!</span></div>
     <canvas id="dg-cv" width="${W}" height="${H}" style="background:linear-gradient(#0a0820,#1a1040);border:2px solid var(--border);border-radius:12px;max-width:100%;touch-action:none"></canvas>
     <p class="text-muted" style="font-size:.78rem">Drag left/right to dodge falling meteors</p></div>`;
   const cv=host.querySelector('#dg-cv'), ctx=cv.getContext('2d');
@@ -2592,7 +2752,14 @@ function createDodge(host){
     host.querySelector('#dg-time').textContent=el.toFixed(1)+'s';
     raf=requestAnimationFrame(loop);
   }
-  function finish(el){ over=true; cancelAnimationFrame(raf); FX.hit(); const sc=Math.round(el*40); if(onGameComplete) onGameComplete(sc); }
+  function finish(el){
+    over=true; cancelAnimationFrame(raf); FX.hit();
+    const secs=Math.round(el*10)/10; const sc=Math.round(el*40);
+    const lb=mgLeaderboardAdd('dodge', secs, {unit:'s'});
+    const idx=lb.findIndex(e=>e.score===secs);
+    host.innerHTML=mgEndScreenHTML({title:'BOOM! 💥', big:secs+'s', sub:'You survived '+secs+' seconds', leaderboard:lb, unit:'s', accent:'#ff9f4f', newWhen:lb[idx]?.when});
+    if(onGameComplete) onGameComplete(sc);
+  }
   raf=requestAnimationFrame(loop);
   return { stop(){ over=true; cancelAnimationFrame(raf); } };
 }
@@ -2611,40 +2778,68 @@ const QUICKDRAW_Q=[
   {q:'9 × 9 = ?', a:['81','72','99','91'], c:0},
 ];
 function createQuickDraw(host){
-  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px">
-    <div id="qd-stat" style="font-weight:700;font-size:.9rem">Get ready…</div>
-    <div id="qd-q" style="min-height:2.4em;font-family:'Bebas Neue';font-size:1.6rem;text-align:center;letter-spacing:1px"></div>
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 6px 6px;width:100%">
+    <div id="qd-stat" style="font-weight:700;font-size:.85rem">Get ready…</div>
+    <div style="width:100%;max-width:300px;height:8px;background:#2a2a3d;border-radius:4px;overflow:hidden"><div id="qd-bar" style="height:100%;width:100%;background:#4fffb0;transition:none"></div></div>
+    <div id="qd-q" style="min-height:2.6em;font-family:'Bebas Neue';font-size:1.5rem;text-align:center;letter-spacing:1px;padding:0 4px"></div>
     <div id="qd-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:300px"></div>
     <div id="qd-log" class="text-muted" style="font-size:.82rem;min-height:1.2em"></div></div>`;
-  const stat=host.querySelector('#qd-stat'), qEl=host.querySelector('#qd-q'), opts=host.querySelector('#qd-opts'), log=host.querySelector('#qd-log');
+  const stat=host.querySelector('#qd-stat'), qEl=host.querySelector('#qd-q'), opts=host.querySelector('#qd-opts'), log=host.querySelector('#qd-log'), bar=host.querySelector('#qd-bar');
   let round=0, total=5, score=0, over=false, t0=0, answered=false, pool=[...QUICKDRAW_Q].sort(()=>Math.random()-0.5);
+  const ANSWER_MS=7000; // generous answer window
+  let barRAF=null, deadline=0;
+  function runBar(){
+    cancelAnimationFrame(barRAF);
+    function tick(){
+      if(over||answered) return;
+      const left=Math.max(0, deadline-performance.now());
+      bar.style.width=(left/ANSWER_MS*100)+'%';
+      bar.style.background = left<2000?'#ff4f6d':left<4000?'#f0e040':'#4fffb0';
+      if(left<=0){ timeUp(); return; }
+      barRAF=requestAnimationFrame(tick);
+    }
+    barRAF=requestAnimationFrame(tick);
+  }
+  function timeUp(){
+    if(answered||over)return; answered=true; cancelAnimationFrame(barRAF);
+    FX.wrong(); log.textContent='⌛ Out of time'; const item=pool[round];
+    const cb=opts.querySelector(`[data-i="${item.c}"]`); if(cb)cb.classList.add('correct');
+    opts.querySelectorAll('.qd-opt').forEach(x=>x.disabled=true);
+    round++; setTimeout(ask,1100);
+  }
   function ask(){
     if(over)return;
     if(round>=total){ finish(); return; }
     const item=pool[round]; answered=false;
     stat.textContent=`Question ${round+1} / ${total}`;
-    qEl.textContent='Get ready…'; opts.innerHTML='';
+    qEl.textContent='Get ready…'; opts.innerHTML=''; bar.style.width='100%'; bar.style.background='#4fffb0';
     setTimeout(()=>{
       if(over)return;
       qEl.textContent=item.q; t0=performance.now(); FX.blip();
-      opts.innerHTML=item.a.map((a,i)=>`<button class="btn btn-ghost qd-opt" data-i="${i}" style="padding:14px;font-size:1rem">${escHtml(a)}</button>`).join('');
+      deadline=performance.now()+ANSWER_MS; runBar();
+      opts.innerHTML=item.a.map((a,i)=>`<button class="btn btn-ghost qd-opt" data-i="${i}" style="padding:16px;font-size:1.05rem">${escHtml(a)}</button>`).join('');
       opts.querySelectorAll('.qd-opt').forEach(b=>{
         const pick=()=>{
-          if(answered||over)return; answered=true;
+          if(answered||over)return; answered=true; cancelAnimationFrame(barRAF);
           const i=+b.dataset.i, ms=Math.round(performance.now()-t0);
-          if(i===item.c){ const pts=Math.max(20,Math.round(500 - ms/3)); score+=pts; FX.correct(); b.classList.add('correct'); log.textContent=`✓ ${ms}ms  +${pts}`; }
-          else { FX.wrong(); b.style.background='#c0392b'; const cb=opts.querySelector(`[data-i="${item.c}"]`); if(cb)cb.classList.add('correct'); log.textContent='✗ wrong'; }
+          if(i===item.c){ const pts=Math.max(30,Math.round(700 - ms/4)); score+=pts; FX.correct(); b.classList.add('correct'); log.textContent=`✓ Correct!  +${pts}`; }
+          else { FX.wrong(); b.style.background='#c0392b'; const cb=opts.querySelector(`[data-i="${item.c}"]`); if(cb)cb.classList.add('correct'); log.textContent='✗ Wrong'; }
           opts.querySelectorAll('.qd-opt').forEach(x=>x.disabled=true);
-          round++; setTimeout(ask,900);
+          round++; setTimeout(ask,1100);
         };
         b.addEventListener('click',pick);
+        b.addEventListener('touchstart',e=>{e.preventDefault();pick();},{passive:false});
       });
-      setTimeout(()=>{ if(!answered&&!over){ answered=true; FX.wrong(); log.textContent='⌛ too slow'; round++; setTimeout(ask,700); } },4000);
-    }, 700+Math.random()*900);
+    }, 800);
   }
-  function finish(){ over=true; stat.textContent='Done!'; qEl.textContent='🏁'; if(onGameComplete) onGameComplete(score); }
+  function finish(){
+    over=true; cancelAnimationFrame(barRAF);
+    const lb=mgLeaderboardAdd('quickdraw', score, {unit:' pts'}); const now=lb.find(e=>e.score===score)?.when;
+    host.innerHTML=mgEndScreenHTML({title:'TIME!', big:score+' pts', sub:`${total} questions answered`, leaderboard:lb, unit:' pts', accent:'#4fffb0', newWhen:lb[lb.findIndex(e=>e.score===score)]?.when});
+    FX.fanfare(); if(onGameComplete) onGameComplete(score);
+  }
   setTimeout(ask,500);
-  return { stop(){ over=true; } };
+  return { stop(){ over=true; cancelAnimationFrame(barRAF); } };
 }
 
 // registry: maps game key -> {label, emoji, make, marquee, accent}
@@ -2661,6 +2856,10 @@ const MINIGAMES={
 
 function showPlayerReveal(room){
   if(activeGame&&activeGame.stop){ activeGame.stop(); activeGame=null; }
+  // Draw rounds: player is on the rank/draw screen, not the question screen.
+  // Show them the round standings instead of the MC reveal.
+  const dq=pGetQuestion(room,room.current_question);
+  if(dq&&dq.qtype==='draw'){ return showPlayerDrawReveal(room, dq); }
   state.shownStatus='reveal'; state.shownOpts=undefined;
   if(!document.getElementById('screen-question').classList.contains('active'))return;
   const q=pGetQuestion(room,room.current_question);if(!q)return;
@@ -2702,8 +2901,314 @@ function showPlayerGameOver(room){
   }
 }
 
+// ============================================================
+//  DRAWING ROUND
+//  Phases driven by room.status: 'draw' (everyone draws the same
+//  prompt) -> 'drawrank' (everyone ranks others' drawings) ->
+//  host scores (golf: lowest total wins) -> converts placement to
+//  quiz points (bonus, then 8,6,4,2…) and folds into reveal flow.
+//  Drawings stored as PNG dataURLs in answers.answer_text; rankings
+//  as JSON in answer_text on a separate marker question_index.
+//  Needs >=3 players (you never rank your own drawing).
+// ============================================================
+const DRAW = { timer:null, canvas:null, ctx:null, drawing:false, size:7, color:'#000000', eraser:false, strokes:[], cur:null, submitted:false, rankOrder:[], drawings:[] };
+const DRAW_PALETTE=['#000000','#ffffff','#e53935','#fb8c00','#fdd835','#43a047','#1e88e5','#8e24aa','#f06292','#6d4c41','#90a4ae','#00acc1'];
+// rank index offset so ranking submissions don't collide with drawings
+const RANK_Q_OFFSET=5000;
+
+/* ---------- HOST ---------- */
+async function hostBeginDraw(idx, q){
+  state.currentQIdx=idx; state.drawQ=q;
+  // clear any stale answers for this question index (drawings + rankings)
+  await sb.from('answers').delete().eq('room_id',state.roomId).eq('question_index',idx);
+  await sb.from('answers').delete().eq('room_id',state.roomId).eq('question_index',idx+RANK_Q_OFFSET);
+  await sb.from('rooms').update({status:'draw',current_question:idx,draw_deadline:new Date(Date.now()+q.time*1000).toISOString()}).eq('id',state.roomId)
+    .then(({error})=>{ if(error){ sb.from('rooms').update({status:'draw',current_question:idx}).eq('id',state.roomId); } });
+  // host view
+  document.getElementById('hd-prompt').textContent=q.text;
+  document.getElementById('hd-phase-draw').style.display='block';
+  document.getElementById('hd-phase-rank').style.display='none';
+  document.getElementById('hd-phase-result').style.display='none';
+  showScreen('screen-host-draw');
+  hostDrawTimer(q.time);
+  hostPollDrawSubmissions();
+}
+function hostDrawTimer(secs){
+  clearInterval(DRAW.timer);
+  const end=Date.now()+secs*1000;
+  const bar=document.getElementById('hd-timer-bar'), badge=document.getElementById('hd-timer-badge');
+  DRAW.timer=setInterval(()=>{
+    const left=Math.max(0,end-Date.now());
+    bar.style.width=(left/(secs*1000)*100)+'%';
+    badge.textContent=Math.ceil(left/1000)+'s';
+    if(left<=0){ clearInterval(DRAW.timer); hostEndDrawEarly(); }
+  },200);
+}
+let _hdPoll=null;
+function hostPollDrawSubmissions(){
+  clearInterval(_hdPoll);
+  _hdPoll=setInterval(async()=>{
+    if(!document.getElementById('hd-phase-draw').style.display||document.getElementById('hd-phase-draw').style.display==='none'){ clearInterval(_hdPoll); return; }
+    const {data}=await sb.from('answers').select('player_id').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
+    const n=data?data.length:0;
+    document.getElementById('hd-submitted').textContent=`${n} of ${state.players.length} submitted`;
+    if(n>=state.players.length && state.players.length>0){ hostEndDrawEarly(); }
+  },1000);
+}
+async function hostEndDrawEarly(){
+  clearInterval(DRAW.timer); clearInterval(_hdPoll);
+  // fetch all drawings
+  const {data:draws}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
+  state.drawDrawings=(draws||[]).filter(d=>d.answer_text&&d.answer_text.startsWith('data:'));
+  if(state.drawDrawings.length<2){
+    // not enough drawings to rank — skip scoring, just continue
+    toast('Not enough drawings submitted — skipping round');
+    return hostDrawContinue();
+  }
+  // move to ranking phase
+  await sb.from('rooms').update({status:'drawrank'}).eq('id',state.roomId);
+  document.getElementById('hd-phase-draw').style.display='none';
+  document.getElementById('hd-phase-rank').style.display='block';
+  document.getElementById('hd-phase-result').style.display='none';
+  hostPollRankings();
+}
+let _hdRankPoll=null;
+function hostPollRankings(){
+  clearInterval(_hdRankPoll);
+  _hdRankPoll=setInterval(async()=>{
+    const {data}=await sb.from('answers').select('player_id').eq('room_id',state.roomId).eq('question_index',state.currentQIdx+RANK_Q_OFFSET);
+    const n=data?data.length:0;
+    // everyone who submitted a drawing should rank
+    const expected=state.drawDrawings.length;
+    document.getElementById('hd-ranked').textContent=`${n} of ${expected} finished ranking`;
+    if(n>=expected && expected>0){ clearInterval(_hdRankPoll); document.getElementById('hd-rank-status').textContent='Everyone has ranked! Ready to score.'; }
+  },1000);
+}
+async function hostScoreDraw(){
+  clearInterval(_hdRankPoll);
+  const q=getQuestion(state.currentQIdx);
+  // gather drawings + rankings
+  const {data:draws}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
+  const {data:ranks}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx+RANK_Q_OFFSET);
+  const drawings=(draws||[]).filter(d=>d.answer_text&&d.answer_text.startsWith('data:'));
+  const drawerIds=drawings.map(d=>d.player_id);
+  const nameMap={}; state.players.forEach(p=>nameMap[p.id]=p.name);
+  // golf scoring: for each ranking, the drawing placed 1st gets 1pt, 2nd 2pts...
+  const golf={}; drawerIds.forEach(id=>golf[id]=0);
+  let rankingsCounted=0;
+  (ranks||[]).forEach(r=>{
+    let order; try{ order=JSON.parse(r.answer_text); }catch(e){ return; }
+    if(!Array.isArray(order)) return;
+    rankingsCounted++;
+    order.forEach((drawerId,i)=>{ if(golf[drawerId]!=null) golf[drawerId]+=(i+1); });
+  });
+  // a drawer not ranked by anyone still has 0 — give them worst-case to be fair?
+  // With >=3 players everyone gets ranked by others. Sort ascending (lowest=best).
+  const standings=drawerIds.map(id=>({id,score:golf[id]})).sort((a,b)=>a.score-b.score);
+  // convert placement to quiz points: bonus, then 8,6,4,2,1,1,1...
+  const ptsLadder=[q.bonus,8,6,4,2,1,1,1];
+  standings.forEach((s,i)=>{ state.scores[s.id]=(state.scores[s.id]||0)+(ptsLadder[i]!=null?ptsLadder[i]:0); });
+  await sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
+  // build host results with thumbnails
+  const drawMap={}; drawings.forEach(d=>drawMap[d.player_id]=d.answer_text);
+  document.getElementById('hd-phase-rank').style.display='none';
+  document.getElementById('hd-phase-result').style.display='block';
+  document.getElementById('hd-results').innerHTML=standings.map((s,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+    const qp=ptsLadder[i]!=null?ptsLadder[i]:0;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:#2a2a3d;margin-bottom:6px">
+      <span style="font-size:1.3rem;width:28px">${medal}</span>
+      <img src="${drawMap[s.id]||''}" style="width:54px;height:54px;border-radius:8px;background:#fff;object-fit:contain">
+      <div style="flex:1"><div style="font-weight:700">${escHtml(nameMap[s.id]||'?')}</div><div class="text-muted" style="font-size:.78rem">golf score ${s.score} · +${qp} quiz pts</div></div>
+    </div>`;
+  }).join('');
+  FX.fanfare&&FX.fanfare();
+}
+async function hostDrawContinue(){
+  document.getElementById('hd-phase-result').style.display='none';
+  await nextQuestion();
+}
+
+/* ---------- PLAYER: DRAWING ---------- */
+function playerEnterDraw(room){
+  const q=pGetQuestion(room,room.current_question); if(!q) return;
+  if(state.shownStatus==='draw' && state.shownDrawIdx===room.current_question) return; // already in
+  state.shownStatus='draw'; state.shownDrawIdx=room.current_question;
+  DRAW.submitted=false; DRAW.strokes=[]; DRAW.cur=null; DRAW.eraser=false; DRAW.color='#000000'; DRAW.size=7;
+  document.getElementById('pd-prompt').textContent=q.text;
+  document.getElementById('pd-submitted-msg').style.display='none';
+  document.getElementById('pd-submit').style.display='block';
+  document.getElementById('pd-submit').disabled=false;
+  // palette
+  const pal=document.getElementById('pd-palette');
+  pal.innerHTML=DRAW_PALETTE.map(c=>`<div class="pd-swatch" data-c="${c}" style="width:30px;height:30px;border-radius:6px;background:${c};border:3px solid ${c==='#000000'?'#4fffb0':'transparent'};cursor:pointer"></div>`).join('');
+  pal.querySelectorAll('.pd-swatch').forEach(s=>s.addEventListener('pointerdown',e=>{ e.preventDefault(); DRAW.color=s.dataset.c; DRAW.eraser=false; pdSyncPalette(); }));
+  showScreen('screen-player-draw');
+  pdInitCanvas();
+  pdSyncSizeButtons();
+  // countdown then enable drawing
+  pdRunCountdown(()=>{ DRAW.canEnabled=true; });
+  // local timer from deadline
+  pdStartTimer(room.draw_deadline, q.time);
+}
+function pdRunCountdown(done){
+  const ov=document.getElementById('pd-countdown');
+  ov.style.display='flex';
+  let n=3; ov.textContent=n;
+  FX.tick&&FX.tick();
+  const iv=setInterval(()=>{
+    n--;
+    if(n>0){ ov.textContent=n; FX.tick&&FX.tick(); }
+    else if(n===0){ ov.textContent='GO!'; FX.go&&FX.go(); }
+    else { clearInterval(iv); ov.style.display='none'; done&&done(); }
+  },800);
+}
+function pdStartTimer(deadlineIso, secs){
+  clearInterval(state.playerTimer);
+  const end=deadlineIso?new Date(deadlineIso).getTime():Date.now()+secs*1000;
+  const t=document.getElementById('pd-timer');
+  state.playerTimer=setInterval(()=>{
+    const left=Math.max(0,end-Date.now());
+    t.textContent=Math.ceil(left/1000)+'s';
+    if(left<=0){ clearInterval(state.playerTimer); if(!DRAW.submitted) pdSubmit(true); }
+  },250);
+}
+function pdInitCanvas(){
+  const cv=document.getElementById('pd-canvas'); DRAW.canvas=cv; DRAW.ctx=cv.getContext('2d');
+  DRAW.ctx.fillStyle='#fff'; DRAW.ctx.fillRect(0,0,cv.width,cv.height);
+  DRAW.ctx.lineCap='round'; DRAW.ctx.lineJoin='round';
+  const pos=e=>{ const r=cv.getBoundingClientRect(); const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY); return {x:(cx-r.left)*(cv.width/r.width), y:(cy-r.top)*(cv.height/r.height)}; };
+  const start=e=>{ e.preventDefault(); DRAW.drawing=true; const p=pos(e); DRAW.cur={color:DRAW.eraser?'#ffffff':DRAW.color,size:DRAW.size,pts:[p]}; };
+  const move=e=>{ if(!DRAW.drawing)return; e.preventDefault(); const p=pos(e); DRAW.cur.pts.push(p); pdRedraw(); };
+  const end=e=>{ if(!DRAW.drawing)return; DRAW.drawing=false; if(DRAW.cur&&DRAW.cur.pts.length){ DRAW.strokes.push(DRAW.cur); } DRAW.cur=null; };
+  cv.onpointerdown=start; cv.onpointermove=move; cv.onpointerup=end; cv.onpointerleave=end;
+}
+function pdRedraw(){
+  const ctx=DRAW.ctx, cv=DRAW.canvas;
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+  const all=DRAW.cur?DRAW.strokes.concat([DRAW.cur]):DRAW.strokes;
+  all.forEach(st=>{
+    ctx.strokeStyle=st.color; ctx.lineWidth=st.size; ctx.beginPath();
+    st.pts.forEach((p,i)=>{ if(i===0)ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); });
+    if(st.pts.length===1){ ctx.lineTo(st.pts[0].x+0.1,st.pts[0].y+0.1); }
+    ctx.stroke();
+  });
+}
+function pdSetSize(s){ DRAW.size=s; DRAW.eraser=false; pdSyncSizeButtons(); pdSyncPalette(); }
+function pdSyncSizeButtons(){ ['pd-brush-s','pd-brush-m','pd-brush-l'].forEach((id,i)=>{ const sz=[3,7,14][i]; const b=document.getElementById(id); if(b) b.style.background=(DRAW.size===sz&&!DRAW.eraser)?'#4fffb0':''; }); }
+function pdToggleEraser(){ DRAW.eraser=!DRAW.eraser; document.getElementById('pd-eraser').style.background=DRAW.eraser?'#4fffb0':''; pdSyncPalette(); }
+function pdSyncPalette(){ document.querySelectorAll('.pd-swatch').forEach(s=>{ s.style.border='3px solid '+((s.dataset.c===DRAW.color&&!DRAW.eraser)?'#4fffb0':'transparent'); }); document.getElementById('pd-eraser').style.background=DRAW.eraser?'#4fffb0':''; }
+function pdUndo(){ DRAW.strokes.pop(); pdRedraw(); }
+function pdClear(){ DRAW.strokes=[]; pdRedraw(); }
+async function pdSubmit(auto){
+  if(DRAW.submitted) return; DRAW.submitted=true;
+  clearInterval(state.playerTimer);
+  document.getElementById('pd-submit').disabled=true;
+  // export compressed PNG (downscale to 240px)
+  const cv=DRAW.canvas;
+  const tmp=document.createElement('canvas'); tmp.width=240; tmp.height=270;
+  tmp.getContext('2d').drawImage(cv,0,0,240,270);
+  const dataUrl=tmp.toDataURL('image/png');
+  try{ await sb.from('answers').insert({room_id:state.roomId,player_id:state.playerId,question_index:state.currentQIdx,answer_text:dataUrl,answer_index:-1}); }catch(e){ console.error(e); }
+  document.getElementById('pd-submit').style.display='none';
+  document.getElementById('pd-submitted-msg').style.display='block';
+  FX.pop&&FX.pop();
+}
+
+/* ---------- PLAYER: RANKING ---------- */
+async function playerEnterDrawRank(room){
+  if(state.shownStatus==='drawrank' && state.shownRankIdx===room.current_question) return;
+  state.shownStatus='drawrank'; state.shownRankIdx=room.current_question;
+  const q=pGetQuestion(room,room.current_question);
+  document.getElementById('pr-prompt').textContent=q?q.text:'';
+  document.getElementById('pr-submitted-msg').style.display='none';
+  document.getElementById('pr-submit').style.display='block';
+  // fetch all drawings except mine
+  const {data:draws}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',room.current_question);
+  let others=(draws||[]).filter(d=>d.answer_text&&d.answer_text.startsWith('data:')&&d.player_id!==state.playerId);
+  // if I didn't draw, I still rank everyone
+  others=others.sort(()=>Math.random()-0.5);
+  DRAW.rankPool=others; DRAW.rankOrder=[];
+  showScreen('screen-player-rank');
+  prRender();
+}
+function prRender(){
+  const list=document.getElementById('pr-list');
+  // show ranked (numbered) first, then unranked pool
+  let html='';
+  DRAW.rankOrder.forEach((d,i)=>{
+    html+=`<div style="display:flex;align-items:center;gap:10px;padding:6px;border-radius:10px;background:#4fffb022;border:1px solid #4fffb0">
+      <span style="font-family:'Bebas Neue';font-size:1.4rem;color:#4fffb0;width:30px">#${i+1}</span>
+      <img src="${d.answer_text}" style="width:60px;height:60px;border-radius:8px;background:#fff;object-fit:contain">
+      <span style="flex:1" class="text-muted">tap to remove</span>
+      <button class="btn btn-ghost btn-sm" style="width:auto" onclick="prUnpick('${d.player_id}')">✕</button></div>`;
+  });
+  const remaining=DRAW.rankPool.filter(d=>!DRAW.rankOrder.find(r=>r.player_id===d.player_id));
+  if(remaining.length){
+    html+=`<div class="text-muted text-center" style="font-size:.8rem;margin:6px 0">Tap your next favourite:</div>`;
+    remaining.forEach(d=>{
+      html+=`<div onclick="prPick('${d.player_id}')" style="display:flex;align-items:center;gap:10px;padding:6px;border-radius:10px;background:#2a2a3d;cursor:pointer">
+        <span style="width:30px">＋</span>
+        <img src="${d.answer_text}" style="width:60px;height:60px;border-radius:8px;background:#fff;object-fit:contain">
+        <span style="flex:1">Pick</span></div>`;
+    });
+  }
+  list.innerHTML=html;
+  document.getElementById('pr-submit').disabled = remaining.length!==0;
+}
+function prPick(pid){ const d=DRAW.rankPool.find(x=>x.player_id===pid); if(d){ DRAW.rankOrder.push(d); FX.blip&&FX.blip(); prRender(); } }
+function prUnpick(pid){ DRAW.rankOrder=DRAW.rankOrder.filter(x=>x.player_id!==pid); prRender(); }
+async function prSubmit(){
+  if(DRAW.rankOrder.length!==DRAW.rankPool.length) return;
+  document.getElementById('pr-submit').disabled=true;
+  const order=DRAW.rankOrder.map(d=>d.player_id); // best -> worst
+  try{ await sb.from('answers').insert({room_id:state.roomId,player_id:state.playerId,question_index:state.currentQIdx+RANK_Q_OFFSET,answer_text:JSON.stringify(order),answer_index:-1}); }catch(e){ console.error(e); }
+  document.getElementById('pr-submit').style.display='none';
+  document.getElementById('pr-submitted-msg').style.display='block';
+  FX.pop&&FX.pop();
+}
+
+async function showPlayerDrawReveal(room, q){
+  if(state.shownStatus==='drawreveal' && state.shownRevealIdx===room.current_question) return;
+  state.shownStatus='drawreveal'; state.shownRevealIdx=room.current_question;
+  state.scores=room.scores||{};
+  const myScore=state.scores[state.playerId]||0;
+  // fetch drawings + rankings to compute standings (same golf logic)
+  const {data:draws}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',room.current_question);
+  const {data:ranks}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',room.current_question+RANK_Q_OFFSET);
+  const drawings=(draws||[]).filter(d=>d.answer_text&&d.answer_text.startsWith('data:'));
+  const drawMap={}; drawings.forEach(d=>drawMap[d.player_id]=d.answer_text);
+  const drawerIds=drawings.map(d=>d.player_id);
+  const golf={}; drawerIds.forEach(id=>golf[id]=0);
+  (ranks||[]).forEach(r=>{ let o; try{o=JSON.parse(r.answer_text);}catch(e){return;} if(Array.isArray(o)) o.forEach((id,i)=>{ if(golf[id]!=null) golf[id]+=(i+1); }); });
+  const standings=drawerIds.map(id=>({id,score:golf[id]})).sort((a,b)=>a.score-b.score);
+  const nameMap={}; state.players.forEach(p=>nameMap[p.id]=p.name);
+  // players list may be stale on player side; fetch names
+  if(!Object.keys(nameMap).length){ const {data:pl}=await sb.from('players').select('id,name').eq('room_id',state.roomId); (pl||[]).forEach(p=>nameMap[p.id]=p.name); }
+  const myPlace=standings.findIndex(s=>s.id===state.playerId);
+  document.getElementById('pr-list').innerHTML=
+    `<div class="text-center" style="margin-bottom:8px"><div style="font-family:'Bebas Neue';font-size:1.4rem">Round results 🎨</div>`+
+    (myPlace>=0?`<div style="color:#4fffb0">You placed #${myPlace+1}!</div>`:`<div class="text-muted">You didn't draw this round</div>`)+`</div>`+
+    standings.map((s,i)=>{
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+      const me=s.id===state.playerId;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px;border-radius:10px;background:${me?'#4fffb022':'#2a2a3d'}">
+        <span style="width:26px">${medal}</span>
+        <img src="${drawMap[s.id]||''}" style="width:48px;height:48px;border-radius:6px;background:#fff;object-fit:contain">
+        <span style="flex:1;font-weight:${me?'700':'400'}">${escHtml(nameMap[s.id]||'?')}</span>
+        <span class="text-muted" style="font-size:.78rem">${s.score} pts</span></div>`;
+    }).join('');
+  document.getElementById('pr-prompt').textContent=q.text;
+  document.getElementById('pr-submit').style.display='none';
+  document.getElementById('pr-submitted-msg').style.display='block';
+  document.getElementById('pr-submitted-msg').textContent='⏳ Waiting for host to continue…';
+  showScreen('screen-player-rank');
+  if(myPlace===0){ FX.fanfare&&FX.fanfare(); confettiBurst&&confettiBurst({count:100}); } else { FX.reveal&&FX.reveal(); }
+}
+
 function resetToLanding(){
   if(state.subscription) state.subscription.unsubscribe();
+  clearInterval(DRAW.timer); clearInterval(_hdPoll); clearInterval(_hdRankPoll);
   pongTeardown();
   arcadeStop();
   if(practiceGame&&practiceGame.stop){ try{practiceGame.stop();}catch(e){} practiceGame=null; }
@@ -3288,12 +3793,18 @@ const PALETTE={
   trousers:['#2a2a3d','#3a4a6e','#6e4b2f','#1a4a2e','#555','#222','#c0c0c0','#4a3a1e'],
 };
 const HAIRSTYLES=[
-  {key:'default', label:'Classic', emoji:'💆'},
-  {key:'spiky',   label:'Spiky',   emoji:'⚡'},
-  {key:'curly',   label:'Curly',   emoji:'🌀'},
-  {key:'long',    label:'Long',    emoji:'🧖'},
-  {key:'bun',     label:'Bun',     emoji:'🎀'},
-  {key:'shaved',  label:'Shaved',  emoji:'✨'},
+  {key:'default',   label:'Classic',   emoji:'💇'},
+  {key:'short',     label:'Short',     emoji:'✂️'},
+  {key:'spiky',     label:'Spiky',     emoji:'⚡'},
+  {key:'curly',     label:'Curly',     emoji:'🌀'},
+  {key:'bun',       label:'Bun',       emoji:'🎀'},
+  {key:'ponytail',  label:'Ponytail',  emoji:'🎽'},
+  {key:'mohawk',    label:'Mohawk',    emoji:'🤘'},
+  {key:'long',      label:'Long',      emoji:'💁'},
+  {key:'longwavy',  label:'Long Wavy', emoji:'🌊'},
+  {key:'longcurly', label:'Long Curly',emoji:'➰'},
+  {key:'veryLong',  label:'Very Long', emoji:'👰'},
+  {key:'bald',      label:'Bald',      emoji:'🥚'},
 ];
 const HATS=[
   {key:'none',     label:'None',    emoji:'🚫'},
@@ -3309,30 +3820,61 @@ const GLASSES=[
   {key:'monocle',    label:'Monocle',   emoji:'🧐'},
 ];
 const SCARVES=[
-  {key:'none',    label:'None',   emoji:'🚫'},
-  {key:'red',     label:'Red',    emoji:'🔴'},
-  {key:'blue',    label:'Blue',   emoji:'🔵'},
-  {key:'green',   label:'Green',  emoji:'🟢'},
-  {key:'rainbow', label:'Rainbow',emoji:'🌈'},
+  {key:'none',    label:'None',    emoji:'🚫'},
+  {key:'red',     label:'Red',     emoji:'🔴'},
+  {key:'blue',    label:'Blue',    emoji:'🔵'},
+  {key:'green',   label:'Green',   emoji:'🟢'},
+  {key:'rainbow', label:'Rainbow', emoji:'🌈'},
+  {key:'leopard', label:'Leopard', emoji:'🐆'},
 ];
+const SHOES=[
+  {key:'trainers', label:'Trainers', emoji:'👟'},
+  {key:'boots',    label:'Boots',    emoji:'🥾'},
+  {key:'sandals',  label:'Sandals',  emoji:'🩴'},
+  {key:'smart',    label:'Smart',    emoji:'👞'},
+];
+// "Pattern" tops/bottoms: chosen via a special swatch value. When jumper or
+// trousers equals one of these keys, the SVG fills with a pattern instead of
+// a flat colour.
+const PATTERN_FILLS={ leopard:'url(#leopard)' };
 const DEFAULT_AVATAR={
   skin:'#f9d8b2', eyes:'#2b6fd4', hair:'#e8c560', hairStyle:'default',
-  jumper:'#a78bfa', sleeves:'long', trousers:'#2a2a3d',
-  hat:'none', glasses:'none', scarf:'none'
+  jumper:'#a78bfa', sleeves:'long', trousers:'#2a2a3d', legwear:'long',
+  shoes:'trainers', hat:'none', glasses:'none', scarf:'none'
 };
 let draftAvatar={ ...DEFAULT_AVATAR };
 
 // Build a recoloured mascot SVG.
+// Every avatar SVG defines patterns (fairisle, leopard) with fixed ids in its
+// own <defs>. When two avatar SVGs sit in the same page (e.g. the landing
+// mascot AND the creator preview), duplicate ids make the browser resolve
+// url(#leopard) to the wrong (or empty) element, so patterns render black.
+// uniquifySvgIds rewrites every id + url(#id) reference with a per-call suffix.
+let _svgIdSeq=0;
+function uniquifySvgIds(svg){
+  const suffix='_'+(++_svgIdSeq);
+  // rewrite id="name"  →  id="name_N"
+  svg=svg.replace(/id="([a-zA-Z][\w-]*)"/g, (m,id)=>`id="${id}${suffix}"`);
+  // rewrite url(#name) → url(#name_N)
+  svg=svg.replace(/url\(#([a-zA-Z][\w-]*)\)/g, (m,id)=>`url(#${id}${suffix})`);
+  return svg;
+}
+
 function mascotSVG(av){
   let svg=MASCOT_SVG;
-  if(!av) return svg;
+  if(!av) return uniquifySvgIds(svg);
   const a={ ...DEFAULT_AVATAR, ...av };
-  const j=a.jumper, jShade=shade(j,-18), jLight=shade(j,16);
+  // Resolve jumper fill: a pattern key (e.g. 'leopard') or a flat colour.
+  const jumperPat=PATTERN_FILLS[a.jumper];
+  const j= jumperPat || a.jumper;
+  const jBase = jumperPat ? '#d8a23e' : a.jumper; // base tone for shading nearby parts
+  const jShade=shade(jBase,-18), jLight=shade(jBase,16);
   const sk=a.skin, skShade=shade(sk,-10);
+  // Resolve trouser fill similarly.
+  const trouserPat=PATTERN_FILLS[a.trousers];
+  const tr= trouserPat || a.trousers;
+  const trBase= trouserPat ? '#d8a23e' : a.trousers;
   // --- SLEEVE LENGTH: rebuild the two arm groups before recolouring ---
-  // Long  = jumper sleeve full length (y 64→92) + ribbed cuff + hand.
-  // Short = jumper sleeve to mid-upper-arm (y 64→78) with a hem, then a
-  //         clearly bare skin forearm (y 78→100) + hand.
   if(a.sleeves==='short'){
     const armL=`<g class="arm-l">
        <rect class="arm-sleeve-l" x="11" y="64" width="11" height="15" rx="5.5" fill="url(#fairisle)"/>
@@ -3349,7 +3891,9 @@ function mascotSVG(av){
     svg=svg.replace(/<g class="arm-l">[\s\S]*?<\/g>/, armL);
     svg=svg.replace(/<g class="arm-r">[\s\S]*?<\/g>/, armR);
   }
-  // jumper colour
+  // --- LEGWEAR + SHOES: rebuild both leg groups ---
+  svg=rebuildLegs(svg, a, sk, skShade);
+  // jumper colour / pattern
   svg=svg.split('url(#fairisle)').join(j);
   svg=svg.split('#ece2cc').join(jLight);
   svg=svg.split('#cfc0a0').join(jShade);
@@ -3361,15 +3905,13 @@ function mascotSVG(av){
   const h=a.hair;
   svg=svg.split('#e8c560').join(h);
   svg=svg.split('#f0d472').join(shade(h,18));
+  // If a specific hairstyle is chosen, remove the default base hair.
+  if(a.hairStyle && a.hairStyle!=='default'){
+    svg=svg.replace(/<g class="base-hair">[\s\S]*?<\/g>/, '');
+  }
   // eyes
   const e=a.eyes;
   svg=svg.split('#2b6fd4').join(e);
-  // trousers
-  const tr=a.trousers;
-  svg=svg.split('#9c7b4e').join(tr);
-  svg=svg.split('#8f6f44').join(shade(tr,-10));
-  svg=svg.split('#876641').join(shade(tr,-18));
-  svg=svg.split('#7a5d3a').join(shade(tr,-18));
   // hair style overlay
   const hairOverlay=buildHairOverlay(a.hairStyle, a.hair);
   // glasses overlay
@@ -3378,48 +3920,155 @@ function mascotSVG(av){
   const hatOverlay=buildHatOverlay(a.hat, a.hair);
   // scarf overlay
   const scarfOverlay=buildScarfOverlay(a.scarf);
-  // inject head/neck overlays INSIDE m-body, after the front arm, so they move
-  // with the lean/walk animations. Keep every closing tag so the tree balances.
+  // inject head/neck overlays INSIDE m-body, after the front arm.
   const overlays=hairOverlay+glassesOverlay+hatOverlay+scarfOverlay;
   svg=svg.replace('   </g>\n  </g>\n </g>\n</svg>', '   </g>\n   '+overlays+'\n  </g>\n </g>\n</svg>');
+  return uniquifySvgIds(svg);
+}
+
+// Rebuild both legs with chosen legwear (long trousers vs shorts) and shoe style.
+function rebuildLegs(svg, a, sk, skShade){
+  const trouserPat=PATTERN_FILLS[a.trousers];
+  const tr= trouserPat || a.trousers;
+  const trBase= trouserPat ? '#d8a23e' : a.trousers;
+  const trDarkL=shade(trBase,-12), trDarkR=shade(trBase,-20);
+  const shorts = a.legwear==='shorts';
+  const trBottom = shorts ? 132 : 156;
+  function legGroup(side){
+    const lx = side==='l' ? 28 : 44;
+    const stripeCol = side==='l' ? trDarkL : trDarkR;
+    let g=`<g class="leg-${side}">`;
+    g+=`<rect x="${lx}" y="112" width="13" height="${trBottom-112}" rx="6" fill="${tr}"/>`;
+    if(!trouserPat){ g+=`<path d="M${lx+2} 114 V${trBottom-2} M${lx+5} 114 V${trBottom-2} M${lx+8} 114 V${trBottom-2} M${lx+11} 114 V${trBottom-2}" stroke="${stripeCol}" stroke-width=".8"/>`; }
+    if(shorts){ g+=`<rect x="${lx+1.5}" y="${trBottom}" width="10" height="${152-trBottom+2}" rx="4" fill="${sk}"/>`; }
+    g+=shoeSVG(a.shoes, side, sk, skShade);
+    g+=`</g>`;
+    return g;
+  }
+  // Replace the entire legs block (between the legs comment and the torso comment).
+  const newLegs=`<!-- legs -->\n   ${legGroup('l')}\n   ${legGroup('r')}\n   `;
+  svg=svg.replace(/<!-- legs[\s\S]*?<!-- torso/, newLegs+'<!-- torso');
   return svg;
+}
+
+// Shoe shapes, positioned at the foot. side 'l' base x~22, 'r' shifted +16.
+function shoeSVG(style, side, sk, skShade){
+  const off = side==='l' ? 0 : 16;
+  const x = 22+off;
+  switch(style){
+    case 'boots':
+      return `<g class="foot-${side}"><path d="M${x+2} 144 h11 v10 q5 0 6 4 l0 3 q0 2 -3 2 h-16 q-2 0 -2 -3 z" fill="#5a3a1e"/><rect x="${x}" y="160" width="27" height="4" rx="1.5" fill="#2a1a0e"/><path d="M${x+4} 146 h7 M${x+4} 149 h7" stroke="#3a2412" stroke-width="1"/></g>`;
+    case 'sandals':
+      return `<g class="foot-${side}"><path d="M${x+3} 153 h15 q2 0 2 3 v2 q0 2 -2 2 h-15 q-2 0 -2 -2 v-2 q0 -3 2 -3 z" fill="${skShade}"/><rect x="${x+1}" y="161" width="23" height="3" rx="1.5" fill="#7a5a3a"/><path d="M${x+5} 154 l6 4 M${x+11} 154 l-3 4" stroke="#6e4f37" stroke-width="1.4" fill="none"/></g>`;
+    case 'smart':
+      return `<g class="foot-${side}"><path d="M${x+2} 152 h13 q7 0 9 6 l0 2 q0 2 -3 2 h-19 q-2 0 -2 -3 z" fill="#1a1a22"/><rect x="${x}" y="161" width="28" height="3" rx="1.5" fill="#0a0a10"/><path d="M${x+3} 154 q5 -2 10 0" stroke="#3a3a45" stroke-width=".8" fill="none"/></g>`;
+    default: // trainers
+      return `<g class="foot-${side}"><path d="M${x+2} 152 h17 q5 0 6 5 l0 3 q0 2 -3 2 h-21 q-2 0 -2 -3 z" fill="#6e4f37"/><path d="M${x+2} 156 h17 q5 0 6 4 h-25 q-2 0 -2 -2 z" fill="#fff"/><rect x="${x}" y="160" width="27" height="3" rx="1.5" fill="#c9a878"/><path d="M${x+8} 153 l3 3 M${x+12} 153 l3 3" stroke="#e8d8b0" stroke-width="1"/></g>`;
+  }
 }
 
 function buildHairOverlay(style, hairCol){
   const h=hairCol||DEFAULT_AVATAR.hair;
-  const hs=shade(h,18);
+  const hl=shade(h,20), hd=shade(h,-22);
+  // Head: ellipse centre (42,35), rx~22 ry~23 → spans x≈20–64, top y≈11,
+  // ears at y≈36. A good hairline frames the forehead (dipping to ~y22 centre)
+  // and the sides come DOWN past the ears (to ~y40) so no skin shows at the temples.
+  // "cap" = a full scalp cover. The outer edge wraps the head (x17–67, top y9);
+  // the inner hairline sits LOW across the brow (y~20) so the forehead is framed
+  // by hair with no skin wedge poking through. Single smooth closed shape.
+  const cap = `<path d="M17 42 Q15 11 42 9 Q69 11 67 42 Q65 30 60 25 Q56 21 50 21 Q46 20 42 20 Q38 20 34 21 Q28 21 24 25 Q19 30 17 42 Z" fill="${h}"/>`;
+  const capSheen = `<path d="M27 18 Q34 13 42 13 Q50 13 57 18 Q50 16 42 16 Q34 16 27 18 Z" fill="${hl}" opacity=".7"/>`;
   switch(style){
+    case 'short':
+      return `<g class="hair-style">${cap}${capSheen}</g>`;
     case 'spiky':
-      return `<g class="hair-style-spiky" fill="${h}">
-        <polygon points="24,24 28,6 32,22"/>
-        <polygon points="33,18 38,2 42,16"/>
-        <polygon points="42,16 48,2 52,18"/>
-        <polygon points="52,22 56,6 60,24"/>
+      return `<g class="hair-style" fill="${h}">
+        ${cap}
+        <polygon points="19,34 15,14 26,28"/>
+        <polygon points="27,26 28,6 38,24"/>
+        <polygon points="39,23 42,3 46,23"/>
+        <polygon points="46,24 56,6 57,26"/>
+        <polygon points="58,28 69,14 65,34"/>
+        ${capSheen}
       </g>`;
     case 'curly':
-      return `<g class="hair-style-curly" fill="${h}">
-        <circle cx="22" cy="22" r="7"/><circle cx="30" cy="14" r="7"/><circle cx="42" cy="11" r="8"/>
-        <circle cx="54" cy="14" r="7"/><circle cx="62" cy="22" r="7"/>
-        <rect x="21" y="20" width="42" height="14" rx="2" fill="${h}"/>
-      </g>`;
-    case 'long':
-      return `<g class="hair-style-long" fill="${h}">
-        <path d="M20 28 Q14 55 16 90 Q18 100 22 100 Q20 70 24 50 L20 28Z"/>
-        <path d="M64 28 Q70 55 68 90 Q66 100 62 100 Q64 70 60 50 L64 28Z"/>
+      // tight curls covering the whole scalp (ring of puffs + filled cap)
+      return `<g class="hair-style" fill="${h}">
+        ${cap}
+        <circle cx="21" cy="26" r="8"/><circle cx="28" cy="16" r="8"/><circle cx="38" cy="12" r="8"/>
+        <circle cx="46" cy="12" r="8"/><circle cx="56" cy="16" r="8"/><circle cx="63" cy="26" r="8"/>
+        <circle cx="20" cy="36" r="7"/><circle cx="64" cy="36" r="7"/>
+        <circle cx="28" cy="18" r="3.2" fill="${hl}"/><circle cx="42" cy="13" r="3.2" fill="${hl}"/>
+        <circle cx="56" cy="18" r="3.2" fill="${hl}"/><circle cx="49" cy="15" r="2.8" fill="${hl}"/>
+        <circle cx="22" cy="30" r="2.6" fill="${hl}"/><circle cx="62" cy="30" r="2.6" fill="${hl}"/>
       </g>`;
     case 'bun':
-      return `<g class="hair-style-bun">
-        <circle cx="42" cy="8" r="10" fill="${h}"/>
-        <circle cx="42" cy="8" r="7" fill="${hs}"/>
-        <path d="M36 10 Q42 3 48 10" stroke="${shade(h,-20)}" stroke-width="1.5" fill="none"/>
+      return `<g class="hair-style">
+        ${cap}
+        <ellipse cx="42" cy="8" rx="9" ry="8" fill="${h}"/>
+        <ellipse cx="42" cy="8" rx="5.5" ry="5" fill="${hl}"/>
+        <path d="M33 10 Q42 3 51 10" stroke="${hd}" stroke-width="1.4" fill="none"/>
+        ${capSheen}
       </g>`;
-    case 'shaved':
-      // Just a very thin stubble line
-      return `<g class="hair-style-shaved" fill="${h}" opacity=".5">
-        <path d="M21 30 Q42 22 63 30 Q58 24 42 22 Q26 22 21 30Z"/>
+    case 'mohawk':
+      // shaved (faded) sides + tall central crest
+      return `<g class="hair-style">
+        <path d="M17 42 Q15 11 42 9 Q69 11 67 42 Q65 30 60 25 Q56 21 50 21 Q46 20 42 20 Q38 20 34 21 Q28 21 24 25 Q19 30 17 42 Z" fill="${h}" opacity=".28"/>
+        <path d="M35 28 Q34 4 42 2 Q50 4 49 28 Q46 23 42 23 Q38 23 35 28 Z" fill="${h}"/>
+        <polygon points="42,2 38,18 46,18" fill="${hl}"/>
       </g>`;
+    case 'long':
+      // straight long hair: full cap + two straight locks down past the shoulders
+      return `<g class="hair-style" fill="${h}">
+        ${cap}
+        <path d="M18 36 Q12 62 15 92 Q16 99 23 98 Q20 68 25 44 Q21 39 18 36 Z"/>
+        <path d="M66 36 Q72 62 69 92 Q68 99 61 98 Q64 68 59 44 Q63 39 66 36 Z"/>
+        ${capSheen}
+      </g>`;
+    case 'longwavy':
+      // long wavy hair: cap + two wavy locks with S-curves
+      return `<g class="hair-style" fill="${h}">
+        ${cap}
+        <path d="M18 36 Q9 50 16 62 Q23 74 14 86 Q11 95 20 97 Q26 84 22 72 Q18 60 26 50 Q22 42 18 36 Z"/>
+        <path d="M66 36 Q75 50 68 62 Q61 74 70 86 Q73 95 64 97 Q58 84 62 72 Q66 60 58 50 Q62 42 66 36 Z"/>
+        <path d="M19 44 Q13 54 18 62" stroke="${hl}" stroke-width="1.4" fill="none" opacity=".6"/>
+        <path d="M65 44 Q71 54 66 62" stroke="${hl}" stroke-width="1.4" fill="none" opacity=".6"/>
+        ${capSheen}
+      </g>`;
+    case 'longcurly':
+      // long curly hair: cap + columns of curl puffs down each side
+      return `<g class="hair-style" fill="${h}">
+        ${cap}
+        <circle cx="19" cy="42" r="7"/><circle cx="17" cy="52" r="7"/><circle cx="19" cy="62" r="7"/>
+        <circle cx="17" cy="72" r="6.5"/><circle cx="19" cy="82" r="6"/><circle cx="18" cy="91" r="5.5"/>
+        <circle cx="65" cy="42" r="7"/><circle cx="67" cy="52" r="7"/><circle cx="65" cy="62" r="7"/>
+        <circle cx="67" cy="72" r="6.5"/><circle cx="65" cy="82" r="6"/><circle cx="66" cy="91" r="5.5"/>
+        <circle cx="18" cy="50" r="2.4" fill="${hl}"/><circle cx="19" cy="70" r="2.4" fill="${hl}"/>
+        <circle cx="66" cy="50" r="2.4" fill="${hl}"/><circle cx="65" cy="70" r="2.4" fill="${hl}"/>
+      </g>`;
+    case 'veryLong':
+      // floor-length: cap + wide curtain of hair down the sides
+      return `<g class="hair-style" fill="${h}">
+        ${cap}
+        <path d="M18 36 Q10 70 13 110 Q14 122 24 121 Q21 80 25 46 Q21 40 18 36 Z"/>
+        <path d="M66 36 Q74 70 71 110 Q70 122 60 121 Q63 80 59 46 Q63 40 66 36 Z"/>
+        <path d="M20 44 V116 M64 44 V116" stroke="${hd}" stroke-width="1" opacity=".4"/>
+        <path d="M23 50 Q21 80 24 110" stroke="${hl}" stroke-width="1.2" fill="none" opacity=".5"/>
+        <path d="M61 50 Q63 80 60 110" stroke="${hl}" stroke-width="1.2" fill="none" opacity=".5"/>
+        ${capSheen}
+      </g>`;
+    case 'ponytail':
+      // swept-back cap + a high ponytail flowing to the side
+      return `<g class="hair-style" fill="${h}">
+        ${cap}
+        <path d="M60 20 Q78 22 80 40 Q82 58 72 70 Q70 60 73 48 Q75 36 62 30 Z"/>
+        <ellipse cx="62" cy="22" rx="5" ry="4.5" fill="${hd}"/>
+        ${capSheen}
+      </g>`;
+    case 'bald':
+      return '';
     default:
-      return ''; // default hair already in base SVG
+      return ''; // 'default' keeps the base SVG hair
   }
 }
 
@@ -3516,6 +4165,15 @@ function buildScarfOverlay(scarf){
     </g>`;
   }
   const colors={red:'#e53935',blue:'#1e88e5',green:'#43a047'};
+  if(scarf==='leopard'){
+    return `<g class="scarf-overlay">
+      <clipPath id="scbandLeo"><path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z"/></clipPath>
+      <g clip-path="url(#scbandLeo)"><rect x="22" y="56" width="42" height="11" fill="url(#leopard)"/></g>
+      <clipPath id="sctailLeo"><path d="M54 60 L63 58 L65 71 L57 73 Z"/></clipPath>
+      <g clip-path="url(#sctailLeo)"><rect x="52" y="56" width="16" height="20" fill="url(#leopard)"/></g>
+      <path d="M24 57 Q42 63 60 57 L61 65 Q42 71 23 65 Z" fill="none" stroke="#4a2c10" stroke-width=".6" opacity=".5"/>
+    </g>`;
+  }
   const fill=colors[scarf]; if(!fill) return '';
   const dk=shade(fill,-22);
   return `<g class="scarf-overlay">
@@ -3545,13 +4203,15 @@ function openCreator(){
   buildSwatches('sw-skin','skin');
   buildSwatches('sw-eyes','eyes');
   buildSwatches('sw-hair','hair');
-  buildSwatches('sw-jumper','jumper');
-  buildSwatches('sw-trousers','trousers');
+  buildSwatches('sw-jumper','jumper', ['leopard']);
+  buildSwatches('sw-trousers','trousers', ['leopard']);
   buildPills('sw-hairstyle', HAIRSTYLES, 'hairStyle');
   buildPills('sw-hat', HATS, 'hat');
   buildPills('sw-glasses', GLASSES, 'glasses');
   buildPills('sw-scarf', SCARVES, 'scarf');
+  buildPills('sw-shoes', SHOES, 'shoes');
   updateSleeveButtons();
+  updateLegwearButtons();
   // reset to first tab
   document.querySelectorAll('.creator-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
   document.querySelectorAll('.creator-panel').forEach((p,i)=>p.classList.toggle('active',i===0));
@@ -3559,11 +4219,21 @@ function openCreator(){
   showScreen('screen-create');
 }
 
-function buildSwatches(containerId, key){
+// Swatch builder. patterns = extra pattern keys (e.g. ['leopard']) shown as
+// special textured swatches after the flat colours.
+function buildSwatches(containerId, key, patterns){
   const wrap=document.getElementById(containerId); if(!wrap)return;
-  wrap.innerHTML=PALETTE[key].map(col=>
+  let html=PALETTE[key].map(col=>
     `<div class="swatch${draftAvatar[key]===col?' sel':''}" style="background:${col}" data-col="${col}" onclick="pickColor('${key}','${col}','${containerId}')"></div>`
   ).join('');
+  (patterns||[]).forEach(pk=>{
+    const sel = draftAvatar[key]===pk ? ' sel' : '';
+    const bg = pk==='leopard'
+      ? 'background:#d8a23e;background-image:radial-gradient(circle at 30% 30%,#3a2a14 18%,transparent 19%),radial-gradient(circle at 70% 60%,#3a2a14 16%,transparent 17%),radial-gradient(circle at 45% 75%,#3a2a14 14%,transparent 15%);background-size:14px 14px'
+      : 'background:#888';
+    html+=`<div class="swatch${sel}" style="${bg}" data-col="${pk}" title="${pk}" onclick="pickColor('${key}','${pk}','${containerId}')"></div>`;
+  });
+  wrap.innerHTML=html;
 }
 function pickColor(key,col,containerId){
   draftAvatar[key]=col;
@@ -3589,6 +4259,49 @@ function setSleeve(len){
 function updateSleeveButtons(){
   document.getElementById('sleeve-long-btn').classList.toggle('sel', draftAvatar.sleeves==='long');
   document.getElementById('sleeve-short-btn').classList.toggle('sel', draftAvatar.sleeves==='short');
+}
+function setLegwear(len){
+  draftAvatar.legwear=len;
+  updateLegwearButtons();
+  renderCreatorPreview();
+}
+function updateLegwearButtons(){
+  const a=document.getElementById('legwear-long-btn'), b=document.getElementById('legwear-shorts-btn');
+  if(a) a.classList.toggle('sel', draftAvatar.legwear==='long');
+  if(b) b.classList.toggle('sel', draftAvatar.legwear==='shorts');
+}
+// Roll a completely random character.
+function randomiseAvatar(){
+  const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+  draftAvatar={
+    skin:pick(PALETTE.skin),
+    eyes:pick(PALETTE.eyes),
+    hair:pick(PALETTE.hair),
+    hairStyle:pick(HAIRSTYLES).key,
+    jumper: Math.random()<0.18 ? 'leopard' : pick(PALETTE.jumper),
+    sleeves: Math.random()<0.5?'long':'short',
+    trousers: Math.random()<0.18 ? 'leopard' : pick(PALETTE.trousers),
+    legwear: Math.random()<0.5?'long':'shorts',
+    shoes:pick(SHOES).key,
+    hat:pick(HATS).key,
+    glasses:pick(GLASSES).key,
+    scarf:pick(SCARVES).key,
+  };
+  // re-sync all the UI controls to the rolled values
+  buildSwatches('sw-skin','skin');
+  buildSwatches('sw-eyes','eyes');
+  buildSwatches('sw-hair','hair');
+  buildSwatches('sw-jumper','jumper', ['leopard']);
+  buildSwatches('sw-trousers','trousers', ['leopard']);
+  buildPills('sw-hairstyle', HAIRSTYLES, 'hairStyle');
+  buildPills('sw-hat', HATS, 'hat');
+  buildPills('sw-glasses', GLASSES, 'glasses');
+  buildPills('sw-scarf', SCARVES, 'scarf');
+  buildPills('sw-shoes', SHOES, 'shoes');
+  updateSleeveButtons();
+  updateLegwearButtons();
+  renderCreatorPreview();
+  if(window.FX) FX.pop&&FX.pop();
 }
 function renderCreatorPreview(){
   const m=document.getElementById('creator-mascot');
@@ -3889,16 +4602,25 @@ function drawSideAvatar(ctx,W,H,floorY,sx,f,av,name,isMe,activity){
   // mirror if facing left
   ctx.save();
   if(f===-1){ ctx.translate(x,0); ctx.scale(-1,1); ctx.translate(-x,0); }
-  // legs
-  ctx.fillStyle=a.trousers||DEFAULT_AVATAR.trousers;
-  ctx.fillRect(x-aw*0.28,by-ah*0.42,aw*0.24,ah*0.38);
-  ctx.fillRect(x+aw*0.04,by-ah*0.42,aw*0.24,ah*0.38);
-  // shoes
-  ctx.fillStyle='#333';
+  // legs (leopard pattern → tan fallback for the tiny lobby sprite)
+  const trCol = a.trousers==='leopard' ? '#d8a23e' : (a.trousers||DEFAULT_AVATAR.trousers);
+  const shorts = a.legwear==='shorts';
+  const legTop = by-ah*0.42, legFull=ah*0.38, legLen = shorts ? legFull*0.5 : legFull;
+  ctx.fillStyle=trCol;
+  ctx.fillRect(x-aw*0.28, legTop, aw*0.24, legLen);
+  ctx.fillRect(x+aw*0.04, legTop, aw*0.24, legLen);
+  if(shorts){ // bare lower legs
+    ctx.fillStyle=a.skin||DEFAULT_AVATAR.skin;
+    ctx.fillRect(x-aw*0.26, legTop+legLen, aw*0.20, legFull-legLen);
+    ctx.fillRect(x+aw*0.06, legTop+legLen, aw*0.20, legFull-legLen);
+  }
+  // shoes (colour by style)
+  const shoeCol = {trainers:'#eee',boots:'#5a3a1a',sandals:'#b98a4a',smart:'#222'}[a.shoes]||'#333';
+  ctx.fillStyle=shoeCol;
   ctx.fillRect(x-aw*0.32,by-ah*0.06,aw*0.28,ah*0.08);
   ctx.fillRect(x,by-ah*0.06,aw*0.28,ah*0.08);
-  // torso (jumper)
-  const jcol=a.jumper||DEFAULT_AVATAR.jumper;
+  // torso (jumper); leopard → tan fallback
+  const jcol = a.jumper==='leopard' ? '#d8a23e' : (a.jumper||DEFAULT_AVATAR.jumper);
   ctx.fillStyle=jcol;
   roundRect(ctx,x-aw*0.38,by-ah*0.9,aw*0.76,ah*0.5,5); ctx.fill();
   // short/long sleeve indication
@@ -3915,7 +4637,7 @@ function drawSideAvatar(ctx,W,H,floorY,sx,f,av,name,isMe,activity){
   ctx.fillRect(x-aw*0.1,by-ah*1.0,aw*0.2,ah*0.14);
   // scarf
   if(a.scarf&&a.scarf!=='none'){
-    const sc={red:'#e53935',blue:'#1e88e5',green:'#43a047',rainbow:'#f0e040'}[a.scarf]||'#f0e040';
+    const sc={red:'#e53935',blue:'#1e88e5',green:'#43a047',rainbow:'#f0e040',leopard:'#d8a23e'}[a.scarf]||'#f0e040';
     ctx.fillStyle=sc; ctx.globalAlpha=0.88;
     ctx.fillRect(x-aw*0.42,by-ah*0.86,aw*0.84,ah*0.1);
     ctx.globalAlpha=1;
@@ -3934,32 +4656,53 @@ function drawSideAvatar(ctx,W,H,floorY,sx,f,av,name,isMe,activity){
   if(a.hat==='none'||!a.hat){
     switch(a.hairStyle){
       case 'spiky':
+        ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.33,Math.PI,2*Math.PI); ctx.fill();
         ctx.beginPath();
-        ctx.moveTo(x-aw*0.3,by-ah*1.22);
-        ctx.lineTo(x-aw*0.18,by-ah*1.52); ctx.lineTo(x-aw*0.05,by-ah*1.28);
-        ctx.lineTo(x+aw*0.08,by-ah*1.55); ctx.lineTo(x+aw*0.2,by-ah*1.28);
-        ctx.lineTo(x+aw*0.3,by-ah*1.42); ctx.lineTo(x+aw*0.32,by-ah*1.22);
+        ctx.moveTo(x-aw*0.3,by-ah*1.28);
+        ctx.lineTo(x-aw*0.2,by-ah*1.5); ctx.lineTo(x-aw*0.08,by-ah*1.32);
+        ctx.lineTo(x,by-ah*1.54); ctx.lineTo(x+aw*0.08,by-ah*1.32);
+        ctx.lineTo(x+aw*0.2,by-ah*1.5); ctx.lineTo(x+aw*0.3,by-ah*1.28);
         ctx.closePath(); ctx.fill();
         break;
       case 'curly':
         for(let i=-2;i<=2;i++){
-          ctx.beginPath(); ctx.arc(x+i*aw*0.14,by-ah*1.28,aw*0.14,0,7); ctx.fill();
+          ctx.beginPath(); ctx.arc(x+i*aw*0.15,by-ah*1.3,aw*0.15,0,7); ctx.fill();
         }
+        ctx.beginPath(); ctx.arc(x-aw*0.3,by-ah*1.18,aw*0.12,0,7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+aw*0.3,by-ah*1.18,aw*0.12,0,7); ctx.fill();
         break;
       case 'long':
-        ctx.fillRect(x-aw*0.36,by-ah*1.42,aw*0.13,ah*0.52);
-        ctx.fillRect(x+aw*0.23,by-ah*1.42,aw*0.13,ah*0.52);
+      case 'longwavy':
+      case 'longcurly':
+        ctx.fillRect(x-aw*0.38,by-ah*1.4,aw*0.14,ah*0.55);
+        ctx.fillRect(x+aw*0.24,by-ah*1.4,aw*0.14,ah*0.55);
+        ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.34,Math.PI,2*Math.PI); ctx.fill();
+        break;
+      case 'veryLong':
+        ctx.fillRect(x-aw*0.4,by-ah*1.4,aw*0.16,ah*0.85);
+        ctx.fillRect(x+aw*0.24,by-ah*1.4,aw*0.16,ah*0.85);
+        ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.34,Math.PI,2*Math.PI); ctx.fill();
+        break;
+      case 'ponytail':
         ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.33,Math.PI,2*Math.PI); ctx.fill();
+        ctx.fillRect(x+aw*0.28,by-ah*1.32,aw*0.14,ah*0.42);
+        ctx.beginPath(); ctx.arc(x+aw*0.35,by-ah*0.9,aw*0.1,0,7); ctx.fill();
         break;
       case 'bun':
-        ctx.beginPath(); ctx.arc(x,by-ah*1.44,aw*0.18,0,7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x,by-ah*1.46,aw*0.16,0,7); ctx.fill();
         ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.33,Math.PI,2*Math.PI); ctx.fill();
         break;
-      case 'shaved':
-        ctx.globalAlpha=0.4;
-        ctx.beginPath(); ctx.arc(x,by-ah*1.26,aw*0.3,Math.PI*1.1,Math.PI*1.9); ctx.fill();
-        ctx.globalAlpha=1;
+      case 'mohawk':
+        ctx.fillRect(x-aw*0.06,by-ah*1.52,aw*0.12,ah*0.28);
+        ctx.beginPath(); ctx.moveTo(x,by-ah*1.6); ctx.lineTo(x-aw*0.06,by-ah*1.42); ctx.lineTo(x+aw*0.06,by-ah*1.42); ctx.closePath(); ctx.fill();
         break;
+      case 'short':
+        ctx.beginPath(); ctx.arc(x,by-ah*1.27,aw*0.32,Math.PI,2*Math.PI); ctx.fill();
+        ctx.fillRect(x-aw*0.32,by-ah*1.27,aw*0.06,ah*0.06);
+        ctx.fillRect(x+aw*0.26,by-ah*1.27,aw*0.06,ah*0.06);
+        break;
+      case 'bald':
+        break; // no hair
       default: // classic
         ctx.beginPath(); ctx.arc(x,by-ah*1.28,aw*0.33,Math.PI,2*Math.PI); ctx.fill();
     }
@@ -4042,6 +4785,25 @@ const MASCOT_SVG = `
     <path d="M0 6 L2 4 L2 8 Z M14 6 L12 4 L12 8 Z" fill="#bfa074"/>
     <circle cx="3.5" cy="6" r="1" fill="#6e5436"/><circle cx="10.5" cy="6" r="1" fill="#6e5436"/>
   </pattern>
+  <pattern id="leopard" width="20" height="20" patternUnits="userSpaceOnUse">
+    <rect width="20" height="20" fill="#e0a83c"/>
+    <rect width="20" height="20" fill="#caa24a" opacity=".25"/>
+    <!-- broken-ring rosettes (dark outline, tan centre) staggered like real leopard -->
+    <g fill="none" stroke="#3a2208" stroke-width="2" stroke-linecap="round">
+      <path d="M4 3 a3 3 0 1 0 .1 0" stroke-dasharray="6 3"/>
+      <path d="M14 6 a3.2 3.2 0 1 0 .1 0" stroke-dasharray="6 3"/>
+      <path d="M8 12 a3 3 0 1 0 .1 0" stroke-dasharray="6 3"/>
+      <path d="M17 15 a2.8 2.8 0 1 0 .1 0" stroke-dasharray="5 3"/>
+      <path d="M2 16 a2.6 2.6 0 1 0 .1 0" stroke-dasharray="5 3"/>
+    </g>
+    <!-- solid dark spots scattered between rosettes -->
+    <g fill="#2e1a06">
+      <ellipse cx="10" cy="2" rx="1.3" ry="1" transform="rotate(20 10 2)"/>
+      <ellipse cx="19" cy="10" rx="1.2" ry="0.9" transform="rotate(-15 19 10)"/>
+      <ellipse cx="12" cy="17" rx="1.3" ry="1" transform="rotate(30 12 17)"/>
+      <ellipse cx="6" cy="8" rx="1.1" ry="0.8" transform="rotate(-25 6 8)"/>
+    </g>
+  </pattern>
  </defs>
  <g class="m-inner">
   <g class="m-body">
@@ -4067,8 +4829,10 @@ const MASCOT_SVG = `
    <ellipse cx="42" cy="36" rx="20" ry="20" fill="#f9d8b2"/>
    <circle cx="21" cy="36" r="4" fill="#f3c9a0"/><circle cx="63" cy="36" r="4" fill="#f3c9a0"/>
    <!-- hair (blonde) -->
+   <g class="base-hair">
    <path d="M21 30 Q22 8 42 8 Q62 8 63 30 Q58 20 50 22 Q52 14 42 14 Q32 14 34 22 Q26 20 21 30 Z" fill="#e8c560"/>
    <path d="M24 28 Q30 16 42 16 Q54 16 60 28 Q52 22 42 23 Q32 22 24 28 Z" fill="#f0d472"/>
+   </g>
    <!-- eyebrows -->
    <rect x="28" y="28" width="10" height="2.6" rx="1.3" fill="#6b4f2a" transform="rotate(-4 33 29)"/>
    <rect x="46" y="28" width="10" height="2.6" rx="1.3" fill="#6b4f2a" transform="rotate(4 51 29)"/>
@@ -4096,7 +4860,7 @@ let mascotTimer=null;
 function initMascot(){
   const m=document.getElementById('mascot');
   if(!m) return;
-  m.innerHTML=MASCOT_SVG;
+  m.innerHTML=uniquifySvgIds(MASCOT_SVG);
   runMascotLoop();
 }
 
