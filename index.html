@@ -275,8 +275,6 @@
     border-radius:22px 22px 12px 12px;
     padding:10px 12px 14px;
     box-shadow:0 18px 40px #000a, inset 0 2px 0 #ffffff14, inset 0 -8px 24px #00000060;
-    transform:rotateX(4deg);
-    transform-style:preserve-3d;
     border:1px solid #3a2068;
   }
   .cab-marquee{
@@ -611,7 +609,7 @@
 <div class="screen" id="screen-question">
   <div class="q-header w100">
     <span class="q-number" id="q-number-display">Q1</span>
-    <span class="badge badge-yellow" id="q-score-badge">0 pts</span>
+    <span class="badge badge-yellow" id="q-score-badge" style="display:none">0 pts</span>
   </div>
   <div class="timer-bar-wrap w100"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
   <p class="evil-warn" id="evil-warn" style="display:none">⚠️ EVIL ROUND — wrong answers LOSE points!</p>
@@ -824,6 +822,7 @@
 
 <!-- HOST CATEGORY INTRO STATUS -->
 <div class="screen" id="screen-host-cat">
+  <div class="flex-row" style="justify-content:flex-end;width:100%"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="hostShowLeaderboard()">🏆 Leaderboard</button></div>
   <div class="round-banner w100"><span>🎯</span><span class="round-banner-label" id="host-cat-name"></span></div>
   <div class="card w100" id="host-cat-rules-card"><p class="text-muted text-center" id="host-cat-rules"></p></div>
   <div class="w100">
@@ -885,6 +884,7 @@
 
 <!-- ===== DRAW ROUND: HOST ===== -->
 <div class="screen" id="screen-host-draw">
+  <div class="flex-row" style="justify-content:flex-end;width:100%"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="hostShowLeaderboard()">🏆 Leaderboard</button></div>
   <div class="pong-banner">🎨 Drawing Round</div>
 
   <!-- PHASE 0: setup (prompt + timer) -->
@@ -966,6 +966,7 @@
 
 <!-- ===== BUZZ-IN: HOST ===== -->
 <div class="screen" id="screen-host-buzz">
+  <div class="flex-row" style="justify-content:flex-end;width:100%"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="hostShowLeaderboard()">🏆 Leaderboard</button></div>
   <div class="pong-banner">🔔 Buzz-In Round</div>
   <p class="host-q-text" id="hb-question"></p>
   <div id="hb-waiting" style="text-align:center">
@@ -991,7 +992,7 @@
 <div class="screen" id="screen-player-buzz">
   <div class="q-header w100">
     <span class="q-number">🔔 Buzz-In</span>
-    <span class="badge badge-yellow" id="pb-score">0 pts</span>
+    <span class="badge badge-yellow" id="pb-score" style="display:none">0 pts</span>
   </div>
   <p class="q-text" id="pb-question"></p>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;width:100%">
@@ -1739,7 +1740,10 @@ function startHostTimer(secs){
     const left=Math.max(0,state.timerEnd-Date.now());
     bar.style.width=(left/(secs*1000)*100)+'%';
     badge.textContent=(left/1000).toFixed(2)+'s';
-    if(left<=0){clearInterval(state.timerInterval);badge.textContent='0.00s';}
+    if(left<=0){
+      clearInterval(state.timerInterval);badge.textContent='0.00s';
+      if(!state.revealed){ revealAnswers(); }
+    }
   },50);
 }
 
@@ -1918,14 +1922,17 @@ async function nextQuestion(){
 
 // ============ MID-GAME LEADERBOARD ============
 async function hostShowLeaderboard(){
+  const current=document.querySelector('.screen.active');
+  if(current&&current.id!=='screen-host-leaderboard') state.leaderboardReturnScreen=current.id;
   const {data}=await sb.from('players').select('*').eq('room_id',state.roomId);
   state.players=data||[];
   const sorted=[...state.players].sort((a,b)=>(state.scores[b.id]||0)-(state.scores[a.id]||0));
   const medals=['🥇','🥈','🥉'];
   document.getElementById('lb-list').innerHTML=sorted.map((p,i)=>`<div class="lb-row ${i<3?'top'+(i+1):''}"><span class="lb-pos">${medals[i]||(i+1)}</span><span class="lb-name">${escHtml(p.name)}</span><span class="lb-score">${state.scores[p.id]||0}</span></div>`).join('')||'<p class="text-muted text-center">No scores yet</p>';
+  document.getElementById('btn-continue').style.display=(state.leaderboardReturnScreen==='screen-host-question')?'block':'none';
   showScreen('screen-host-leaderboard');
 }
-function hostLeaderboardBack(){ showScreen('screen-host-question'); }
+function hostLeaderboardBack(){ showScreen(state.leaderboardReturnScreen||'screen-host-question'); }
 async function continueToNext(){ await nextQuestion(); }
 
 // ============ END GAME — staged reveal ============
@@ -2003,6 +2010,18 @@ function subscribePlayerRoom(){
   state.subscription=sb.channel('player-'+state.roomId)
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:`id=eq.${state.roomId}`},p=>routePlayer(p.new))
     .subscribe();
+  // Fallback poll: realtime pushes can occasionally be dropped or coalesced
+  // (e.g. two status changes back-to-back). Re-fetch the room every few
+  // seconds and re-route so the player screen can self-heal within a few
+  // seconds instead of getting stuck, even if a websocket event goes missing.
+  clearInterval(state.roomPoll);
+  state.roomPoll=setInterval(async()=>{
+    if(!state.roomId||state.role!=='player') return;
+    try{
+      const {data:room}=await sb.from('rooms').select('*').eq('id',state.roomId).single();
+      if(room) routePlayer(room);
+    }catch(e){}
+  },3000);
 }
 
 function routePlayer(room){
@@ -2749,6 +2768,19 @@ function showPlayerReveal(room){
   if(q.qtype==='mc'||q.qtype==='tf'){
     document.querySelectorAll('.option-btn').forEach((btn,i)=>{btn.disabled=true;if(i===q.correct)btn.classList.add('correct');else if(btn.classList.contains('selected'))btn.classList.add('wrong');});
     gotIt = state._lastPick===q.correct;
+  } else if(q.qtype==='multi'){
+    const correctArr=q.multiCorrect||[];
+    const picks=state.multiPicks||[];
+    let allCorrect=true;
+    document.querySelectorAll('#multi-btns .option-btn').forEach((btn,i)=>{
+      btn.disabled=true;
+      const shouldPick=!!correctArr[i];
+      const picked=picks.includes(i);
+      if(shouldPick) btn.classList.add('correct');
+      if(picked&&!shouldPick){ btn.classList.add('wrong'); allCorrect=false; }
+      else if(!picked&&shouldPick){ allCorrect=false; }
+    });
+    gotIt = allCorrect;
   }
   const prevScore=state._myShownScore||0;
   state.scores=room.scores||{};
@@ -3285,8 +3317,8 @@ function resetToLanding(){
   arcadeStop();
   if(practiceGame&&practiceGame.stop){ try{practiceGame.stop();}catch(e){} practiceGame=null; }
   if(pongMatchWatch){ try{pongMatchWatch.unsubscribe();}catch(e){} pongMatchWatch=null; }
-  clearInterval(state.timerInterval);clearInterval(state.playerTimer);
-  state={role:null,roomId:null,roomCode:null,playerId:null,playerName:null,questions:[],currentQIdx:0,scores:{},timerInterval:null,timerEnd:0,answered:false,revealed:false,subscription:null,players:[],questionStartTime:0,wsPath:[],wsGrid:null,calcValue:'',revealList:[],revealPtr:0,pong:null,myActivity:'lobby',avatar:null,myPos:null};
+  clearInterval(state.timerInterval);clearInterval(state.playerTimer);clearInterval(state.roomPoll);
+  state={role:null,roomId:null,roomCode:null,playerId:null,playerName:null,questions:[],currentQIdx:0,scores:{},timerInterval:null,timerEnd:0,answered:false,revealed:false,subscription:null,players:[],questionStartTime:0,wsPath:[],wsGrid:null,calcValue:'',revealList:[],revealPtr:0,pong:null,myActivity:'lobby',avatar:null,myPos:null,roomPoll:null};
   hostItems=[];renderQList();
   document.getElementById('join-code').value='';document.getElementById('join-name').value='';
   showScreen('screen-landing');
