@@ -592,7 +592,6 @@
     <p class="text-muted" style="font-size:.8rem;margin-bottom:12px">Pass the time while you wait. Practice scores don't count.</p>
     <div class="gap">
       <button class="btn btn-ghost" onclick="practiceStart('invaders')">👾 Space Invaders</button>
-      <button class="btn btn-ghost" onclick="practiceStart('pacman')">🟡 Pac-Man</button>
       <button class="btn btn-purple" onclick="practiceStart('pong')">🏓 Pong (find an opponent)</button>
     </div>
     <div id="pong-waiters" style="margin-top:12px"></div>
@@ -678,6 +677,9 @@
     <div class="type-tabs" id="type-tabs" style="margin-bottom:14px">
       <div class="type-tab active" data-type="mc" onclick="setQType('mc')">Multiple Choice</div>
       <div class="type-tab" data-type="tf" onclick="setQType('tf')">True / False</div>
+      <div class="type-tab" data-type="nearest" onclick="setQType('nearest')">🎯 Nearest</div>
+      <div class="type-tab" data-type="multi" onclick="setQType('multi')">☑️ Multi-Select</div>
+      <div class="type-tab" data-type="buzz" onclick="setQType('buzz')">🔔 Buzz-In</div>
       <div class="type-tab" data-type="number" onclick="setQType('number')">Number</div>
       <div class="type-tab" data-type="word" onclick="setQType('word')">Wordsearch</div>
       <div class="type-tab" data-type="game" onclick="setQType('game')">🎮 Mini-Game</div>
@@ -721,6 +723,34 @@
         <input id="number-answer" type="number" step="any" placeholder="e.g. 250">
       </div>
 
+      <!-- NEAREST THE BULL -->
+      <div id="nearest-fields" style="display:none">
+        <label>Correct Number (the bullseye)</label>
+        <input id="nearest-answer" type="number" step="any" placeholder="e.g. 206">
+        <p class="text-muted" style="font-size:.78rem;margin-top:6px">Players type a number. The 3 closest win <b>10 / 6 / 4</b> points. Ties broken by who answered fastest.</p>
+      </div>
+
+      <!-- MULTI-SELECT -->
+      <div id="multi-fields" style="display:none">
+        <label>6 Options — tick the ones that are CORRECT</label>
+        <div class="options-editor" style="grid-template-columns:1fr;gap:6px">
+          <div class="option-input-wrap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="multi-c0" style="width:20px;height:20px"><input id="multi-o0" placeholder="Option 1"></div>
+          <div class="option-input-wrap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="multi-c1" style="width:20px;height:20px"><input id="multi-o1" placeholder="Option 2"></div>
+          <div class="option-input-wrap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="multi-c2" style="width:20px;height:20px"><input id="multi-o2" placeholder="Option 3"></div>
+          <div class="option-input-wrap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="multi-c3" style="width:20px;height:20px"><input id="multi-o3" placeholder="Option 4"></div>
+          <div class="option-input-wrap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="multi-c4" style="width:20px;height:20px"><input id="multi-o4" placeholder="Option 5"></div>
+          <div class="option-input-wrap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="multi-c5" style="width:20px;height:20px"><input id="multi-o5" placeholder="Option 6"></div>
+        </div>
+        <p class="text-muted" style="font-size:.78rem;margin-top:6px">Players tap the ones they think are right (taps <b>lock</b> — no un-tapping). 1 point per correct tap AND per correct leave-blank (out of 6). Then fastest to a <b>perfect 6</b> gets +4, 2nd +2, 3rd +1.</p>
+      </div>
+
+      <!-- BUZZ-IN -->
+      <div id="buzz-fields" style="display:none">
+        <p class="text-muted" style="font-size:.82rem">Players get a big <b>BUZZER</b> button. First to buzz shows on your screen; they answer out loud and you mark right/wrong. Wrong → others can still buzz. Use this for "Who is this?" too — show the image in the room and put "Who is this?" as the question.</p>
+        <label style="margin-top:8px">Points for a correct buzz</label>
+        <input id="buzz-pts" type="number" value="10" min="1">
+      </div>
+
       <!-- WORD -->
       <div id="word-fields" style="display:none">
         <label>Answer Word (hidden in grid)</label>
@@ -733,10 +763,9 @@
         <label>Choose Game</label>
         <select id="game-choice" style="margin-bottom:10px" onchange="onGameChoiceChange()">
           <option value="invaders">👾 Space Invaders</option>
-          <option value="pacman">🟡 Pac-Man</option>
           <option value="reaction">⚡ Reaction Challenge</option>
           <option value="targettap">🎯 Target Tap</option>
-          <option value="memory">🧠 Memory Match</option>
+          <option value="memory">🧠 Memory</option>
           <option value="dodge">☄️ Dodge the Meteors</option>
           <option value="quickdraw">🤠 Quick Draw</option>
           <option value="pong">🏓 Pong Tournament</option>
@@ -748,12 +777,11 @@
 
       <!-- DRAW ROUND -->
       <div id="draw-fields" style="display:none">
-        <p class="text-muted" style="font-size:.82rem;margin-top:2px">Everyone draws the same prompt on their phone, then ranks each other's drawings. Lowest total (golf) wins the round. Put the prompt in the <b>Question</b> box above (e.g. "Shrek"). Needs at least 3 players.</p>
-        <label style="margin-top:8px">Drawing time (seconds)</label>
-        <input id="draw-time" type="number" value="60" min="20" max="300">
-        <label style="margin-top:8px">Winner gets</label>
+        <p class="text-muted" style="font-size:.85rem;margin-top:2px">Everyone draws the same prompt on their phone, then ranks each other's drawings. Lowest total (golf) wins the round.</p>
+        <p class="text-muted" style="font-size:.82rem;margin-top:8px">You'll type the <b>prompt</b> and the <b>timer</b> live, when the quiz reaches this round — nothing to set up now. Needs at least 3 players.</p>
+        <label style="margin-top:8px">Winner gets (quiz points)</label>
         <input id="draw-bonus" type="number" value="10" min="1">
-        <p class="text-muted" style="font-size:.78rem;margin-top:6px">Round places convert to quiz points: 1st gets this many, then 8, 6, 4, 2… down the line.</p>
+        <p class="text-muted" style="font-size:.78rem;margin-top:6px">Round places convert to quiz points: 1st gets this many, then 8, 6, 4, 2…</p>
       </div>
 
       <div class="field-row" id="time-row">
@@ -858,23 +886,50 @@
 <!-- ===== DRAW ROUND: HOST ===== -->
 <div class="screen" id="screen-host-draw">
   <div class="pong-banner">🎨 Drawing Round</div>
-  <h2 style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:1px;text-align:center;margin:6px 0">"<span id="hd-prompt">Shrek</span>"</h2>
-  <div id="hd-phase-draw">
-    <p class="text-muted text-center" id="hd-draw-status">Players are drawing…</p>
+
+  <!-- PHASE 0: setup (prompt + timer) -->
+  <div id="hd-phase-setup">
+    <p class="text-muted text-center" style="font-size:.85rem">Type a prompt for everyone to draw, set a timer, then press Start.</p>
+    <label style="margin-top:10px">Drawing prompt</label>
+    <input id="hd-prompt-input" placeholder="e.g. Shrek, Homer Simpson…" maxlength="60">
+    <label style="margin-top:10px">Timer (seconds)</label>
+    <input id="hd-seconds-input" type="number" value="60" min="15" max="600">
+    <button class="btn btn-success w100" style="margin-top:14px" onclick="hostStartDraw()">▶ Start drawing</button>
+  </div>
+
+  <!-- PHASE 1: drawing in progress -->
+  <div id="hd-phase-draw" style="display:none">
+    <h2 style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:1px;text-align:center;margin:6px 0">"<span id="hd-prompt">…</span>"</h2>
+    <p class="text-muted text-center">Players are drawing…</p>
     <div style="height:10px;background:#2a2a3d;border-radius:5px;overflow:hidden;margin:10px 0"><div id="hd-timer-bar" style="height:100%;width:100%;background:#4fffb0"></div></div>
-    <p class="text-center" style="font-family:'Bebas Neue';font-size:2rem" id="hd-timer-badge">--</p>
+    <p class="text-center" style="font-family:'Bebas Neue';font-size:2.4rem" id="hd-timer-badge">--</p>
     <p class="text-center" id="hd-submitted">0 submitted</p>
     <button class="btn btn-ghost w100 btn-sm" onclick="hostEndDrawEarly()">⏭ End drawing now</button>
   </div>
-  <div id="hd-phase-rank" style="display:none">
-    <p class="text-muted text-center" id="hd-rank-status">Players are ranking the drawings…</p>
-    <p class="text-center" id="hd-ranked">0 of 0 finished ranking</p>
-    <button class="btn btn-success w100" onclick="hostScoreDraw()" id="hd-score-btn">📊 Score the round</button>
+
+  <!-- PHASE 2: time's up — host sends drawings out for ranking -->
+  <div id="hd-phase-sendrank" style="display:none">
+    <h2 style="font-family:'Bebas Neue';font-size:1.6rem;text-align:center">⏰ Time's up!</h2>
+    <p class="text-muted text-center" id="hd-collected">Collecting drawings…</p>
+    <button class="btn btn-success w100" onclick="hostSendToRanking()" id="hd-sendrank-btn">📤 Send drawings out to rank</button>
   </div>
-  <div id="hd-phase-result" style="display:none">
-    <p class="text-muted text-center">Round results — lowest golf score wins!</p>
-    <div id="hd-results"></div>
-    <button class="btn btn-primary w100" onclick="hostDrawContinue()">Continue →</button>
+
+  <!-- PHASE 3: players ranking -->
+  <div id="hd-phase-rank" style="display:none">
+    <h2 style="font-family:'Bebas Neue';font-size:1.5rem;text-align:center">Ranking…</h2>
+    <p class="text-muted text-center">Players are ranking the drawings.</p>
+    <div id="hd-rank-status-list" style="margin:10px 0"></div>
+    <button class="btn btn-success w100" onclick="hostBeginReveal()" id="hd-reveal-btn">🎬 Reveal results (worst → best)</button>
+  </div>
+
+  <!-- PHASE 4: reveal drawings one by one, worst first -->
+  <div id="hd-phase-reveal" style="display:none">
+    <div id="hd-reveal-stage" style="text-align:center"></div>
+    <button class="btn btn-primary w100" style="margin-top:12px" onclick="hostRevealNextDrawing()" id="hd-reveal-next-btn">Reveal next ↓</button>
+    <div id="hd-reveal-done" style="display:none;margin-top:10px">
+      <button class="btn btn-success w100" onclick="hostDrawAnother()">🎨 Another drawing round</button>
+      <button class="btn btn-primary w100" style="margin-top:8px" onclick="hostDrawContinue()">Continue quiz →</button>
+    </div>
   </div>
 </div>
 
@@ -907,6 +962,42 @@
   <div id="pr-list" style="display:flex;flex-direction:column;gap:8px;margin:10px 0"></div>
   <button class="btn btn-primary w100" id="pr-submit" onclick="prSubmit()" disabled>Submit Ranking</button>
   <p class="text-center text-muted" id="pr-submitted-msg" style="display:none">✓ Ranking submitted! Waiting for others…</p>
+</div>
+
+<!-- ===== BUZZ-IN: HOST ===== -->
+<div class="screen" id="screen-host-buzz">
+  <div class="pong-banner">🔔 Buzz-In Round</div>
+  <p class="host-q-text" id="hb-question"></p>
+  <div id="hb-waiting" style="text-align:center">
+    <div style="font-size:3rem;margin:14px 0">🔔</div>
+    <p class="text-muted">Buzzers are live. Waiting for someone to buzz…</p>
+  </div>
+  <div id="hb-buzzed" style="display:none;text-align:center">
+    <div style="font-family:'Bebas Neue';font-size:2.4rem;color:var(--accent)" id="hb-buzzer-name">—</div>
+    <p class="text-muted">buzzed first! Did they get it right?</p>
+    <div class="host-actions" style="justify-content:center;margin-top:12px">
+      <button class="btn btn-success" onclick="hostBuzzJudge(true)">✓ Correct</button>
+      <button class="btn btn-danger" onclick="hostBuzzJudge(false)">✗ Wrong</button>
+    </div>
+  </div>
+  <div id="hb-locked" style="display:none;text-align:center">
+    <p class="text-muted" id="hb-locked-msg"></p>
+  </div>
+  <div id="hb-status" style="margin-top:14px"></div>
+  <button class="btn btn-ghost w100 btn-sm" style="margin-top:12px" onclick="hostBuzzSkip()">⏭ Skip — nobody got it</button>
+</div>
+
+<!-- ===== BUZZ-IN: PLAYER ===== -->
+<div class="screen" id="screen-player-buzz">
+  <div class="q-header w100">
+    <span class="q-number">🔔 Buzz-In</span>
+    <span class="badge badge-yellow" id="pb-score">0 pts</span>
+  </div>
+  <p class="q-text" id="pb-question"></p>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;width:100%">
+    <button id="pb-buzzer" onclick="playerBuzz()" style="width:200px;height:200px;border-radius:50%;border:none;background:radial-gradient(circle at 40% 35%,#ff7089,#c01030);color:#fff;font-family:'Bebas Neue';font-size:2.4rem;letter-spacing:2px;cursor:pointer;box-shadow:0 10px 30px #ff4f6d55, inset 0 -6px 12px #0004;touch-action:manipulation">BUZZ!</button>
+    <p class="text-muted text-center" id="pb-msg">First to buzz gets to answer — say it out loud!</p>
+  </div>
 </div>
 
 <!-- ===== PONG: HOST WATCH (host spectates the match) ===== -->
@@ -1167,15 +1258,20 @@ function setQType(t){
   document.getElementById('mc-fields').style.display = t==='mc'?'block':'none';
   document.getElementById('tf-fields').style.display = t==='tf'?'block':'none';
   document.getElementById('number-fields').style.display = t==='number'?'block':'none';
+  document.getElementById('nearest-fields').style.display = t==='nearest'?'block':'none';
+  document.getElementById('multi-fields').style.display = t==='multi'?'block':'none';
+  document.getElementById('buzz-fields').style.display = t==='buzz'?'block':'none';
   document.getElementById('word-fields').style.display = t==='word'?'block':'none';
   document.getElementById('game-fields').style.display = t==='game'?'block':'none';
   const drawF=document.getElementById('draw-fields'); if(drawF) drawF.style.display = t==='draw'?'block':'none';
-  // time limit not used for games or draw (draw has its own time field)
+  // time row hidden for games and draw
   const timeRow=document.getElementById('q-time').closest('.field-row');
-  if(timeRow) timeRow.style.display = (t==='game'||t==='draw')?'none':'flex';
-  // relabel question box
+  if(timeRow) timeRow.style.display = (t==='game'||t==='draw'||t==='buzz')?'none':'flex';
+  // question box hidden entirely for draw (prompt typed live by host)
+  const qWrap=document.querySelector('#new-q-text').closest('div');
+  if(qWrap) qWrap.style.display = t==='draw'?'none':'block';
   const qlabel=document.querySelector('#new-q-text').previousElementSibling;
-  if(qlabel) qlabel.textContent = t==='game'?'On-screen title':(t==='draw'?'Drawing prompt (e.g. Shrek)':'Question');
+  if(qlabel) qlabel.textContent = t==='game'?'On-screen title':'Question';
 }
 
 function onRoundTypeChange(){
@@ -1184,7 +1280,7 @@ function onRoundTypeChange(){
   const wrongWrap=document.getElementById('round-wrong-wrap');
   const correctInput=document.getElementById('round-correct-pts');
   wrongWrap.style.display='none';
-  if(t==='normal'){desc.textContent='Speed scoring: 10pts (<2s) down to 5pts. Correct pts field ignored.';}
+  if(t==='normal'){desc.textContent='Position scoring: 1st correct = 10pts, then 8, 6, 5, 4… by who answered correctly first.';}
   else if(t==='flat'){desc.textContent='Everyone correct gets the same points (set below).';correctInput.value=5;}
   else if(t==='closest'){desc.textContent='Everyone correct gets points EXCEPT the fastest correct answer (they get 0).';correctInput.value=5;}
   else if(t==='evil'){desc.textContent='Correct = +pts, Wrong = -pts (no guessing!).';wrongWrap.style.display='block';correctInput.value=5;document.getElementById('round-wrong-pts').value=-5;}
@@ -1205,7 +1301,7 @@ function addRoundHeader(){
 function addQuestion(){
   const text=document.getElementById('new-q-text').value.trim();
   const time=parseInt(document.getElementById('q-time').value)||10;
-  if(!text) return toast('⚠️ Enter a question');
+  if(currentQType!=='draw' && !text) return toast('⚠️ Enter a question');
   let item={type:'question',qtype:currentQType,text,time};
   if(currentQType==='mc'){
     const opts=['opt-a','opt-b','opt-c','opt-d'].map(id=>document.getElementById(id).value.trim());
@@ -1221,6 +1317,18 @@ function addQuestion(){
     const n=document.getElementById('number-answer').value;
     if(n==='') return toast('⚠️ Enter the correct number');
     item.numberAnswer=parseFloat(n);
+  } else if(currentQType==='nearest'){
+    const n=document.getElementById('nearest-answer').value;
+    if(n==='') return toast('⚠️ Enter the bullseye number');
+    item.numberAnswer=parseFloat(n);
+  } else if(currentQType==='multi'){
+    const opts=[0,1,2,3,4,5].map(i=>document.getElementById('multi-o'+i).value.trim());
+    if(opts.some(o=>!o)) return toast('⚠️ Fill all 6 options');
+    item.opts=opts;
+    item.multiCorrect=[0,1,2,3,4,5].map(i=>document.getElementById('multi-c'+i).checked);
+  } else if(currentQType==='buzz'){
+    item.buzzPts=parseInt(document.getElementById('buzz-pts').value)||10;
+    item.time=0;
   } else if(currentQType==='word'){
     const w=document.getElementById('word-answer').value.trim().toUpperCase().replace(/[^A-Z]/g,'');
     if(w.length<2) return toast('⚠️ Enter answer word (letters only)');
@@ -1232,7 +1340,8 @@ function addQuestion(){
     item.bonus=parseInt(document.getElementById('game-bonus').value)||20;
     item.time=0;
   } else if(currentQType==='draw'){
-    item.time=parseInt(document.getElementById('draw-time').value)||60;
+    item.text='🎨 Drawing Round';
+    item.time=0; // host sets the timer live
     item.bonus=parseInt(document.getElementById('draw-bonus').value)||10;
   }
   hostItems.push(item);
@@ -1243,6 +1352,8 @@ function addQuestion(){
   document.querySelectorAll('input[name=tf-correct]').forEach(r=>r.checked=false);
   document.getElementById('number-answer').value='';
   document.getElementById('word-answer').value='';
+  const na=document.getElementById('nearest-answer'); if(na) na.value='';
+  [0,1,2,3,4,5].forEach(i=>{ const o=document.getElementById('multi-o'+i), c=document.getElementById('multi-c'+i); if(o)o.value=''; if(c)c.checked=false; });
   renderQList(); toast('✓ Question added');
 }
 
@@ -1377,7 +1488,7 @@ function renderQList(){
   document.getElementById('q-count').textContent=qCount;
   if(!hostItems.length){list.innerHTML='';return;}
   let qNum=0;
-  const typeLabels={mc:'Multi',tf:'T/F',number:'Number',word:'Word',game:'🎮 Game',draw:'🎨 Draw'};
+  const typeLabels={mc:'Multi',tf:'T/F',number:'Number',nearest:'🎯 Nearest',multi:'☑️ Multi-Sel',buzz:'🔔 Buzz',word:'Word',game:'🎮 Game',draw:'🎨 Draw'};
   list.innerHTML=hostItems.map((item,i)=>{
     const arrows=`<div class="q-item-btns"><button onclick="moveItem(${i},-1)">↑</button><button onclick="moveItem(${i},1)">↓</button><button class="q-item-del" onclick="removeItem(${i})">✕</button></div>`;
     if(item.type==='round'){
@@ -1452,7 +1563,7 @@ function getTotalQuestions(){return state.questions.filter(q=>q.type==='question
 function roundRulesText(round){
   if(!round) return '';
   const rt=round.roundType;
-  if(rt==='normal') return 'Speed scoring: faster = more (10 down to 5).';
+  if(rt==='normal') return 'Be the first to answer correctly! 1st = 10pts, then 8, 6, 5, 4…';
   if(rt==='flat') return `All correct answers = ${round.correctPts} pts.`;
   if(rt==='closest') return `Get it right for ${round.correctPts} pts — but the FASTEST correct gets 0! Wait as close to the buzzer as you dare.`;
   if(rt==='evil') return `EVIL ROUND: Correct = +${round.correctPts}, Wrong = ${round.wrongPts}. No guessing!`;
@@ -1491,7 +1602,6 @@ async function refreshPlayers(){
 function activityLabel(a){
   if(!a||a==='lobby') return '';
   if(a==='invaders') return '· 👾 Invaders';
-  if(a==='pacman') return '· 🟡 Pac-Man';
   if(a==='pong-wait') return '· 🏓 waiting';
   if(a==='pong-playing') return '· 🏓 playing';
   return '';
@@ -1551,6 +1661,7 @@ async function beginQuestion(idx){
   state.currentQIdx=idx;state.revealed=false;
   const q=getQuestion(idx);
   if(q&&q.qtype==='draw'){ return hostBeginDraw(idx, q); }
+  if(q&&q.qtype==='buzz'){ return hostBeginBuzz(idx, q); }
   // For multiple choice / true-false, start with options hidden so players read the question first
   const optionsShown = !(q&&(q.qtype==='mc'||q.qtype==='tf'));
   state.optionsShown=optionsShown;
@@ -1633,15 +1744,22 @@ function startHostTimer(secs){
 }
 
 // ============ REVEAL ============
-function computePoints(round,isCorrect,timeSec,isFastestCorrect){
+function computePoints(round,isCorrect,timeSec,isFastestCorrect,correctRank){
   const rt=round?round.roundType:'normal';
   if(rt==='evil'){return isCorrect?(round.correctPts):(round.wrongPts);}
   if(!isCorrect) return 0;
   if(rt==='flat') return round.correctPts;
   if(rt==='closest') return isFastestCorrect?0:round.correctPts;
-  // normal speed
-  const t=timeSec;
-  return t<2?10:t<4?8:t<6?7:t<8?6:t<=10?5:5;
+  // normal: POSITION-based. 1st correct = 10, then 8,6,5,4,3,2,1 (min 1).
+  // Absolute time doesn't matter — only the order you got it right.
+  const ladder=[10,8,6,5,4,3,2,1];
+  if(correctRank==null) return 5;
+  return ladder[correctRank]!=null?ladder[correctRank]:1;
+}
+// Build a map: player_id -> their rank (0-based) among CORRECT answers by time.
+function correctRankMap(answers,q){
+  const correct=answers.filter(a=>answerIsCorrect(q,a)).sort((a,b)=>(a.time_taken||99)-(b.time_taken||99));
+  const map={}; correct.forEach((a,i)=>map[a.player_id]=i); return map;
 }
 
 function answerIsCorrect(q,ans){
@@ -1675,7 +1793,7 @@ async function revealAnswers(){
     winners.forEach(w=>{ state.scores[w.player_id]=(state.scores[w.player_id]||0)+q.bonus; });
     await sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
     const revBox=document.getElementById('host-answer-reveal');
-    const gname=q.game==='pacman'?'Pac-Man':'Space Invaders';
+    const gname=(MINIGAMES[q.game]&&MINIGAMES[q.game].label)||'Mini-Game';
     revBox.innerHTML=winners.length?`🏆 <b>${winners.map(w=>escHtml(nameMap[w.player_id]||'?')).join(', ')}</b> won the ${gname} round with <b>${topScore}</b> — +${q.bonus} pts!`:`No scores recorded for the ${gname} round.`;
     revBox.style.display='block';
     // breakdown table of game scores
@@ -1692,13 +1810,74 @@ async function revealAnswers(){
     return;
   }
 
+  // ===== NEAREST THE BULL: 3 closest get 10/6/4, ties broken by speed =====
+  if(q.qtype==='nearest'){
+    const nameMap={};state.players.forEach(p=>nameMap[p.id]=p.name);
+    const target=q.numberAnswer;
+    const guesses=list.filter(a=>a.answer_text!=null&&a.answer_text!=='').map(a=>({
+      id:a.player_id, val:parseFloat(a.answer_text), t:a.time_taken||999
+    })).filter(g=>!isNaN(g.val));
+    guesses.forEach(g=>g.dist=Math.abs(g.val-target));
+    guesses.sort((a,b)=> a.dist-b.dist || a.t-b.t);
+    const ladder=[10,6,4];
+    guesses.forEach((g,i)=>{ if(i<3) state.scores[g.id]=(state.scores[g.id]||0)+ladder[i]; g.pts=i<3?ladder[i]:0; });
+    await sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
+    const revBox=document.getElementById('host-answer-reveal');
+    revBox.innerHTML=`🎯 Bullseye: <b>${target}</b> — closest 3 win 10 / 6 / 4`;
+    revBox.style.display='block';
+    const rows=guesses.map((g,i)=>{
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+      return `<tr><td class="rank-num">${medal}</td><td style="font-weight:600">${escHtml(nameMap[g.id]||'?')}</td><td>${g.val} <span class="text-muted">(${g.dist} away)</span></td><td class="ans-time">${g.t.toFixed(2)}s</td><td style="font-weight:700;color:${g.pts>0?'var(--accent3)':'var(--muted)'}">${g.pts>0?'+'+g.pts:'0'}</td></tr>`;
+    });
+    const answeredIds=new Set(guesses.map(g=>g.id));
+    state.players.filter(p=>!answeredIds.has(p.id)).forEach(p=>rows.push(`<tr><td class="rank-num">-</td><td style="font-weight:600">${escHtml(p.name)}</td><td class="ans-none">No answer</td><td class="ans-time">-</td><td style="color:var(--muted)">0</td></tr>`));
+    document.getElementById('breakdown-tbody').innerHTML=rows.join('');
+    document.getElementById('host-breakdown-card').style.display='block';
+    toast('✓ Nearest scored');
+    return;
+  }
+
+  // ===== MULTI-SELECT: 1pt per correct pick/leave (out of 6) + speed bonus for perfect 6 =====
+  if(q.qtype==='multi'){
+    const nameMap={};state.players.forEach(p=>nameMap[p.id]=p.name);
+    const correctArr=q.multiCorrect||[];
+    const scored=list.map(a=>{
+      let picks=[]; try{ picks=JSON.parse(a.answer_text||'[]'); }catch(e){}
+      const pickSet=new Set(picks);
+      let correct=0;
+      for(let i=0;i<6;i++){ if((!!correctArr[i])===pickSet.has(i)) correct++; }
+      return { id:a.player_id, correct, perfect:correct===6, t:a.time_taken||999 };
+    });
+    scored.forEach(s=>{ state.scores[s.id]=(state.scores[s.id]||0)+s.correct; });
+    const perfects=scored.filter(s=>s.perfect).sort((a,b)=>a.t-b.t);
+    const bonusLadder=[4,2,1];
+    perfects.forEach((s,i)=>{ if(i<3){ state.scores[s.id]=(state.scores[s.id]||0)+bonusLadder[i]; s.bonus=bonusLadder[i]; } });
+    await sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
+    const revBox=document.getElementById('host-answer-reveal');
+    const correctNames=q.opts.filter((o,i)=>correctArr[i]).map(escHtml).join(', ');
+    revBox.innerHTML=`✅ Correct: <b>${correctNames||'none'}</b>`;
+    revBox.style.display='block';
+    scored.sort((a,b)=> b.correct-a.correct || a.t-b.t);
+    const rows=scored.map((s,i)=>{
+      const tot=s.correct+(s.bonus||0);
+      return `<tr><td class="rank-num">${i+1}</td><td style="font-weight:600">${escHtml(nameMap[s.id]||'?')}${s.perfect?' ⭐':''}</td><td>${s.correct}/6${s.bonus?` <span style="color:var(--accent3)">+${s.bonus} speed</span>`:''}</td><td class="ans-time">${s.t.toFixed(2)}s</td><td style="font-weight:700;color:var(--accent3)">+${tot}</td></tr>`;
+    });
+    const answeredIds=new Set(scored.map(s=>s.id));
+    state.players.filter(p=>!answeredIds.has(p.id)).forEach(p=>rows.push(`<tr><td class="rank-num">-</td><td style="font-weight:600">${escHtml(p.name)}</td><td class="ans-none">No answer</td><td class="ans-time">-</td><td style="color:var(--muted)">0</td></tr>`));
+    document.getElementById('breakdown-tbody').innerHTML=rows.join('');
+    document.getElementById('host-breakdown-card').style.display='block';
+    toast('✓ Multi-select scored');
+    return;
+  }
+
   // find fastest correct (for closest round)
   let fastestCorrectId=null,fastestTime=Infinity;
   list.forEach(a=>{if(answerIsCorrect(q,a)&&(a.time_taken||999)<fastestTime){fastestTime=a.time_taken||999;fastestCorrectId=a.player_id;}});
+  const rankMap=correctRankMap(list,q);
 
   for(const ans of list){
     const correct=answerIsCorrect(q,ans);
-    const pts=computePoints(round,correct,ans.time_taken||0,ans.player_id===fastestCorrectId);
+    const pts=computePoints(round,correct,ans.time_taken||0,ans.player_id===fastestCorrectId,rankMap[ans.player_id]);
     state.scores[ans.player_id]=(state.scores[ans.player_id]||0)+pts;
   }
   await sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
@@ -1716,11 +1895,12 @@ async function revealAnswers(){
 function buildBreakdown(answers,q,round,fastestCorrectId){
   const nameMap={};state.players.forEach(p=>nameMap[p.id]=p.name);
   const sorted=[...answers].sort((a,b)=>(a.time_taken||99)-(b.time_taken||99));
+  const rankMap=correctRankMap(answers,q);
   const answeredIds=new Set(answers.map(a=>a.player_id));
   const noAnswer=state.players.filter(p=>!answeredIds.has(p.id));
   const rows=sorted.map((ans,i)=>{
     const correct=answerIsCorrect(q,ans);
-    const pts=computePoints(round,correct,ans.time_taken||0,ans.player_id===fastestCorrectId);
+    const pts=computePoints(round,correct,ans.time_taken||0,ans.player_id===fastestCorrectId,rankMap[ans.player_id]);
     const cls=correct?'ans-correct':'ans-wrong';
     const fastTag=(ans.player_id===fastestCorrectId&&round&&round.roundType==='closest')?' ⚡':'';
     return `<tr><td class="rank-num">${i+1}</td><td style="font-weight:600">${escHtml(nameMap[ans.player_id]||'?')}${fastTag}</td><td class="${cls}">${correct?'✓ ':'✗ '}${escHtml(answerDisplay(q,ans))}</td><td class="ans-time">${Number(ans.time_taken||0).toFixed(2)}s</td><td style="font-weight:700;color:${pts>0?'var(--accent3)':pts<0?'var(--accent2)':'var(--muted)'}">${pts>0?'+'+pts:pts}</td></tr>`;
@@ -1853,8 +2033,12 @@ function routePlayer(room){
   else if(s==='pong-match'){ state.myActivity='lobby'; playerEnterPong(room); }
   else if(s==='catintro'){ state.currentQIdx=room.current_question; showPlayerCatIntro(room); }
   else if(s==='question'){ state.currentQIdx=room.current_question; showPlayerQuestion(room); }
+  else if(s==='draw-wait'){ state.currentQIdx=room.current_question; playerDrawWait(room); }
   else if(s==='draw'){ state.currentQIdx=room.current_question; playerEnterDraw(room); }
+  else if(s==='buzz'){ state.currentQIdx=room.current_question; playerEnterBuzz(room); }
+  else if(s==='draw-collected'){ playerDrawCollected(room); }
   else if(s==='drawrank'){ state.currentQIdx=room.current_question; playerEnterDrawRank(room); }
+  else if(s==='drawreveal'){ state.currentQIdx=room.current_question; showPlayerDrawReveal(room, pGetQuestion(room,room.current_question)); }
   else if(s==='reveal') showPlayerReveal(room);
   else if(s==='leaderboard'){/* host-only mid leaderboard; players keep last screen */}
   else if(s==='gameover'||s==='gameover-done') showPlayerGameOver(room);
@@ -1895,7 +2079,7 @@ function showPlayerQuestion(room){
   const sameQuestion = state.shownQIdx===room.current_question && state.shownStatus==='question';
   state.shownQIdx=room.current_question; state.shownStatus='question'; state.shownOpts=optionsShown;
   state.currentQIdx=room.current_question;
-  if(!sameQuestion){ state.answered=false; state.wsPath=[];state.calcValue=''; }
+  if(!sameQuestion){ state.answered=false; state.wsPath=[];state.calcValue=''; state.multiPicks=[]; }
   const round=pGetRound(room,room.current_question);
   document.getElementById('q-number-display').textContent=`Q${room.current_question+1}/${pTotal(room)}`;
   document.getElementById('q-score-badge').textContent=(state.scores[state.playerId]||0)+' pts';
@@ -1926,8 +2110,10 @@ function showPlayerQuestion(room){
   if(q.qtype==='mc'||q.qtype==='tf'){
     const letters=['A','B','C','D'];
     area.innerHTML=`<div class="options-grid ${q.qtype==='tf'?'tf':''}">`+q.opts.map((o,i)=>`<button class="option-btn ${q.qtype==='tf'?(i===0?'tf-true':'tf-false'):''}" id="opt-btn-${i}" onclick="submitMC(${i})">${q.qtype==='tf'?'':letters[i]+'. '}${escHtml(o)}</button>`).join('')+`</div>`;
-  } else if(q.qtype==='number'){
+  } else if(q.qtype==='number'||q.qtype==='nearest'){
     area.innerHTML=renderCalculator();
+  } else if(q.qtype==='multi'){
+    area.innerHTML=renderMultiSelect(q);
   } else if(q.qtype==='word'){
     area.innerHTML=renderWordsearch(q);
   } else if(q.qtype==='game'){
@@ -1958,6 +2144,36 @@ function renderCalculator(){
   <button class="calc-btn" onclick="calcPress('-')">±</button>
   <button class="calc-btn enter wide" onclick="submitNumber()">ENTER ⏎</button>
   </div></div>`;
+}
+
+// Multi-select: 6 options, tap to LOCK-select (cannot un-tap). Submit sends
+// the set of selected indices as JSON. Scoring happens at reveal.
+function renderMultiSelect(q){
+  return `<div class="gap">
+    <p class="text-muted text-center" style="font-size:.82rem">Tap all you think are correct — taps lock! Then press Submit.</p>
+    <div style="display:flex;flex-direction:column;gap:8px" id="multi-btns">
+      ${q.opts.map((o,i)=>`<button class="option-btn" id="ms-btn-${i}" onclick="multiTap(${i})" style="text-align:left">${escHtml(o)}</button>`).join('')}
+    </div>
+    <button class="btn btn-primary w100" style="margin-top:6px" onclick="submitMulti()">Submit answers ✓</button>
+  </div>`;
+}
+function multiTap(i){
+  if(state.answered) return;
+  if(!state.multiPicks) state.multiPicks=[];
+  if(state.multiPicks.includes(i)) return; // locked
+  state.multiPicks.push(i);
+  const b=document.getElementById('ms-btn-'+i);
+  if(b){ b.classList.add('selected'); }
+  FX.blip&&FX.blip();
+}
+async function submitMulti(){
+  if(state.answered) return; state.answered=true;
+  clearInterval(state.playerTimer);
+  const t=(Date.now()-state.questionStartTime)/1000;
+  const picks=(state.multiPicks||[]).slice().sort((a,b)=>a-b);
+  document.querySelectorAll('#multi-btns .option-btn').forEach(b=>b.disabled=true);
+  await sendAnswer({answer_index:-1,answer_text:JSON.stringify(picks),time_taken:t});
+  FX.pop&&FX.pop();
 }
 function calcPress(ch){
   if(state.answered)return;
@@ -2202,339 +2418,6 @@ function createInvaders(host){
   return { stop(){ over=true; cancelAnimationFrame(raf); } };
 }
 
-// ---------- PAC-MAN (rewritten: authentic maze, smooth grid movement, proper ghost AI) ----------
-function createPacman(host){
-  // Legend: # wall, . dot, o power pellet, (space) empty / ghost-house, = gate
-  // 19 wide. Ghost house is the open box rows 8-10; gate '=' is the single
-  // opening on row 8 col 9. Ghosts spawn inside and leave UP through the gate.
-  const RAW=[
-    "###################",
-    "#........#........#",
-    "#o##.###.#.###.##o#",
-    "#.................#",
-    "#.##.#.#####.#.##.#",
-    "#....#...#...#....#",
-    "####.###...###.####",
-    "####.#.......#.####",
-    "####.#.##-##.#.####",
-    ".......#GGG#.......",
-    "####.#.#GGG#.#.####",
-    "####.#.#####.#.####",
-    "####.#.......#.####",
-    "####.#.#####.#.####",
-    "#........#........#",
-    "#o##.###.#.###.##o#",
-    "#..#.........#....#",
-    "##.#.#.#####.#.#.##",
-    "#....#...#...#....#",
-    "#.................#",
-    "###################",
-  ];
-  // numeric grid: 0=wall, 1=dot, 2=empty/house, 3=power, 5=gate
-  const MAP=RAW.map(row=>row.split('').map(ch=>
-    ch==='#'?0 : ch==='.'?1 : ch==='o'?3 : ch==='-'?5 : 2
-  ));
-  const ROWS=MAP.length, COLS=MAP[0].length;
-  // size tiles to fit the phone screen (cabinet usable ~270px). 19*14=266.
-  const TS=14;
-  const W=COLS*TS, H=ROWS*TS;
-  const PAC_START={c:9,r:19};  // open bottom corridor (validated walkable)
-  const HOUSE={c:9,r:9};   // inside the ghost house (open area)
-  const GATE={c:9,r:8};    // the gate tile (single exit)
-  const GATE_OUT={c:9,r:7};// the corridor tile just outside the gate
-  host.innerHTML=`
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px;width:100%">
-      <div style="display:flex;justify-content:space-between;width:100%;max-width:${W}px;font-weight:700;font-size:.9rem">
-        <span id="pm-score">Score: 0</span><span id="pm-lives">❤️❤️❤️</span>
-      </div>
-      <canvas id="pm-canvas" width="${W}" height="${H}" style="background:#000;border:2px solid #3a2a6e;border-radius:10px;max-width:100%;touch-action:none"></canvas>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:center;width:100%">
-        <button class="btn btn-ghost" onclick="pmDir(0,-1)" style="width:56px;padding:10px;font-size:1.2rem">▲</button>
-        <div style="display:flex;gap:6px;justify-content:center">
-          <button class="btn btn-ghost" onclick="pmDir(-1,0)" style="width:56px;padding:10px;font-size:1.2rem">◀</button>
-          <button class="btn btn-ghost" onclick="pmDir(0,1)" style="width:56px;padding:10px;font-size:1.2rem">▼</button>
-          <button class="btn btn-ghost" onclick="pmDir(1,0)" style="width:56px;padding:10px;font-size:1.2rem">▶</button>
-        </div>
-      </div>
-      <p class="text-muted" style="font-size:.75rem">Swipe canvas or use d-pad • eat power pellets to hunt ghosts!</p>
-    </div>`;
-  const cv=document.getElementById('pm-canvas'), ctx=cv.getContext('2d');
-  let pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
-  let score=0, lives=3, over=false, raf=null;
-  let power=0, stepCount=0, ghostEaten=0, level=1, frightTimer=0;
-  const TILE=TS;
-  const ctr=(t)=>t*TILE+TILE/2; // tile index -> pixel centre
-
-  let pac={ x:ctr(PAC_START.c), y:ctr(PAC_START.r), dx:0, dy:0, ndx:0, ndy:0, mouth:0 };
-
-  // Ghosts: each has personality target fn. Start inside house, staggered release.
-  function mkGhost(col,name,homeC,releaseStep,scatter){
-    return { x:ctr(homeC), y:ctr(HOUSE.r), dx:0, dy:-1, col, name, mode:'house',
-             releaseStep, scatter, eaten:false };
-  }
-  let ghosts=[
-    mkGhost('#ff4f6d','Blinky',9,0,  {c:COLS-2,r:0}),
-    mkGhost('#ffb8ff','Pinky', 8,30, {c:1,r:0}),
-    mkGhost('#4fffcc','Inky',  10,70,{c:COLS-2,r:ROWS-1}),
-    mkGhost('#ffb84f','Clyde', 9,120,{c:1,r:ROWS-1}),
-  ];
-
-  function tileVal(c,r){
-    if(c<0)c=COLS-1; if(c>=COLS)c=0;
-    if(r<0||r>=ROWS) return 0;
-    return MAP[r][c];
-  }
-  function tileOf(px,py){ return { c:Math.floor(px/TILE), r:Math.floor(py/TILE) }; }
-  // walkable for pac (gate is solid), for ghosts in/out of house gate passable
-  function pacCanGo(c,r){ const v=tileVal(c,r); return v!==0 && v!==5; }
-  function ghostCanGo(c,r,allowGate){ const v=tileVal(c,r); if(v===0)return false; if(v===5)return !!allowGate; return true; }
-
-  // Input
-  window.pmDir=(dx,dy)=>{ pac.ndx=dx; pac.ndy=dy; };
-  let tsx=0,tsy=0;
-  cv.addEventListener('touchstart',e=>{e.preventDefault();tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;},{passive:false});
-  cv.addEventListener('touchend',e=>{
-    e.preventDefault();
-    const dx=e.changedTouches[0].clientX-tsx, dy=e.changedTouches[0].clientY-tsy;
-    if(Math.abs(dx)<8&&Math.abs(dy)<8) return;
-    if(Math.abs(dx)>Math.abs(dy)){ pac.ndx=dx>0?1:-1; pac.ndy=0; }
-    else { pac.ndx=0; pac.ndy=dy>0?1:-1; }
-  },{passive:false});
-  function keyHandler(e){
-    if(over)return;
-    if(e.key==='ArrowLeft'||e.key==='a'){pac.ndx=-1;pac.ndy=0;}
-    else if(e.key==='ArrowRight'||e.key==='d'){pac.ndx=1;pac.ndy=0;}
-    else if(e.key==='ArrowUp'||e.key==='w'){pac.ndx=0;pac.ndy=-1;}
-    else if(e.key==='ArrowDown'||e.key==='s'){pac.ndx=0;pac.ndy=1;}
-  }
-  window.addEventListener('keydown',keyHandler);
-
-  const PAC_SPEED=2.0;
-  const GHOST_SPEED=1.7;
-  const FRIGHT_SPEED=1.05;
-  const EYES_SPEED=3.2;
-
-  // generic "snap to centre when aligned, allow turn at intersections" mover
-  function atCentre(px,py,axis){
-    const v=axis==='x'?px:py;
-    const m=((v%TILE)+TILE)%TILE;
-    return Math.abs(m-TILE/2)<PAC_SPEED;
-  }
-
-  function movePac(){
-    const c=Math.floor(pac.x/TILE), r=Math.floor(pac.y/TILE);
-    const cx=ctr(c), cy=ctr(r);
-    const onCentre=Math.abs(pac.x-cx)<PAC_SPEED && Math.abs(pac.y-cy)<PAC_SPEED;
-    // turn only when centred on a tile
-    if(onCentre && (pac.ndx||pac.ndy)){
-      if(pacCanGo(c+pac.ndx, r+pac.ndy)){
-        pac.dx=pac.ndx; pac.dy=pac.ndy;
-        pac.x=cx; pac.y=cy;
-      }
-    }
-    // stop if wall ahead
-    if(onCentre && (pac.dx||pac.dy) && !pacCanGo(c+pac.dx, r+pac.dy)){
-      pac.x=cx; pac.y=cy; pac.dx=0; pac.dy=0;
-    }
-    pac.x+=pac.dx*PAC_SPEED; pac.y+=pac.dy*PAC_SPEED;
-    // tunnel wrap (horizontal)
-    if(pac.x<-TILE/2) pac.x=W+TILE/2; else if(pac.x>W+TILE/2) pac.x=-TILE/2;
-    // eat
-    const ec=Math.floor(((pac.x%W)+W)%W/TILE), er=Math.floor(pac.y/TILE);
-    if(MAP[er]&&MAP[er][ec]===1){ MAP[er][ec]=2; score+=10; pellets--; }
-    else if(MAP[er]&&MAP[er][ec]===3){ MAP[er][ec]=2; score+=50; pellets--; power=1; frightTimer=Math.max(300,420-level*30); ghostEaten=0; }
-    if(pellets<=0){ over=true; cancelAnimationFrame(raf); setTimeout(()=>nextLevel(),700); return; }
-    if(pac.dx||pac.dy) pac.mouth=(pac.mouth+0.18)%1;
-  }
-
-  function ghostTarget(g){
-    const pc=Math.floor(pac.x/TILE), pr=Math.floor(pac.y/TILE);
-    if(g.name==='Blinky') return {c:pc, r:pr};
-    if(g.name==='Pinky')  return {c:pc+pac.dx*4, r:pr+pac.dy*4};
-    if(g.name==='Inky'){
-      // vector from Blinky doubled (simplified): aim 2 ahead then mirror
-      const b=ghosts[0];
-      const ahead={c:pc+pac.dx*2, r:pr+pac.dy*2};
-      return {c:ahead.c+(ahead.c-Math.floor(b.x/TILE)), r:ahead.r+(ahead.r-Math.floor(b.y/TILE))};
-    }
-    // Clyde: chase when far, scatter when close
-    const gc=Math.floor(g.x/TILE), gr=Math.floor(g.y/TILE);
-    const d=Math.hypot(pc-gc, pr-gr);
-    return d>8?{c:pc,r:pr}:g.scatter;
-  }
-
-  function moveGhost(g){
-    // release from house
-    if(g.mode==='house'){
-      if(stepCount>=g.releaseStep){ g.mode='exit'; }
-      else { // bob inside house
-        g.y+=g.dy*0.6; if(g.y<ctr(HOUSE.r)-4||g.y>ctr(HOUSE.r)+4) g.dy*=-1;
-        return;
-      }
-    }
-    if(g.mode==='exit'){
-      // Step 1: slide to the gate column. Step 2: rise up through the gate to
-      // the corridor tile just outside (GATE_OUT). Only then start chasing.
-      const tx=ctr(GATE.c), ty=ctr(GATE_OUT.r);
-      const dx=tx-g.x;
-      if(Math.abs(dx)>EYES_SPEED){ g.x+=Math.sign(dx)*EYES_SPEED; }
-      else {
-        g.x=tx; const dy=ty-g.y;
-        if(Math.abs(dy)>EYES_SPEED){ g.y+=Math.sign(dy)*EYES_SPEED; }
-        else { g.y=ty; g.mode='chase'; g.dx=(Math.random()<0.5?-1:1); g.dy=0; }
-      }
-      return;
-    }
-    const eyes=g.mode==='eyes';
-    let spd= eyes?EYES_SPEED : (power>0?FRIGHT_SPEED:GHOST_SPEED+Math.min(0.6,level*0.06));
-    const c=Math.floor(g.x/TILE), r=Math.floor(g.y/TILE);
-    const cx=ctr(c), cy=ctr(r);
-    const onCentre=Math.abs(g.x-cx)<spd && Math.abs(g.y-cy)<spd;
-    if(onCentre){
-      g.x=cx; g.y=cy;
-      // eyes returning home -> drop back into the house through the gate
-      if(eyes && c===GATE.c && r>=GATE.r){
-        g.x=ctr(HOUSE.c); g.y=ctr(HOUSE.r); g.mode='house'; g.releaseStep=stepCount+50; g.dy=-1; g.eaten=false; return;
-      }
-      const allowGate=eyes; // only eyes may use the gate (to go back in)
-      let opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>
-        ghostCanGo(c+d[0], r+d[1], allowGate) && !(d[0]===-g.dx && d[1]===-g.dy)
-      );
-      if(!opts.length) opts=[[-g.dx,-g.dy]];
-      let chosen;
-      if(power>0 && !eyes){
-        chosen=opts[Math.floor(Math.random()*opts.length)];
-      } else {
-        const t = eyes?{c:GATE.c,r:GATE.r}:ghostTarget(g);
-        opts.sort((a,b)=>
-          Math.hypot(c+a[0]-t.c, r+a[1]-t.r) - Math.hypot(c+b[0]-t.c, r+b[1]-t.r)
-        );
-        chosen=opts[0];
-      }
-      g.dx=chosen[0]; g.dy=chosen[1];
-    }
-    g.x+=g.dx*spd; g.y+=g.dy*spd;
-    if(g.x<-TILE/2) g.x=W+TILE/2; else if(g.x>W+TILE/2) g.x=-TILE/2;
-  }
-
-  function nextLevel(){
-    level++;
-    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ if(MAP[r][c]===2) MAP[r][c]=1; }
-    // re-place the 4 power pellets at their original spots
-    [[2,1],[2,COLS-2],[15,1],[15,COLS-2]].forEach(([r,c])=>{ if(MAP[r][c]!==0) MAP[r][c]=3; });
-    pellets=0; MAP.forEach(row=>row.forEach(v=>{if(v===1||v===3)pellets++;}));
-    pac.x=ctr(PAC_START.c); pac.y=ctr(PAC_START.r); pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0;
-    ghosts.forEach((g,i)=>{ g.x=ctr([9,8,10,9][i]); g.y=ctr(HOUSE.r); g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=stepCount+[0,30,70,120][i]; });
-    power=0; over=false; raf=requestAnimationFrame(loop);
-  }
-
-  function checkCollisions(){
-    ghosts.forEach(g=>{
-      if(g.mode==='house'||g.mode==='exit'||g.mode==='eyes') return;
-      if(Math.hypot(g.x-pac.x, g.y-pac.y) < TILE*0.72){
-        if(power>0){
-          ghostEaten++; score+=200*Math.pow(2,Math.min(3,ghostEaten-1));
-          g.mode='eyes';
-        } else { hit(); }
-      }
-    });
-  }
-
-  function hit(){
-    lives--;
-    document.getElementById('pm-lives').textContent='❤️'.repeat(Math.max(0,lives))||'💀';
-    pac.x=ctr(PAC_START.c); pac.y=ctr(PAC_START.r); pac.dx=0;pac.dy=0;pac.ndx=0;pac.ndy=0;
-    power=0; frightTimer=0; stepCount=0;
-    ghosts.forEach((g,i)=>{ g.x=ctr([9,8,10,9][i]); g.y=ctr(HOUSE.r); g.dx=0;g.dy=-1; g.mode='house'; g.releaseStep=[0,30,70,120][i]; });
-    if(lives<=0) endGame(false);
-  }
-
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
-      const v=MAP[r][c], x=c*TILE, y=r*TILE;
-      if(v===0){
-        ctx.fillStyle='#0a0a3a'; ctx.fillRect(x,y,TILE,TILE);
-        ctx.strokeStyle='#2a4ae0'; ctx.lineWidth=2;
-        ctx.strokeRect(x+2,y+2,TILE-4,TILE-4);
-      } else if(v===5){
-        ctx.fillStyle='#ffb8ff'; ctx.fillRect(x+1,y+TILE/2-1,TILE-2,2);
-      } else if(v===1){
-        ctx.fillStyle='#ffd9a0'; ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,2,0,7); ctx.fill();
-      } else if(v===3){
-        if(stepCount%24<14){
-          ctx.fillStyle='#fff'; ctx.shadowColor='#ffd9a0'; ctx.shadowBlur=8;
-          ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,5,0,7); ctx.fill(); ctx.shadowBlur=0;
-        }
-      }
-    }
-    // pac-man
-    const open=Math.abs(Math.sin(pac.mouth*Math.PI))*0.32+0.04;
-    let ang=0;
-    if(pac.dx>0)ang=0; else if(pac.dx<0)ang=Math.PI; else if(pac.dy<0)ang=-Math.PI/2; else if(pac.dy>0)ang=Math.PI/2;
-    ctx.fillStyle='#ffe11a';
-    ctx.beginPath(); ctx.moveTo(pac.x,pac.y);
-    ctx.arc(pac.x,pac.y,TILE/2-1,ang+open*Math.PI,ang+(2-open)*Math.PI);
-    ctx.closePath(); ctx.fill();
-    // ghosts
-    ghosts.forEach(g=>{
-      const gr=TILE/2-1, gx=g.x, gy=g.y;
-      const eyes=g.mode==='eyes';
-      const frightened=power>0 && !eyes;
-      const blink=frightened && frightTimer<120 && stepCount%12<6;
-      if(!eyes){
-        ctx.fillStyle=blink?'#fff':(frightened?'#3b4cff':g.col);
-        ctx.beginPath();
-        ctx.arc(gx,gy-1,gr,Math.PI,0);
-        ctx.lineTo(gx+gr,gy+gr-1);
-        const waves=3;
-        for(let i=0;i<waves;i++){
-          const wx=gx+gr-(i*(gr*2/waves));
-          ctx.quadraticCurveTo(wx-gr/waves, gy+gr+ (i%2?-3:3) -1, wx-gr*2/waves, gy+gr-1);
-        }
-        ctx.lineTo(gx-gr,gy+gr-1);
-        ctx.closePath(); ctx.fill();
-      }
-      // eyes (always)
-      const lookx=(g.dx||0)*1.6, looky=(g.dy||0)*1.6;
-      if(frightened && !blink){
-        ctx.fillStyle='#ffd9a0'; ctx.font=`${Math.round(TILE*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText('▾',gx,gy+1);
-      } else {
-        ctx.fillStyle='#fff';
-        ctx.beginPath(); ctx.arc(gx-3,gy-2,2.6,0,7); ctx.arc(gx+3,gy-2,2.6,0,7); ctx.fill();
-        ctx.fillStyle='#1133aa';
-        ctx.beginPath(); ctx.arc(gx-3+lookx,gy-2+looky,1.3,0,7); ctx.arc(gx+3+lookx,gy-2+looky,1.3,0,7); ctx.fill();
-      }
-    });
-    document.getElementById('pm-score').textContent=`Score: ${score}  Lv${level}`;
-  }
-
-  function loop(){
-    if(over)return;
-    stepCount++;
-    if(power>0){ frightTimer--; if(frightTimer<=0){ power=0; ghostEaten=0; } }
-    movePac();
-    if(over)return; // level cleared mid-frame
-    ghosts.forEach(moveGhost);
-    checkCollisions();
-    draw();
-    raf=requestAnimationFrame(loop);
-  }
-
-  function endGame(won){
-    over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler);
-    const lb=mgLeaderboardAdd('pacman', score, {unit:''});
-    const idx=lb.findIndex(e=>e.score===score);
-    host.innerHTML=mgEndScreenHTML({title:won?'YOU WIN! 🎉':'GAME OVER', big:score+'', sub:won?'You cleared the board!':'Munched '+score+' points', leaderboard:lb, unit:' pts', accent:'#ffe11a', newWhen:lb[idx]?.when});
-    if(won) FX.fanfare(); else FX.wrong();
-    if(onGameComplete) onGameComplete(score);
-  }
-  raf=requestAnimationFrame(loop);
-  return { stop(){ over=true; cancelAnimationFrame(raf); window.removeEventListener('keydown',keyHandler); } };
-}
-
-
 // ============================================================
 //  NEW MINI-GAMES (phone-friendly, 15–60s). Each returns {stop()}
 //  and calls onGameComplete(score) when finished. Higher = better.
@@ -2661,20 +2544,24 @@ function createTargetTap(host){
   return { stop(){ over=true; cancelAnimationFrame(raf); } };
 }
 
-// ---------- 3. MEMORY MATCH (Simon-style) ----------
+// ---------- 3. MEMORY ----------
 function createMemory(host){
-  const PADS=[{c:'#ff4f6d',f:330},{c:'#4fffb0',f:415},{c:'#4fa8ff',f:494},{c:'#f0e040',f:587}];
+  const PADS=[{c:'#ff4f6d'},{c:'#4fffb0'},{c:'#4fa8ff'},{c:'#f0e040'}];
+  // Fixed pixel sizing (aspect-ratio inside flex/grid can mis-size on mobile,
+  // hiding the bottom row). Each pad is an explicit square button.
+  const PAD=104, GAP=12, GRID=PAD*2+GAP;
   host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 6px 6px;width:100%">
     <div id="mm-stat" style="font-weight:700;font-size:.95rem">Watch carefully…</div>
-    <div id="mm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:240px;max-width:80vw">
-      ${PADS.map((p,i)=>`<div class="mm-pad" data-i="${i}" style="aspect-ratio:1;border-radius:16px;background:${p.c};opacity:.35;cursor:pointer;transition:opacity .08s ease,transform .08s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent"></div>`).join('')}
+    <div id="mm-grid" style="position:relative;width:${GRID}px;height:${GRID}px">
+      ${PADS.map((p,i)=>{
+        const x=(i%2)*(PAD+GAP), y=Math.floor(i/2)*(PAD+GAP);
+        return `<button type="button" class="mm-pad" data-i="${i}" style="position:absolute;left:${x}px;top:${y}px;width:${PAD}px;height:${PAD}px;border:none;border-radius:16px;background:${p.c};opacity:.35;cursor:pointer;transition:opacity .08s ease,transform .08s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:0"></button>`;
+      }).join('')}
     </div>
     <div id="mm-len" class="text-muted" style="font-size:.9rem">Level 1</div></div>`;
   const pads=[...host.querySelectorAll('.mm-pad')], stat=host.querySelector('#mm-stat'), lenEl=host.querySelector('#mm-len');
   let seq=[], inputIdx=0, accepting=false, level=0, over=false, best=0;
   const w=(ms)=>new Promise(r=>setTimeout(r,ms));
-  // beep per pad
-  function beep(i){ try{ FX.resume(); const a=FX._actx||(window.AudioContext&&new AudioContext()); }catch(e){} FX.blip&&FX.blip(); }
   function flash(i){ pads[i].style.opacity='1'; pads[i].style.transform='scale(1.06)'; }
   function unflash(i){ pads[i].style.opacity='0.35'; pads[i].style.transform='scale(1)'; }
   async function playSeq(){
@@ -2686,23 +2573,19 @@ function createMemory(host){
     accepting=true; inputIdx=0; stat.textContent='Your turn! 👆';
   }
   function addStep(){ level++; lenEl.textContent='Level '+level; seq.push(Math.floor(Math.random()*4)); playSeq(); }
-  // single pointer handler avoids the touch+mouse double-fire that skipped taps
   let lock=false;
+  function handlePress(i){
+    if(!accepting||over||lock) return;
+    lock=true; setTimeout(()=>lock=false,90);
+    flash(i); FX.pop(); setTimeout(()=>{ if(accepting) unflash(i); },160);
+    if(i===seq[inputIdx]){
+      inputIdx++;
+      if(inputIdx>=seq.length){ best=level; accepting=false; stat.textContent='✓ Nice!'; setTimeout(()=>{ if(!over) addStep(); },650); }
+    } else { fail(); }
+  }
   pads.forEach(p=>{
-    const press=(ev)=>{
-      if(ev){ ev.preventDefault(); ev.stopPropagation(); }
-      if(!accepting||over||lock) return;
-      const i=+p.dataset.i;
-      lock=true; setTimeout(()=>lock=false,90); // debounce duplicate events
-      flash(i); FX.pop(); setTimeout(()=>{ if(accepting) unflash(i); },160);
-      if(i===seq[inputIdx]){
-        inputIdx++;
-        if(inputIdx>=seq.length){ best=level; accepting=false; stat.textContent='✓ Nice!'; setTimeout(()=>{ if(!over) addStep(); },650); }
-      } else {
-        fail();
-      }
-    };
-    p.addEventListener('pointerdown',press);
+    const i=+p.dataset.i;
+    p.addEventListener('pointerdown',ev=>{ ev.preventDefault(); ev.stopPropagation(); handlePress(i); });
   });
   function fail(){
     over=true; accepting=false; FX.wrong();
@@ -2845,10 +2728,9 @@ function createQuickDraw(host){
 // registry: maps game key -> {label, emoji, make, marquee, accent}
 const MINIGAMES={
   invaders:{label:'Space Invaders', emoji:'👾', make:createInvaders, marquee:'SPACE BLASTERS', accent:'#4fffb0'},
-  pacman:{label:'Pac-Man', emoji:'🟡', make:createPacman, marquee:'PAC-MUNCH', accent:'#f0e040'},
   reaction:{label:'Reaction Challenge', emoji:'⚡', make:createReaction, marquee:'FAST FINGERS', accent:'#ff4f6d'},
   targettap:{label:'Target Tap', emoji:'🎯', make:createTargetTap, marquee:'BULLSEYE', accent:'#4fa8ff'},
-  memory:{label:'Memory Match', emoji:'🧠', make:createMemory, marquee:'SIMON SAYS', accent:'#a78bfa'},
+  memory:{label:'Memory', emoji:'🧠', make:createMemory, marquee:'MEMORY', accent:'#a78bfa'},
   dodge:{label:'Dodge the Meteors', emoji:'☄️', make:createDodge, marquee:'METEOR RUN', accent:'#ff9f4f'},
   quickdraw:{label:'Quick Draw', emoji:'🤠', make:createQuickDraw, marquee:'QUICK DRAW', accent:'#4fffb0'},
 };
@@ -2917,20 +2799,37 @@ const DRAW_PALETTE=['#000000','#ffffff','#e53935','#fb8c00','#fdd835','#43a047',
 const RANK_Q_OFFSET=5000;
 
 /* ---------- HOST ---------- */
+// Show the setup phase. NOTHING auto-starts — host types prompt + timer.
 async function hostBeginDraw(idx, q){
   state.currentQIdx=idx; state.drawQ=q;
-  // clear any stale answers for this question index (drawings + rankings)
+  // park the room so players wait (no drawing yet)
+  await sb.from('rooms').update({status:'draw-wait',current_question:idx}).eq('id',state.roomId);
+  hostShowDrawPhase('setup');
+  document.getElementById('hd-prompt-input').value='';
+  document.getElementById('hd-seconds-input').value='60';
+  showScreen('screen-host-draw');
+}
+function hostShowDrawPhase(phase){
+  ['setup','draw','sendrank','rank','reveal'].forEach(p=>{
+    const el=document.getElementById('hd-phase-'+p); if(el) el.style.display = p===phase?'block':'none';
+  });
+}
+// Host pressed Start — broadcast prompt + deadline, players begin drawing.
+async function hostStartDraw(){
+  const prompt=document.getElementById('hd-prompt-input').value.trim();
+  const secs=parseInt(document.getElementById('hd-seconds-input').value)||60;
+  if(!prompt) return toast('⚠️ Enter a prompt first');
+  const idx=state.currentQIdx;
+  state.drawPrompt=prompt; state.drawSecs=secs;
+  // clear stale answers for this round
   await sb.from('answers').delete().eq('room_id',state.roomId).eq('question_index',idx);
   await sb.from('answers').delete().eq('room_id',state.roomId).eq('question_index',idx+RANK_Q_OFFSET);
-  await sb.from('rooms').update({status:'draw',current_question:idx,draw_deadline:new Date(Date.now()+q.time*1000).toISOString()}).eq('id',state.roomId)
-    .then(({error})=>{ if(error){ sb.from('rooms').update({status:'draw',current_question:idx}).eq('id',state.roomId); } });
-  // host view
-  document.getElementById('hd-prompt').textContent=q.text;
-  document.getElementById('hd-phase-draw').style.display='block';
-  document.getElementById('hd-phase-rank').style.display='none';
-  document.getElementById('hd-phase-result').style.display='none';
-  showScreen('screen-host-draw');
-  hostDrawTimer(q.time);
+  const deadline=new Date(Date.now()+secs*1000).toISOString();
+  await sb.from('rooms').update({status:'draw',current_question:idx,draw_prompt:prompt,draw_deadline:deadline}).eq('id',state.roomId)
+    .then(({error})=>{ if(error){ sb.from('rooms').update({status:'draw',current_question:idx,draw_prompt:prompt}).eq('id',state.roomId); } });
+  document.getElementById('hd-prompt').textContent=prompt;
+  hostShowDrawPhase('draw');
+  hostDrawTimer(secs);
   hostPollDrawSubmissions();
 }
 function hostDrawTimer(secs){
@@ -2948,28 +2847,36 @@ let _hdPoll=null;
 function hostPollDrawSubmissions(){
   clearInterval(_hdPoll);
   _hdPoll=setInterval(async()=>{
-    if(!document.getElementById('hd-phase-draw').style.display||document.getElementById('hd-phase-draw').style.display==='none'){ clearInterval(_hdPoll); return; }
+    if(document.getElementById('hd-phase-draw').style.display==='none'){ clearInterval(_hdPoll); return; }
     const {data}=await sb.from('answers').select('player_id').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
     const n=data?data.length:0;
     document.getElementById('hd-submitted').textContent=`${n} of ${state.players.length} submitted`;
     if(n>=state.players.length && state.players.length>0){ hostEndDrawEarly(); }
   },1000);
 }
+// Time up (or host ended). Tell players to STOP drawing & wait. Host then
+// presses a button to send the drawings out for ranking.
 async function hostEndDrawEarly(){
   clearInterval(DRAW.timer); clearInterval(_hdPoll);
-  // fetch all drawings
-  const {data:draws}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
-  state.drawDrawings=(draws||[]).filter(d=>d.answer_text&&d.answer_text.startsWith('data:'));
-  if(state.drawDrawings.length<2){
-    // not enough drawings to rank — skip scoring, just continue
-    toast('Not enough drawings submitted — skipping round');
-    return hostDrawContinue();
-  }
-  // move to ranking phase
+  await sb.from('rooms').update({status:'draw-collected'}).eq('id',state.roomId);
+  hostShowDrawPhase('sendrank');
+  document.getElementById('hd-collected').textContent='Collecting drawings…';
+  // give late submissions a moment, then count
+  setTimeout(async()=>{
+    const {data:draws}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
+    state.drawDrawings=(draws||[]).filter(d=>d.answer_text&&d.answer_text.startsWith('data:'));
+    document.getElementById('hd-collected').textContent=`${state.drawDrawings.length} drawing${state.drawDrawings.length===1?'':'s'} collected.`;
+    if(state.drawDrawings.length<2){
+      document.getElementById('hd-collected').textContent='Not enough drawings to rank. Continue the quiz.';
+      document.getElementById('hd-sendrank-btn').textContent='Continue →';
+      document.getElementById('hd-sendrank-btn').onclick=hostDrawContinue;
+    }
+  },1200);
+}
+// Host sends drawings out — players move to ranking.
+async function hostSendToRanking(){
   await sb.from('rooms').update({status:'drawrank'}).eq('id',state.roomId);
-  document.getElementById('hd-phase-draw').style.display='none';
-  document.getElementById('hd-phase-rank').style.display='block';
-  document.getElementById('hd-phase-result').style.display='none';
+  hostShowDrawPhase('rank');
   hostPollRankings();
 }
 let _hdRankPoll=null;
@@ -2977,65 +2884,103 @@ function hostPollRankings(){
   clearInterval(_hdRankPoll);
   _hdRankPoll=setInterval(async()=>{
     const {data}=await sb.from('answers').select('player_id').eq('room_id',state.roomId).eq('question_index',state.currentQIdx+RANK_Q_OFFSET);
-    const n=data?data.length:0;
-    // everyone who submitted a drawing should rank
-    const expected=state.drawDrawings.length;
-    document.getElementById('hd-ranked').textContent=`${n} of ${expected} finished ranking`;
-    if(n>=expected && expected>0){ clearInterval(_hdRankPoll); document.getElementById('hd-rank-status').textContent='Everyone has ranked! Ready to score.'; }
+    const ranked=new Set((data||[]).map(r=>r.player_id));
+    // everyone in the room ranks (even if they didn't draw)
+    const list=state.players.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;background:${ranked.has(p.id)?'#4fffb022':'#2a2a3d'};margin-bottom:4px">
+      <span>${ranked.has(p.id)?'✓':'⏳'}</span><span style="flex:1">${escHtml(p.name)}</span><span class="text-muted" style="font-size:.78rem">${ranked.has(p.id)?'ranked':'ranking…'}</span></div>`).join('');
+    const el=document.getElementById('hd-rank-status-list'); if(el) el.innerHTML=list;
+    if(ranked.size>=state.players.length && state.players.length>0){ document.getElementById('hd-reveal-btn').textContent='✓ Everyone ranked — Reveal! 🎬'; }
   },1000);
 }
-async function hostScoreDraw(){
+// Compute standings (golf), award quiz points, then reveal worst→best one at a time.
+async function hostBeginReveal(){
   clearInterval(_hdRankPoll);
   const q=getQuestion(state.currentQIdx);
-  // gather drawings + rankings
   const {data:draws}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
   const {data:ranks}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx+RANK_Q_OFFSET);
   const drawings=(draws||[]).filter(d=>d.answer_text&&d.answer_text.startsWith('data:'));
   const drawerIds=drawings.map(d=>d.player_id);
   const nameMap={}; state.players.forEach(p=>nameMap[p.id]=p.name);
-  // golf scoring: for each ranking, the drawing placed 1st gets 1pt, 2nd 2pts...
   const golf={}; drawerIds.forEach(id=>golf[id]=0);
-  let rankingsCounted=0;
-  (ranks||[]).forEach(r=>{
-    let order; try{ order=JSON.parse(r.answer_text); }catch(e){ return; }
-    if(!Array.isArray(order)) return;
-    rankingsCounted++;
-    order.forEach((drawerId,i)=>{ if(golf[drawerId]!=null) golf[drawerId]+=(i+1); });
-  });
-  // a drawer not ranked by anyone still has 0 — give them worst-case to be fair?
-  // With >=3 players everyone gets ranked by others. Sort ascending (lowest=best).
-  const standings=drawerIds.map(id=>({id,score:golf[id]})).sort((a,b)=>a.score-b.score);
-  // convert placement to quiz points: bonus, then 8,6,4,2,1,1,1...
+  (ranks||[]).forEach(r=>{ let o; try{o=JSON.parse(r.answer_text);}catch(e){return;} if(Array.isArray(o)) o.forEach((id,i)=>{ if(golf[id]!=null) golf[id]+=(i+1); }); });
+  // ascending = best first; we reveal worst first so reverse for the stage
+  const best2worst=drawerIds.map(id=>({id,score:golf[id]})).sort((a,b)=>a.score-b.score);
   const ptsLadder=[q.bonus,8,6,4,2,1,1,1];
-  standings.forEach((s,i)=>{ state.scores[s.id]=(state.scores[s.id]||0)+(ptsLadder[i]!=null?ptsLadder[i]:0); });
-  await sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
-  // build host results with thumbnails
+  best2worst.forEach((s,i)=>{ state.scores[s.id]=(state.scores[s.id]||0)+(ptsLadder[i]!=null?ptsLadder[i]:0); s.place=i+1; s.qp=(ptsLadder[i]!=null?ptsLadder[i]:0); });
+  await sb.from('rooms').update({status:'drawreveal',scores:state.scores}).eq('id',state.roomId);
   const drawMap={}; drawings.forEach(d=>drawMap[d.player_id]=d.answer_text);
-  document.getElementById('hd-phase-rank').style.display='none';
-  document.getElementById('hd-phase-result').style.display='block';
-  document.getElementById('hd-results').innerHTML=standings.map((s,i)=>{
-    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
-    const qp=ptsLadder[i]!=null?ptsLadder[i]:0;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:#2a2a3d;margin-bottom:6px">
-      <span style="font-size:1.3rem;width:28px">${medal}</span>
-      <img src="${drawMap[s.id]||''}" style="width:54px;height:54px;border-radius:8px;background:#fff;object-fit:contain">
-      <div style="flex:1"><div style="font-weight:700">${escHtml(nameMap[s.id]||'?')}</div><div class="text-muted" style="font-size:.78rem">golf score ${s.score} · +${qp} quiz pts</div></div>
-    </div>`;
-  }).join('');
-  FX.fanfare&&FX.fanfare();
+  // store reveal queue worst -> best
+  state.drawReveal={ queue:[...best2worst].reverse(), drawMap, nameMap, total:best2worst.length, shown:0 };
+  hostShowDrawPhase('reveal');
+  document.getElementById('hd-reveal-done').style.display='none';
+  document.getElementById('hd-reveal-next-btn').style.display='block';
+  document.getElementById('hd-reveal-stage').innerHTML='<p class="text-muted">Tap "Reveal next" to show the worst-ranked drawing first…</p>';
+  document.getElementById('hd-reveal-next-btn').textContent='Reveal worst drawing ↓';
+}
+function hostRevealNextDrawing(){
+  const R=state.drawReveal; if(!R) return;
+  if(R.shown>=R.queue.length){ return; }
+  const s=R.queue[R.shown]; R.shown++;
+  const place=s.place, isWinner=place===1;
+  const medal=place===1?'🥇':place===2?'🥈':place===3?'🥉':'#'+place;
+  const stage=document.getElementById('hd-reveal-stage');
+  stage.innerHTML=`<div style="animation:slideInUp .4s">
+    <div style="font-family:'Bebas Neue';font-size:1.4rem;color:${isWinner?'#f0e040':'#fff'}">${medal} place${isWinner?' — WINNER! 🎉':''}</div>
+    <img src="${R.drawMap[s.id]||''}" style="width:80%;max-width:300px;border-radius:12px;background:#fff;margin:10px auto;display:block;box-shadow:0 6px 24px #0008">
+    <div style="font-family:'Bebas Neue';font-size:1.8rem">${escHtml(R.nameMap[s.id]||'?')}</div>
+    <div class="text-muted" style="font-size:.85rem">golf score ${s.score} · +${s.qp} quiz points</div>
+  </div>`;
+  if(isWinner){ FX.fanfare&&FX.fanfare(); confettiBurst&&confettiBurst({count:120}); } else { FX.reveal&&FX.reveal(); }
+  const left=R.queue.length-R.shown;
+  const btn=document.getElementById('hd-reveal-next-btn');
+  if(left<=0){
+    btn.style.display='none';
+    document.getElementById('hd-reveal-done').style.display='block';
+  } else {
+    const nextPlace=R.queue[R.shown].place;
+    btn.textContent = nextPlace===1 ? 'Reveal the WINNER 🏆' : 'Reveal next ↓';
+  }
+}
+// Host chose to run ANOTHER drawing round at the same quiz slot — loop back to setup.
+async function hostDrawAnother(){
+  await hostBeginDraw(state.currentQIdx, getQuestion(state.currentQIdx));
 }
 async function hostDrawContinue(){
-  document.getElementById('hd-phase-result').style.display='none';
+  hostShowDrawPhase('setup'); // reset for next time
   await nextQuestion();
 }
 
 /* ---------- PLAYER: DRAWING ---------- */
+// Host is on the setup screen — show a waiting message.
+function playerDrawWait(room){
+  if(state.shownStatus==='draw-wait') return;
+  state.shownStatus='draw-wait';
+  showScreen('screen-player-draw');
+  document.getElementById('pd-prompt').textContent='Get ready to draw…';
+  document.getElementById('pd-timer').textContent='';
+  document.getElementById('pd-submitted-msg').style.display='block';
+  document.getElementById('pd-submitted-msg').textContent='⏳ Waiting for the host to start…';
+  document.getElementById('pd-submit').style.display='none';
+  // blank the canvas
+  const cv=document.getElementById('pd-canvas'); if(cv){ const c=cv.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,cv.width,cv.height); }
+}
+// Time's up — stop drawing, wait for host to send rankings.
+function playerDrawCollected(room){
+  clearInterval(state.playerTimer);
+  if(!DRAW.submitted){ pdSubmit(true); }
+  state.shownStatus='draw-collected';
+  document.getElementById('pd-timer').textContent="Time's up!";
+  document.getElementById('pd-submit').style.display='none';
+  document.getElementById('pd-submitted-msg').style.display='block';
+  document.getElementById('pd-submitted-msg').textContent='✓ Pencils down! Waiting for the host…';
+}
 function playerEnterDraw(room){
   const q=pGetQuestion(room,room.current_question); if(!q) return;
   if(state.shownStatus==='draw' && state.shownDrawIdx===room.current_question) return; // already in
   state.shownStatus='draw'; state.shownDrawIdx=room.current_question;
   DRAW.submitted=false; DRAW.strokes=[]; DRAW.cur=null; DRAW.eraser=false; DRAW.color='#000000'; DRAW.size=7;
-  document.getElementById('pd-prompt').textContent=q.text;
+  const prompt=room.draw_prompt||q.text||'Draw!';
+  document.getElementById('pd-prompt').textContent=prompt;
   document.getElementById('pd-submitted-msg').style.display='none';
   document.getElementById('pd-submit').style.display='block';
   document.getElementById('pd-submit').disabled=false;
@@ -3049,7 +2994,7 @@ function playerEnterDraw(room){
   // countdown then enable drawing
   pdRunCountdown(()=>{ DRAW.canEnabled=true; });
   // local timer from deadline
-  pdStartTimer(room.draw_deadline, q.time);
+  pdStartTimer(room.draw_deadline, state.drawSecs||60);
 }
 function pdRunCountdown(done){
   const ov=document.getElementById('pd-countdown');
@@ -3120,7 +3065,7 @@ async function playerEnterDrawRank(room){
   if(state.shownStatus==='drawrank' && state.shownRankIdx===room.current_question) return;
   state.shownStatus='drawrank'; state.shownRankIdx=room.current_question;
   const q=pGetQuestion(room,room.current_question);
-  document.getElementById('pr-prompt').textContent=q?q.text:'';
+  document.getElementById('pr-prompt').textContent=room.draw_prompt||(q?q.text:'');
   document.getElementById('pr-submitted-msg').style.display='none';
   document.getElementById('pr-submit').style.display='block';
   // fetch all drawings except mine
@@ -3198,7 +3143,7 @@ async function showPlayerDrawReveal(room, q){
         <span style="flex:1;font-weight:${me?'700':'400'}">${escHtml(nameMap[s.id]||'?')}</span>
         <span class="text-muted" style="font-size:.78rem">${s.score} pts</span></div>`;
     }).join('');
-  document.getElementById('pr-prompt').textContent=q.text;
+  document.getElementById('pr-prompt').textContent=room.draw_prompt||(q&&q.text)||'';
   document.getElementById('pr-submit').style.display='none';
   document.getElementById('pr-submitted-msg').style.display='block';
   document.getElementById('pr-submitted-msg').textContent='⏳ Waiting for host to continue…';
@@ -3206,9 +3151,136 @@ async function showPlayerDrawReveal(room, q){
   if(myPlace===0){ FX.fanfare&&FX.fanfare(); confettiBurst&&confettiBurst({count:100}); } else { FX.reveal&&FX.reveal(); }
 }
 
+// ============================================================
+//  BUZZ-IN ROUND (also used for "Who is this?")
+//  Host opens buzzing (status 'buzz'). Players tap a buzzer which
+//  inserts an answer row with a client timestamp in answer_text.
+//  Host polls, picks the earliest buzz from a NON-locked-out player,
+//  shows them, and marks correct/wrong. Wrong => lock out that player
+//  and reopen. Correct => award buzzPts and move to reveal.
+//  Lockouts are tracked in-memory on the host for the current question.
+// ============================================================
+const BUZZ = { lockedOut:new Set(), buzzedId:null, startTs:0 };
+let _hbPoll=null;
+
+async function hostBeginBuzz(idx, q){
+  state.currentQIdx=idx; state.buzzQ=q;
+  BUZZ.lockedOut=new Set(); BUZZ.buzzedId=null; BUZZ.startTs=Date.now();
+  await sb.from('answers').delete().eq('room_id',state.roomId).eq('question_index',idx);
+  await sb.from('rooms').update({status:'buzz',current_question:idx,buzz_open:true}).eq('id',state.roomId)
+    .then(({error})=>{ if(error){ sb.from('rooms').update({status:'buzz',current_question:idx}).eq('id',state.roomId); } });
+  document.getElementById('hb-question').textContent=q.text;
+  document.getElementById('hb-waiting').style.display='block';
+  document.getElementById('hb-buzzed').style.display='none';
+  document.getElementById('hb-locked').style.display='none';
+  document.getElementById('hb-status').innerHTML='';
+  showScreen('screen-host-buzz');
+  hostPollBuzzes();
+}
+function hostPollBuzzes(){
+  clearInterval(_hbPoll);
+  _hbPoll=setInterval(async()=>{
+    if(!document.getElementById('screen-host-buzz').classList.contains('active')){ clearInterval(_hbPoll); return; }
+    if(BUZZ.buzzedId) return; // already showing someone, waiting for judge
+    const {data}=await sb.from('answers').select('*').eq('room_id',state.roomId).eq('question_index',state.currentQIdx);
+    const buzzes=(data||[]).filter(b=>!BUZZ.lockedOut.has(b.player_id))
+      .map(b=>({id:b.player_id, ts:parseFloat(b.answer_text)||0}))
+      .sort((a,b)=>a.ts-b.ts);
+    if(buzzes.length){
+      BUZZ.buzzedId=buzzes[0].id;
+      const nameMap={}; state.players.forEach(p=>nameMap[p.id]=p.name);
+      document.getElementById('hb-buzzer-name').textContent=nameMap[BUZZ.buzzedId]||'?';
+      document.getElementById('hb-waiting').style.display='none';
+      document.getElementById('hb-buzzed').style.display='block';
+      document.getElementById('hb-locked').style.display='none';
+      // freeze buzzing so late buzzes queue but nobody else jumps in visually
+      await sb.from('rooms').update({buzz_open:false}).eq('id',state.roomId).then(()=>{},()=>{});
+      FX.reveal&&FX.reveal();
+    }
+  },600);
+}
+async function hostBuzzJudge(correct){
+  const id=BUZZ.buzzedId; if(!id) return;
+  const q=getQuestion(state.currentQIdx);
+  const nameMap={}; state.players.forEach(p=>nameMap[p.id]=p.name);
+  if(correct){
+    clearInterval(_hbPoll);
+    state.scores[id]=(state.scores[id]||0)+(q.buzzPts||10);
+    await sb.from('rooms').update({status:'reveal',scores:state.scores,buzz_open:false}).eq('id',state.roomId).then(()=>{},()=>{
+      sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
+    });
+    document.getElementById('hb-buzzed').style.display='none';
+    document.getElementById('hb-status').innerHTML=`<div style="text-align:center"><div style="font-family:'Bebas Neue';font-size:1.8rem;color:var(--accent3)">✓ ${escHtml(nameMap[id]||'?')} got it! +${q.buzzPts||10} pts</div></div>`;
+    FX.fanfare&&FX.fanfare(); confettiBurst&&confettiBurst({count:100});
+    // show Next button
+    document.getElementById('hb-status').innerHTML+=`<button class="btn btn-primary w100" style="margin-top:12px" onclick="nextQuestion()">Next →</button>`;
+  } else {
+    // lock out this player, remove their buzz, reopen
+    BUZZ.lockedOut.add(id);
+    BUZZ.buzzedId=null;
+    await sb.from('answers').delete().eq('room_id',state.roomId).eq('question_index',state.currentQIdx).eq('player_id',id);
+    await sb.from('rooms').update({status:'buzz',buzz_open:true,buzz_lockout_bump:Date.now()}).eq('id',state.roomId).then(()=>{},()=>{
+      sb.from('rooms').update({status:'buzz'}).eq('id',state.roomId);
+    });
+    document.getElementById('hb-buzzed').style.display='none';
+    document.getElementById('hb-waiting').style.display='block';
+    document.getElementById('hb-status').innerHTML=`<p class="text-muted text-center">✗ ${escHtml(nameMap[id]||'?')} was wrong — they're locked out. Others can still buzz!</p>`;
+    FX.wrong&&FX.wrong();
+  }
+}
+async function hostBuzzSkip(){
+  clearInterval(_hbPoll);
+  BUZZ.buzzedId=null;
+  await sb.from('rooms').update({status:'reveal',scores:state.scores,buzz_open:false}).eq('id',state.roomId).then(()=>{},()=>{
+    sb.from('rooms').update({status:'reveal',scores:state.scores}).eq('id',state.roomId);
+  });
+  const revBox=document.getElementById('host-answer-reveal');
+  document.getElementById('hb-status').innerHTML=`<p class="text-muted text-center">Nobody got it. Moving on…</p><button class="btn btn-primary w100" style="margin-top:12px" onclick="nextQuestion()">Next →</button>`;
+  document.getElementById('hb-waiting').style.display='none';
+  document.getElementById('hb-buzzed').style.display='none';
+}
+
+/* ---------- BUZZ PLAYER ---------- */
+function playerEnterBuzz(room){
+  const q=pGetQuestion(room,room.current_question); if(!q) return;
+  const open=room.buzz_open!==false;
+  const alreadyShown = state.shownStatus==='buzz' && state.shownBuzzIdx===room.current_question;
+  // If I had buzzed and buzzing has REOPENED, it means I was judged wrong → lock me out.
+  if(state.buzzed && open && state.shownBuzzIdx===room.current_question && state.buzzLockedThisQ!==room.current_question){
+    state.buzzLockedThisQ=room.current_question;
+  }
+  state.shownStatus='buzz'; state.shownBuzzIdx=room.current_question;
+  document.getElementById('pb-question').textContent=q.text;
+  document.getElementById('pb-score').textContent=(state.scores[state.playerId]||0)+' pts';
+  const btn=document.getElementById('pb-buzzer');
+  const msg=document.getElementById('pb-msg');
+  // if I'm locked out (my buzz was deleted and I got a wrong judge) keep me disabled this question
+  if(state.buzzLockedThisQ===room.current_question){
+    btn.disabled=true; btn.style.filter='grayscale(1)'; btn.textContent='OUT';
+    msg.textContent='You had your go — locked out for this one!';
+  } else if(!open){
+    // someone is being judged — disable temporarily
+    btn.disabled=true; btn.style.filter='grayscale(.6)';
+    msg.textContent='Someone buzzed! Waiting for the host…';
+  } else {
+    btn.disabled=false; btn.style.filter='none'; btn.textContent='BUZZ!';
+    msg.textContent='First to buzz gets to answer — say it out loud!';
+  }
+  if(!alreadyShown){ state.buzzed=false; }
+  showScreen('screen-player-buzz');
+}
+async function playerBuzz(){
+  if(state.buzzed) return; state.buzzed=true;
+  const btn=document.getElementById('pb-buzzer');
+  btn.disabled=true; btn.style.filter='grayscale(.4)'; btn.textContent='✓';
+  document.getElementById('pb-msg').textContent='You buzzed! Say your answer out loud 🎤';
+  FX.pop&&FX.pop();
+  try{ await sb.from('answers').insert({room_id:state.roomId,player_id:state.playerId,question_index:state.currentQIdx,answer_index:-1,answer_text:String(Date.now())}); }catch(e){ console.error(e); }
+}
+
 function resetToLanding(){
   if(state.subscription) state.subscription.unsubscribe();
-  clearInterval(DRAW.timer); clearInterval(_hdPoll); clearInterval(_hdRankPoll);
+  clearInterval(DRAW.timer); clearInterval(_hdPoll); clearInterval(_hdRankPoll); clearInterval(_hbPoll);
   pongTeardown();
   arcadeStop();
   if(practiceGame&&practiceGame.stop){ try{practiceGame.stop();}catch(e){} practiceGame=null; }
@@ -4326,16 +4398,15 @@ const ARCADE={
   CAM_LERP:0.08,
   // machines placed at fixed world X (canvas units, world is 1000px wide)
   machines:[
-    {key:'invaders',  wx:160,  emoji:'👾', label:'INVADERS',  color:'#4fffb0'},
-    {key:'pacman',    wx:420,  emoji:'🟡', label:'PAC-MAN',   color:'#f0e040'},
-    {key:'reaction',  wx:680,  emoji:'⚡', label:'REACTION',  color:'#ff4f6d'},
-    {key:'targettap', wx:940,  emoji:'🎯', label:'TARGET',    color:'#4fa8ff'},
-    {key:'memory',    wx:1200, emoji:'🧠', label:'MEMORY',    color:'#a78bfa'},
-    {key:'dodge',     wx:1460, emoji:'☄️', label:'DODGE',     color:'#ff9f4f'},
-    {key:'quickdraw', wx:1720, emoji:'🤠', label:'QUICKDRAW', color:'#4fffb0'},
-    {key:'pong',      wx:1980, emoji:'🏓', label:'PONG',      color:'#a78bfa'},
+    {key:'invaders',  wx:200,  emoji:'👾', label:'INVADERS',  color:'#4fffb0'},
+    {key:'reaction',  wx:480,  emoji:'⚡', label:'REACTION',  color:'#ff4f6d'},
+    {key:'targettap', wx:760,  emoji:'🎯', label:'TARGET',    color:'#4fa8ff'},
+    {key:'memory',    wx:1040, emoji:'🧠', label:'MEMORY',    color:'#a78bfa'},
+    {key:'dodge',     wx:1320, emoji:'☄️', label:'DODGE',     color:'#ff9f4f'},
+    {key:'quickdraw', wx:1600, emoji:'🤠', label:'QUICKDRAW', color:'#4fffb0'},
+    {key:'pong',      wx:1880, emoji:'🏓', label:'PONG',      color:'#a78bfa'},
   ],
-  WORLD_W:2140,
+  WORLD_W:2080,
 };
 let arcadeRT=null;
 
